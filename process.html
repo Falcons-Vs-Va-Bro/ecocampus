@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EcoCampus 校园闲置物品智慧流转小程序</title>
+    <style>
+      :root {
+        --paper: #f7f8f5;
+        --paper-deep: #eff2ed;
+        --ink: #171717;
+        --muted: #767676;
+        --line: #dfe4de;
+        --green: #0b8f22;
+        --green-deep: #047018;
+        --red: #e4231f;
+        --red-deep: #bc1714;
+        --blue-gray: #e9eef5;
+        --white: #fffefa;
+        --shadow: 0 16px 38px rgba(23, 23, 23, 0.09);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          repeating-linear-gradient(108deg, rgba(23, 23, 23, 0.018) 0 1px, transparent 1px 13px),
+          repeating-linear-gradient(18deg, rgba(11, 143, 34, 0.012) 0 1px, transparent 1px 19px),
+          var(--paper);
+        background-size: 26px 26px, 42px 42px, auto;
+        line-height: 1.65;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      a:focus-visible,
+      button:focus-visible {
+        outline: 3px solid rgba(11, 143, 34, 0.38);
+        outline-offset: 4px;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      figure {
+        margin: 0;
+      }
+
+      .page {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 32px;
+        width: min(1180px, calc(100% - 64px));
+        margin: 0 auto;
+        padding: 34px 0 10px;
+      }
+
+      .brand-mark {
+        position: relative;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        font-size: 18px;
+        font-weight: 750;
+        color: var(--ink);
+        transform: rotate(-1deg);
+      }
+
+      .brand-mark::after {
+        content: "";
+        position: absolute;
+        left: -13px;
+        bottom: -27px;
+        width: 246px;
+        height: 28px;
+        background-image: url("assets/process/brand-smear-transparent.png");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 246px auto;
+        mix-blend-mode: multiply;
+        opacity: 0.96;
+        pointer-events: none;
+      }
+
+      .brand-mark .green {
+        color: var(--green);
+      }
+
+      .brand-mark .red {
+        color: var(--red);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 26px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #303030;
+      }
+
+      .nav a {
+        padding-bottom: 6px;
+        border-bottom: 2px solid transparent;
+      }
+
+      .nav a:hover {
+        border-color: var(--green);
+      }
+
+      .hero {
+        position: relative;
+        width: min(1180px, calc(100% - 64px));
+        min-height: 620px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 0.88fr 1.12fr;
+        align-items: start;
+        gap: 34px;
+        padding: 46px 0 64px;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -145px;
+        bottom: -8px;
+        width: 500px;
+        height: 245px;
+        background-image: url("assets/process/hero-red-brush-transparent.png");
+        background-repeat: no-repeat;
+        background-position: right bottom;
+        background-size: contain;
+        mix-blend-mode: multiply;
+        opacity: 0.92;
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 24px;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--green);
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 4px;
+        background: var(--green);
+        border-radius: 999px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 72px;
+        line-height: 0.98;
+        font-weight: 860;
+      }
+
+      .eco {
+        color: var(--green);
+      }
+
+      .campus {
+        color: var(--ink);
+      }
+
+      .hero h2 {
+        margin: 26px 0 18px;
+        font-size: 34px;
+        line-height: 1.25;
+        font-weight: 820;
+      }
+
+      .hero p {
+        max-width: 460px;
+        margin: 0;
+        color: #4d4d4d;
+        font-size: 17px;
+        font-weight: 500;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-top: 34px;
+      }
+
+      .action {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 54px;
+        padding: 0 22px;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 780;
+        box-shadow: 0 12px 24px rgba(23, 23, 23, 0.14);
+      }
+
+      .action svg {
+        width: 19px;
+        height: 19px;
+        flex: 0 0 auto;
+      }
+
+      .action.green {
+        background: var(--green);
+      }
+
+      .action.red {
+        background: var(--red);
+      }
+
+      .hero-art {
+        position: relative;
+        z-index: 1;
+        min-height: 560px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .hero-art::before {
+        content: "";
+        position: absolute;
+        inset: 6% 0 auto 10%;
+        height: 72%;
+        border: 1px solid rgba(11, 143, 34, 0.09);
+        background: rgba(255, 255, 255, 0.34);
+        transform: rotate(2deg);
+        z-index: -1;
+      }
+
+      .hero-art img {
+        width: min(590px, 100%);
+        filter: contrast(1.05);
+        mix-blend-mode: multiply;
+      }
+
+      .section {
+        border-top: 1px solid rgba(31, 31, 31, 0.12);
+      }
+
+      .band {
+        width: min(1180px, calc(100% - 64px));
+        margin: 0 auto;
+        padding: 64px 0;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 0 0 30px;
+        font-size: 34px;
+        line-height: 1.15;
+        font-weight: 850;
+      }
+
+      .section-title::before {
+        content: "";
+        display: block;
+        width: 7px;
+        height: 38px;
+        border-radius: 999px;
+        background: var(--green);
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 0.86fr 1.14fr;
+        gap: 56px;
+        align-items: center;
+      }
+
+      .lead {
+        margin: 0;
+        max-width: 580px;
+        font-size: 18px;
+        color: #343434;
+      }
+
+      .quiet-note {
+        position: relative;
+        margin: 26px 0 0;
+        padding: 18px 20px;
+        border-left: 4px solid var(--green);
+        background: rgba(255, 255, 255, 0.54);
+        color: #3b3b3b;
+        font-size: 16px;
+      }
+
+      .campus-line {
+        width: 100%;
+        min-height: 230px;
+        overflow: hidden;
+      }
+
+      .campus-line img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        object-position: center;
+        mix-blend-mode: multiply;
+        opacity: 0.72;
+      }
+
+      .team-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 14px;
+      }
+
+      .member-card {
+        min-height: 264px;
+        padding: 24px 16px 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 12px 28px rgba(23, 23, 23, 0.06);
+        text-align: center;
+      }
+
+      .member-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 18px;
+        border: 1.5px solid rgba(11, 143, 34, 0.65);
+        border-radius: 50%;
+        color: var(--green);
+        font-size: 20px;
+        font-weight: 850;
+      }
+
+      .member-role {
+        margin: 0 0 8px;
+        color: var(--green);
+        font-size: 16px;
+        font-weight: 850;
+      }
+
+      .member-name {
+        margin: 0 0 14px;
+        font-size: 22px;
+        font-weight: 850;
+      }
+
+      .member-desc {
+        margin: 0;
+        color: #565656;
+        font-size: 13px;
+        line-height: 1.72;
+      }
+
+      .section-footnote {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin: 28px 0 0;
+        color: #6b6b6b;
+        font-size: 15px;
+      }
+
+      .section-footnote::before {
+        content: "!";
+        display: grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        border: 1px solid #b7c0b7;
+        border-radius: 50%;
+        color: var(--green);
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .progress-layout {
+        display: grid;
+        grid-template-columns: 238px minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
+      }
+
+      .progress-band {
+        padding-bottom: 84px;
+      }
+
+      .progress-intro {
+        max-width: 620px;
+        margin: -18px 0 36px 23px;
+        color: #4d5750;
+        font-size: 15px;
+        font-weight: 560;
+      }
+
+      .checklist {
+        display: grid;
+        gap: 22px;
+        position: sticky;
+        top: 24px;
+        padding: 28px 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.76);
+        box-shadow: 0 16px 34px rgba(23, 23, 23, 0.08);
+      }
+
+      .check-item {
+        display: grid;
+        grid-template-columns: 26px 1fr;
+        gap: 11px;
+        align-items: center;
+        color: #143e33;
+        font-size: 15px;
+        font-weight: 820;
+        line-height: 1.35;
+      }
+
+      .check {
+        display: grid;
+        place-items: center;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: var(--green);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 900;
+      }
+
+      .check.pending {
+        background: transparent;
+        border: 2px dashed var(--green);
+        color: transparent;
+      }
+
+      .evidence-list {
+        position: relative;
+        display: grid;
+        gap: 42px;
+        padding: 26px 24px 36px 66px;
+        border: 1px solid rgba(11, 143, 34, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 16px 36px rgba(23, 23, 23, 0.06);
+      }
+
+      .evidence-list::before {
+        content: "";
+        position: absolute;
+        top: 39px;
+        bottom: 40px;
+        left: 31px;
+        width: 1px;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(11, 143, 34, 0.45) 0 6px,
+          rgba(11, 143, 34, 0.1) 6px 10px
+        );
+      }
+
+      .evidence-item {
+        position: relative;
+      }
+
+      .evidence-heading {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 0 0 18px;
+      }
+
+      .evidence-index {
+        position: absolute;
+        left: -52px;
+        top: 0;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--green);
+        color: #fff;
+        box-shadow: 0 0 0 5px rgba(247, 248, 245, 0.92);
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .evidence-title {
+        margin: 0;
+        color: #182335;
+        font-size: 24px;
+        line-height: 1.25;
+        font-weight: 860;
+      }
+
+      .evidence-shot {
+        overflow: hidden;
+        border: 1px solid rgba(23, 23, 23, 0.13);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 18px 38px rgba(23, 23, 23, 0.1);
+      }
+
+      .evidence-shot img {
+        width: 100%;
+        height: auto;
+      }
+
+      .evidence-shot.github {
+        background: #06090f;
+      }
+
+      .evidence-shot.github img {
+        border-radius: 7px;
+      }
+
+      .evidence-shot.prd {
+        display: grid;
+        place-items: center;
+        padding: 26px;
+      }
+
+      .evidence-shot.prd img {
+        max-height: 760px;
+        object-fit: contain;
+      }
+
+      .evidence-shot.issue img {
+        min-height: 360px;
+        object-fit: cover;
+        object-position: top center;
+      }
+
+      .materials {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 34px;
+      }
+
+      .material-card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 14px 32px rgba(23, 23, 23, 0.08);
+      }
+
+      .material-frame {
+        display: grid;
+        place-items: center;
+        min-height: 255px;
+        padding: 18px;
+        background: linear-gradient(180deg, #fff, var(--blue-gray));
+      }
+
+      .material-frame img {
+        width: 100%;
+        max-height: 250px;
+        object-fit: contain;
+        border: 1px solid #e3e6e2;
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      .material-caption {
+        padding: 18px 18px 20px;
+        border-top: 4px solid var(--green);
+        text-align: center;
+        font-size: 17px;
+        font-weight: 750;
+      }
+
+      .material-card.red .material-caption {
+        border-color: var(--red);
+      }
+
+      .route-plan {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 48px;
+      }
+
+      .route-plan > article + article {
+        padding-left: 48px;
+        border-left: 1px solid rgba(23, 23, 23, 0.18);
+      }
+
+      .compact-title {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 0 0 24px;
+        font-size: 32px;
+        line-height: 1.16;
+        font-weight: 850;
+      }
+
+      .compact-title::before {
+        content: "";
+        width: 7px;
+        height: 34px;
+        border-radius: 999px;
+        background: var(--green);
+      }
+
+      .compact-title.red::before {
+        background: var(--red);
+      }
+
+      .route-copy {
+        max-width: 520px;
+        margin: 0 0 24px;
+        font-size: 17px;
+        color: #383838;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        padding: 7px 12px;
+        border: 1px solid #c9cfc8;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #3c3c3c;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .plan-list {
+        display: grid;
+        gap: 15px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .plan-list li {
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        gap: 13px;
+        align-items: center;
+        color: #323232;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .plan-list span {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--red);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .closing {
+        position: relative;
+        overflow: hidden;
+        padding: 46px 0 0;
+        text-align: center;
+      }
+
+      .closing::before,
+      .closing::after {
+        content: "";
+        position: absolute;
+        width: 330px;
+        height: 230px;
+        background-image: url("assets/process/falcons-vs-va-bro.png");
+        background-repeat: no-repeat;
+        background-size: cover;
+        opacity: 0.22;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .closing::before {
+        left: -90px;
+        bottom: -42px;
+        transform: rotate(13deg);
+      }
+
+      .closing::after {
+        right: -80px;
+        bottom: -36px;
+        transform: rotate(-13deg);
+        filter: hue-rotate(130deg) saturate(1.35);
+      }
+
+      .closing h2 {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        font-size: 42px;
+        line-height: 1.12;
+        font-weight: 850;
+      }
+
+      .closing h3 {
+        position: relative;
+        z-index: 1;
+        margin: 10px 0 0;
+        font-size: 26px;
+        line-height: 1.25;
+        font-weight: 820;
+      }
+
+      .closing p {
+        position: relative;
+        z-index: 1;
+        margin: 16px 0 36px;
+        color: #424242;
+        font-size: 17px;
+      }
+
+      .team-script {
+        position: relative;
+        z-index: 1;
+        margin: 14px 0 0;
+        font-size: 24px;
+        font-weight: 700;
+        transform: rotate(-1deg);
+      }
+
+      .team-script .green {
+        color: var(--green);
+      }
+
+      .team-script .red {
+        color: var(--red);
+      }
+
+      .footer {
+        position: relative;
+        z-index: 1;
+        padding: 18px 24px;
+        background: #171717;
+        color: #bfbfbf;
+        font-size: 14px;
+      }
+
+      @media (max-width: 960px) {
+        .topbar,
+        .hero,
+        .band {
+          width: min(100% - 52px, 1180px);
+        }
+
+        .nav {
+          gap: 18px;
+          font-size: 13px;
+        }
+
+        h1 {
+          font-size: 54px;
+        }
+
+        .hero h2 {
+          font-size: 26px;
+        }
+
+        .hero p,
+        .lead,
+        .route-copy {
+          font-size: 16px;
+        }
+
+        .hero {
+          grid-template-columns: 0.9fr 1.1fr;
+          min-height: 590px;
+          gap: 22px;
+          padding-top: 40px;
+        }
+
+        .hero-art {
+          min-height: 470px;
+        }
+
+        .member-card {
+          padding: 20px 12px 18px;
+        }
+
+        .member-name {
+          font-size: 18px;
+        }
+
+        .member-desc {
+          font-size: 12px;
+        }
+      }
+
+      @media (max-width: 820px) {
+        .hero {
+          grid-template-columns: 1fr;
+          min-height: auto;
+          gap: 12px;
+          padding-top: 62px;
+        }
+
+        .hero-art {
+          min-height: 390px;
+        }
+
+        .team-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .split,
+        .progress-layout,
+        .route-plan {
+          grid-template-columns: 1fr;
+        }
+
+        .checklist {
+          position: static;
+        }
+
+        .route-plan > article + article {
+          padding-left: 0;
+          padding-top: 42px;
+          border-left: 0;
+          border-top: 1px solid rgba(23, 23, 23, 0.18);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .topbar,
+        .hero,
+        .band {
+          width: min(100% - 36px, 1180px);
+        }
+
+        .topbar {
+          display: block;
+          padding-top: 24px;
+        }
+
+        .nav {
+          justify-content: flex-start;
+          gap: 16px;
+          margin-top: 28px;
+          font-size: 13px;
+        }
+
+        h1 {
+          font-size: 52px;
+        }
+
+        .hero h2 {
+          font-size: 26px;
+        }
+
+        .hero p,
+        .lead,
+        .route-copy {
+          font-size: 16px;
+        }
+
+        .hero {
+          padding-bottom: 46px;
+        }
+
+        .hero-art {
+          min-height: 280px;
+        }
+
+        .hero::after {
+          right: -160px;
+          bottom: -10px;
+          width: 320px;
+          opacity: 0.55;
+        }
+
+        .section-title,
+        .compact-title {
+          font-size: 28px;
+        }
+
+        .team-grid,
+        .materials {
+          grid-template-columns: 1fr;
+        }
+
+        .progress-intro {
+          margin-left: 0;
+        }
+
+        .evidence-list {
+          padding: 24px 16px 30px 50px;
+        }
+
+        .evidence-list::before {
+          left: 25px;
+        }
+
+        .evidence-index {
+          left: -39px;
+          width: 27px;
+          height: 27px;
+        }
+
+        .evidence-title {
+          font-size: 20px;
+        }
+
+        .evidence-shot.prd {
+          padding: 14px;
+        }
+
+        .evidence-shot.issue img {
+          min-height: 240px;
+        }
+
+        .member-card {
+          min-height: 0;
+        }
+
+        .material-frame {
+          min-height: 220px;
+        }
+
+        .closing h2 {
+          font-size: 34px;
+        }
+
+        .closing h3 {
+          font-size: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar" aria-label="页面导航">
+        <a class="brand-mark" href="#top" aria-label="Falcons VS Va Bro">
+          <span class="green">Falcons</span>
+          <span>VS</span>
+          <span class="red">Va Bro</span>
+        </a>
+        <nav class="nav" aria-label="进度汇报章节">
+          <a href="#background">项目概览</a>
+          <a href="#progress">当前进度</a>
+          <a href="#route">技术路线</a>
+          <a href="#plan">后续计划</a>
+        </nav>
+      </header>
+
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">项目进度汇报</p>
+          <h1 id="hero-title"><span class="eco">Eco</span><span class="campus">Campus</span></h1>
+          <h2>校园闲置物品智慧流转小程序</h2>
+          <p>面向校内师生的闲置物品智慧流转平台</p>
+          <div class="actions" aria-label="项目链接">
+            <a class="action green" href="https://github.com/Falcons-Vs-Va-Bro" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.52 2.87 8.35 6.84 9.7.5.09.68-.22.68-.49v-1.75c-2.78.62-3.36-1.21-3.36-1.21-.46-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .08 1.53 1.06 1.53 1.06.9 1.56 2.36 1.11 2.94.85.09-.67.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .85-.28 2.77 1.05A9.33 9.33 0 0 1 12 7.1c.86 0 1.72.12 2.53.35 1.92-1.33 2.76-1.05 2.76-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.66c0 .27.18.59.69.49A10.2 10.2 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z" fill="currentColor"/>
+              </svg>
+              GitHub 组织
+            </a>
+            <a class="action red" href="https://github.com/Falcons-Vs-Va-Bro/ecocampus" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 18 3 12l6-6 1.55 1.55L6.1 12l4.45 4.45L9 18Zm6 0-1.55-1.55L17.9 12l-4.45-4.45L15 6l6 6-6 6Z" fill="currentColor"/>
+              </svg>
+              项目仓库
+            </a>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="Falcons VS Va Bro 小组主视觉">
+          <img src="assets/process/falcons-vs-va-bro.png" alt="Falcons VS Va Bro 手绘小组主视觉" />
+        </div>
+      </section>
+
+      <section class="section" id="background" aria-labelledby="background-title">
+        <div class="band split">
+          <article>
+            <h2 class="section-title" id="background-title">项目背景</h2>
+            <p class="lead">
+              校园二手信息长期分散，交易信任和信息留存不足；跑腿、集市类发布容易被平台规则误伤，文字限制也让真实需求表达变得低效。
+            </p>
+            <p class="quiet-note">
+              从“天下苦校园集市久矣”的日常感受出发，EcoCampus 先把校内闲置流转这件事做得更集中、更可信、更便于留痕。
+            </p>
+          </article>
+          <div class="campus-line" aria-hidden="true">
+            <img src="assets/process/campus-line-art.png" alt="" />
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="team" aria-labelledby="team-title">
+        <div class="band">
+          <h2 class="section-title" id="team-title">小组分工</h2>
+          <div class="team-grid">
+            <article class="member-card">
+              <div class="member-icon" aria-hidden="true">&lt;/&gt;</div>
+              <p class="member-role">全栈</p>
+              <h3 class="member-name">李富悦</h3>
+              <p class="member-desc">全程跟进，提供技术支持，负责项目架构、工程规范管理与成员调度</p>
+            </article>
+            <article class="member-card">
+              <div class="member-icon" aria-hidden="true">▣</div>
+              <p class="member-role">产品经理</p>
+              <h3 class="member-name">余思洁</h3>
+              <p class="member-desc">提需、整理需求，砍掉不合理需求，兼顾测试与交互，建立产品验收门槛</p>
+            </article>
+            <article class="member-card">
+              <div class="member-icon" aria-hidden="true">✓</div>
+              <p class="member-role">测试</p>
+              <h3 class="member-name">龙墨纯</h3>
+              <p class="member-desc">主要负责端到端测试，与产品经理深度沟通，确保需求按预期运行</p>
+            </article>
+            <article class="member-card">
+              <div class="member-icon" aria-hidden="true">☁</div>
+              <p class="member-role">运维</p>
+              <h3 class="member-name">郑宗豪</h3>
+              <p class="member-desc">完成域名解析、Cloudflare 部署、后端、数据库与文件存储服务，为演示提供正式支持</p>
+            </article>
+            <article class="member-card">
+              <div class="member-icon" aria-hidden="true">□</div>
+              <p class="member-role">前端</p>
+              <h3 class="member-name">黄珍霓</h3>
+              <p class="member-desc">设计组件与交互，复现产品效果，兼顾动画，负责项目展示门面</p>
+            </article>
+            <article class="member-card">
+              <div class="member-icon" aria-hidden="true">◎</div>
+              <p class="member-role">后端</p>
+              <h3 class="member-name">经伟昊</h3>
+              <p class="member-desc">交付接口和接口文档，并持续维护接口文档</p>
+            </article>
+          </div>
+          <p class="section-footnote">分工只表示主要职责，实际执行允许交叉协作，重点是保持沟通和交付同步。</p>
+        </div>
+      </section>
+
+      <section class="section" id="progress" aria-labelledby="progress-title">
+        <div class="band progress-band">
+          <h2 class="section-title" id="progress-title">当前进度</h2>
+          <p class="progress-intro">项目基础文档与平台已就绪，核心材料按计划推进中。</p>
+          <div class="progress-layout">
+            <div class="checklist" aria-label="当前进度清单">
+              <div class="check-item"><span class="check">✓</span><span>README 初始化</span></div>
+              <div class="check-item"><span class="check">✓</span><span>PRD 整理中</span></div>
+              <div class="check-item"><span class="check">✓</span><span>Issue Report 已建立</span></div>
+              <div class="check-item"><span class="check">✓</span><span>GitHub 仓库已初始化</span></div>
+              <div class="check-item"><span class="check pending">.</span><span>演示页准备中</span></div>
+            </div>
+            <div class="evidence-list" aria-label="当前进度材料截图">
+              <figure class="evidence-item">
+                <figcaption class="evidence-heading">
+                  <span class="evidence-index">1</span>
+                  <h3 class="evidence-title">GitHub 仓库与 README</h3>
+                </figcaption>
+                <div class="evidence-shot github">
+                  <img src="assets/process/github-repo-snapshot.png" alt="GitHub 仓库与 README 截图" />
+                </div>
+              </figure>
+              <figure class="evidence-item">
+                <figcaption class="evidence-heading">
+                  <span class="evidence-index">2</span>
+                  <h3 class="evidence-title">PRD 文档（摘录）</h3>
+                </figcaption>
+                <div class="evidence-shot prd">
+                  <img src="assets/process/prd-snapshot.png" alt="产品需求文档 PRD 截图" />
+                </div>
+              </figure>
+              <figure class="evidence-item">
+                <figcaption class="evidence-heading">
+                  <span class="evidence-index">3</span>
+                  <h3 class="evidence-title">Issue Report（示例）</h3>
+                </figcaption>
+                <div class="evidence-shot issue">
+                  <img src="assets/process/issue-report-snapshot.png" alt="Issue Report 测试表截图" />
+                </div>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="route" aria-labelledby="route-title">
+        <div class="band route-plan">
+          <article>
+            <h2 class="compact-title" id="route-title">技术路线</h2>
+            <p class="route-copy">
+              后端以 Java 21、Spring Boot、Maven 为主，前端优先 Web/H5，运维侧配合完成部署、数据库和文件存储支持。
+            </p>
+            <div class="chips" aria-label="技术关键词">
+              <span class="chip">Java 21</span>
+              <span class="chip">Spring Boot</span>
+              <span class="chip">Maven</span>
+              <span class="chip">Web / H5</span>
+              <span class="chip">Cloudflare</span>
+            </div>
+          </article>
+          <article id="plan">
+            <h2 class="compact-title red">后续计划</h2>
+            <ol class="plan-list">
+              <li><span>01</span>完善需求与原型</li>
+              <li><span>02</span>推进接口与页面开发</li>
+              <li><span>03</span>完成联调测试</li>
+              <li><span>04</span>准备演示环境</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <section class="section closing" aria-labelledby="closing-title">
+        <h2 id="closing-title"><span class="eco">Eco</span><span class="campus">Campus</span></h2>
+        <h3>校园闲置物品智慧流转小程序</h3>
+        <p class="team-script"><span class="green">Falcons</span> VS <span class="red">Va Bro</span></p>
+        <p>让校园闲置物品在校内更顺畅地流转</p>
+        <footer class="footer">© 2026 Falcons VS Va Bro - EcoCampus Team</footer>
+      </section>
+    </main>
+  </body>
+</html>
