@@ -1,0 +1,433 @@
+.xmu-login-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: #fff;
+  font-family: PingFangSC-Regular, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  background: #e9edf1;
+}
+
+.xmu-background-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.xmu-background-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 900ms ease;
+}
+
+.xmu-background-slide {
+  display: block;
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
+  background-position: center center;
+  background-size: cover;
+}
+
+.xmu-background-slide::after {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  content: "";
+}
+
+.xmu-language-switch {
+  position: absolute;
+  top: 24px;
+  right: 100px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 208px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(205, 205, 205, 0.82);
+}
+
+.xmu-language-switch button {
+  border: 0;
+  color: #333;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  line-height: 40px;
+  cursor: pointer;
+}
+
+.xmu-language-switch button.active {
+  color: #fff;
+  background: #173f8f;
+}
+
+.xmu-login-card {
+  position: absolute;
+  top: 174px;
+  left: calc(50% + 22px);
+  z-index: 2;
+  width: 496px;
+  height: 554px;
+  padding: 24px 79px 20px;
+  border-radius: 4px;
+  background: rgba(43, 43, 43, 0.66);
+  box-shadow: none;
+}
+
+.xmu-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 52px;
+}
+
+.xmu-login-brand img {
+  display: block;
+  width: 184px;
+  height: auto;
+}
+
+.xmu-login-brand h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.36);
+}
+
+.xmu-login-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 16px;
+}
+
+.xmu-login-tabs button {
+  position: relative;
+  height: 34px;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 34px;
+  cursor: pointer;
+}
+
+.xmu-login-tabs button::after {
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  left: 14px;
+  height: 3px;
+  background: transparent;
+  content: "";
+}
+
+.xmu-login-tabs button.active::after {
+  background: #fff;
+}
+
+.xmu-qr-panel {
+  padding-top: 14px;
+  text-align: left;
+}
+
+.xmu-qr-placeholder {
+  position: relative;
+  display: grid;
+  width: 236px;
+  height: 236px;
+  margin: 0 auto;
+  place-items: center;
+  overflow: hidden;
+  background: #f7f7f7;
+}
+
+.xmu-qr-pattern {
+  width: 204px;
+  height: 204px;
+  opacity: 0.34;
+  background:
+    linear-gradient(90deg, #c8c8c8 10px, transparent 10px) 0 0 / 26px 26px,
+    linear-gradient(#c8c8c8 10px, transparent 10px) 0 0 / 26px 26px,
+    linear-gradient(90deg, transparent 4px, #d4d4d4 4px 12px, transparent 12px) 6px 6px / 28px 28px,
+    linear-gradient(transparent 4px, #d4d4d4 4px 12px, transparent 12px) 6px 6px / 28px 28px,
+    #fff;
+}
+
+.xmu-qr-placeholder::before,
+.xmu-qr-placeholder::after,
+.xmu-qr-pattern::before {
+  position: absolute;
+  width: 35px;
+  height: 35px;
+  border: 8px solid rgba(185, 185, 185, 0.62);
+  content: "";
+}
+
+.xmu-qr-placeholder::before {
+  top: 21px;
+  left: 21px;
+}
+
+.xmu-qr-placeholder::after {
+  top: 21px;
+  right: 21px;
+}
+
+.xmu-qr-pattern::before {
+  right: 16px;
+  bottom: 16px;
+}
+
+.xmu-qr-refresh {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  color: #777;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.xmu-qr-panel h2 {
+  margin: 32px 0 24px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.xmu-qr-panel p {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.xmu-account-panel {
+  display: grid;
+  gap: 14px;
+  padding-top: 28px;
+}
+
+.xmu-account-panel label {
+  display: grid;
+  gap: 6px;
+}
+
+.xmu-account-panel label span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.xmu-account-panel input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  color: #333;
+  background: rgba(255, 255, 255, 0.96);
+  font-size: 14px;
+  outline: none;
+}
+
+.xmu-account-panel input::placeholder {
+  color: #8a8a8a;
+}
+
+.xmu-login-submit {
+  height: 44px;
+  margin-top: 6px;
+  border: 0;
+  color: #fff;
+  background: #17438f;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.xmu-account-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.xmu-account-links a {
+  color: #fff;
+  text-decoration: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.xmu-account-tips,
+.xmu-account-warning {
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.xmu-account-tips {
+  display: grid;
+  gap: 2px;
+}
+
+.xmu-account-tips p {
+  margin: 0;
+}
+
+.xmu-account-warning {
+  padding-top: 2px;
+}
+
+.xmu-login-error {
+  margin: 0;
+  color: #ffe1dc;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.xmu-mock-notice {
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.45;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.xmu-carousel-dots {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 7px;
+  transform: translateX(-50%);
+}
+
+.xmu-carousel-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.xmu-carousel-dots button.active {
+  background: #fff;
+}
+
+.xmu-login-footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  height: 34px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.14);
+  font-size: 14px;
+  line-height: 34px;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 1100px) {
+  .xmu-login-card {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .xmu-language-switch {
+    right: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .xmu-login-page {
+    min-height: 100svh;
+  }
+
+  .xmu-background-slide {
+    background-position: center bottom;
+  }
+
+  .xmu-language-switch {
+    top: 18px;
+    right: 16px;
+    width: 172px;
+    height: 36px;
+  }
+
+  .xmu-language-switch button {
+    font-size: 14px;
+    line-height: 36px;
+  }
+
+  .xmu-login-card {
+    top: 92px;
+    width: min(100% - 30px, 440px);
+    min-height: auto;
+    padding: 24px 28px 26px;
+  }
+
+  .xmu-login-brand {
+    justify-content: center;
+  }
+
+  .xmu-login-brand img {
+    width: 168px;
+  }
+
+  .xmu-login-brand h1 {
+    font-size: 18px;
+  }
+
+  .xmu-qr-placeholder {
+    width: min(236px, 72vw);
+    height: min(236px, 72vw);
+  }
+
+  .xmu-qr-pattern {
+    width: calc(min(236px, 72vw) - 32px);
+    height: calc(min(236px, 72vw) - 32px);
+  }
+
+  .xmu-carousel-dots {
+    bottom: 42px;
+  }
+}

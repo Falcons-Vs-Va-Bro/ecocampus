@@ -58,24 +58,25 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 
 ## 3. 认证与校园核验
 
-### 3.1 发送验证码
+### 3.1 登录与账号建档策略
 
-`POST /auth/sms-code`
+系统不提供独立注册入口，mock 环境和正式环境均使用同一登录建档策略：
 
-```json
-{
-  "phone": "13800000000"
-}
-```
+- 登录账号必须以 `2292024` 作为前 7 位。
+- 密码按用户输入提交，接口不得在响应中返回密码，后端不得明文保存密码。
+- 如果账号已存在，则直接登录。
+- 如果账号不存在，则在登录时自动创建默认用户档案，再返回登录态。
+- 自动创建的用户默认为 `USER`，校园核验状态为 `VERIFIED`。
+- 前端和后端均不提供显式“注册”页面、注册按钮或注册接口。
 
-### 3.2 手机号登录
+### 3.2 账号登录
 
 `POST /auth/login`
 
 ```json
 {
-  "phone": "13800000000",
-  "code": "123456"
+  "account": "22920240001",
+  "password": "user-input-password"
 }
 ```
 
@@ -181,7 +182,15 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
       "priceCent": 3200,
       "status": "ON_SALE",
       "coverImageUrl": "https://cdn.example.com/item/1001.png",
-      "createdAt": "2026-07-03T15:00:00+08:00"
+      "createdAt": "2026-07-03T15:00:00+08:00",
+      "deliveryModes": ["SELF_PICKUP"],
+      "seller": {
+        "id": 7,
+        "nickname": "李同学",
+        "verificationStatus": "VERIFIED"
+      },
+      "favorited": false,
+      "favoriteCount": 18
     }
   ],
   "page": 1,
@@ -246,6 +255,8 @@ Content-Type: `multipart/form-data`
 | `maxPriceCent` | 最高价 |
 | `deliveryMode` | 自提/送货到校 |
 | `page` / `size` | 分页 |
+
+响应字段与 `GET /users/me/items` 中商品摘要保持一致，并额外返回公开浏览所需的 `deliveryModes`、`seller`、`favorited` 和 `favoriteCount`。
 
 ### 7.2 商品详情
 

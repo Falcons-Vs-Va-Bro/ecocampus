@@ -3,12 +3,12 @@ import type { RouteMeta } from '../types/routes'
 export const routeCatalog = [
   {
     path: '/login',
-    title: '手机号登录',
+    title: '统一身份认证登录',
     permission: '公开',
-    description: '手机号验证码登录入口，后续接校园核验状态回填。',
+    description: '对接厦门大学统一身份认证视觉入口，使用项目账号规则登录并自动建档。',
     guard: 'public',
     module: 'public',
-    endpoints: ['POST /auth/sms-code', 'POST /auth/login'],
+    endpoints: ['POST /auth/login'],
   },
   {
     path: '/',

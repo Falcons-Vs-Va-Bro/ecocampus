@@ -1,4 +1,4 @@
-import type { ApiResponse, DeliveryMode, PageResult, VerificationStatus } from '../types/api'
+import type { ApiResponse, PageResult } from '../types/api'
 import { apiClient } from './http'
 import type { ItemSummary } from './item.api'
 import { favoriteMockItem, listMockFavorites, unfavoriteMockItem } from './mock/favorites.mock'
@@ -6,14 +6,6 @@ import { favoriteMockItem, listMockFavorites, unfavoriteMockItem } from './mock/
 const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
 
 export interface FavoriteItemSummary extends ItemSummary {
-  deliveryModes: DeliveryMode[]
-  seller: {
-    id: number
-    nickname: string
-    verificationStatus: VerificationStatus
-  }
-  favorited: boolean
-  favoriteCount: number
   favoritedAt: string
   invalidReason?: string
 }

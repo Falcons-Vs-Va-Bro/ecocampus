@@ -1,5 +1,14 @@
-import type { ApiResponse, DeliveryMode, ItemStatus, PageResult } from '../types/api'
+import type { ApiResponse, DeliveryMode, ItemStatus, PageResult, VerificationStatus } from '../types/api'
 import { apiClient } from './http'
+import { listMockItems } from './mock/items.mock'
+
+const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
+
+export interface ItemSellerSummary {
+  id: number
+  nickname: string
+  verificationStatus: VerificationStatus
+}
 
 export interface ItemSummary {
   id: number
@@ -9,19 +18,16 @@ export interface ItemSummary {
   status: ItemStatus
   coverImageUrl?: string
   createdAt: string
+  deliveryModes: DeliveryMode[]
+  seller: ItemSellerSummary
+  favorited: boolean
+  favoriteCount: number
 }
 
 export interface ItemDetail extends ItemSummary {
   description: string
   categoryId: number
-  deliveryModes: DeliveryMode[]
   imageUrls: string[]
-  favorited: boolean
-  favoriteCount: number
-  seller: {
-    id: number
-    nickname: string
-  }
 }
 
 export interface ItemListParams {
@@ -44,6 +50,10 @@ export interface UpsertItemRequest {
 }
 
 export async function listItems(params?: ItemListParams) {
+  if (useMocks) {
+    return listMockItems(params)
+  }
+
   const response = await apiClient.get<ApiResponse<PageResult<ItemSummary>>>('/items', { params })
   return response.data
 }

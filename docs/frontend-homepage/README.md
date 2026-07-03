@@ -40,6 +40,8 @@ Those features should remain under authenticated user routes such as `/favorites
 
 The first screen should be a functional marketplace surface, not a marketing landing page.
 
+Current implementation entry: `frontend/src/features/item-market/HomePage.tsx`. Homepage data must come through the API boundary (`frontend/src/api/item.api.ts` and `frontend/src/api/category.api.ts`) so `VITE_USE_MOCKS=true` and later backend-backed mode keep the same component contract.
+
 Recommended desktop layout:
 
 - top bar: logo, platform name, global search, notification/message/user area;
