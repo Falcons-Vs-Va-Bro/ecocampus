@@ -1,0 +1,80 @@
+import type { ApiResponse, ItemStatus, PageResult, VerificationStatus } from '../types/api'
+import { apiClient } from './http'
+import type { ItemSummary } from './item.api'
+
+export interface DashboardOverview {
+  publishedCount: number
+  completedOrderCount: number
+  pendingReviewCount: number
+  activeUserCount: number
+}
+
+export interface AdminUserSummary {
+  id: number
+  nickname: string
+  phoneMasked: string
+  studentNoMasked?: string
+  role: 'USER' | 'ADMIN'
+  verificationStatus: VerificationStatus
+  blacklisted: boolean
+}
+
+export interface ReviewItemRequest {
+  approved: boolean
+  reason: string
+}
+
+export interface ViolationRemoveRequest {
+  reason: string
+}
+
+export async function getDashboardOverview() {
+  const response = await apiClient.get<ApiResponse<DashboardOverview>>('/admin/dashboard/overview')
+  return response.data
+}
+
+export async function listReviewItems(params?: { status?: Extract<ItemStatus, 'PENDING_REVIEW'>; page?: number; size?: number }) {
+  const response = await apiClient.get<ApiResponse<PageResult<ItemSummary>>>('/admin/items/review', { params })
+  return response.data
+}
+
+export async function reviewItem(itemId: string | number, payload: ReviewItemRequest) {
+  const response = await apiClient.post<ApiResponse<void>>(`/admin/items/${itemId}/review`, payload)
+  return response.data
+}
+
+export async function listAdminItems(params?: {
+  status?: ItemStatus
+  keyword?: string
+  categoryId?: number
+  page?: number
+  size?: number
+}) {
+  const response = await apiClient.get<ApiResponse<PageResult<ItemSummary>>>('/admin/items', { params })
+  return response.data
+}
+
+export async function violationRemoveItem(itemId: string | number, payload: ViolationRemoveRequest) {
+  const response = await apiClient.post<ApiResponse<void>>(`/admin/items/${itemId}/violation-remove`, payload)
+  return response.data
+}
+
+export async function listAdminUsers(params?: {
+  keyword?: string
+  verificationStatus?: VerificationStatus
+  page?: number
+  size?: number
+}) {
+  const response = await apiClient.get<ApiResponse<PageResult<AdminUserSummary>>>('/admin/users', { params })
+  return response.data
+}
+
+export async function blacklistUser(userId: string | number) {
+  const response = await apiClient.post<ApiResponse<void>>(`/admin/users/${userId}/blacklist`)
+  return response.data
+}
+
+export async function removeUserFromBlacklist(userId: string | number) {
+  const response = await apiClient.delete<ApiResponse<void>>(`/admin/users/${userId}/blacklist`)
+  return response.data
+}
