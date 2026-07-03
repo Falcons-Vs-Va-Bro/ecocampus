@@ -1,5 +1,6 @@
 package com.falconsvsvabro.ecocampus.item;
 
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,4 +44,15 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 			""")
 	Page<Item> searchAdminItems(@Param("status") ItemStatus status, @Param("keyword") String keyword,
 			@Param("categoryId") Long categoryId, Pageable pageable);
+
+	@Query("""
+			select item from Item item
+			where item.status = com.falconsvsvabro.ecocampus.item.ItemStatus.ON_SALE
+			  and item.categoryId = :categoryId
+			  and (:budgetMinCent is null or item.priceCent >= :budgetMinCent)
+			  and (:budgetMaxCent is null or item.priceCent <= :budgetMaxCent)
+			order by item.createdAt desc
+			""")
+	List<Item> findOnSaleCandidatesForDemand(@Param("categoryId") Long categoryId,
+			@Param("budgetMinCent") Long budgetMinCent, @Param("budgetMaxCent") Long budgetMaxCent);
 }
