@@ -4,11 +4,19 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
+import { LoginPage } from '../features/auth/LoginPage'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
 import type { RouteMeta } from '../types/routes'
 import { routeCatalog } from './routeCatalog'
 
 function createRoute(meta: RouteMeta): RouteObject {
+  if (meta.path === '/login') {
+    return {
+      path: 'login',
+      element: <LoginPage />,
+    }
+  }
+
   if (meta.path === '/favorites') {
     return {
       path: 'favorites',
