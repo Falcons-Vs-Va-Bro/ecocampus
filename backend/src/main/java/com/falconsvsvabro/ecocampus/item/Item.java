@@ -110,6 +110,20 @@ public class Item {
 		this.status = ItemStatus.OFF_SHELF;
 	}
 
+	public void review(boolean approved) {
+		if (status != ItemStatus.PENDING_REVIEW) {
+			throw new IllegalStateException("item is not pending review");
+		}
+		this.status = approved ? ItemStatus.ON_SALE : ItemStatus.REJECTED;
+	}
+
+	public void violationRemove() {
+		if (status == ItemStatus.DELETED) {
+			throw new IllegalStateException("deleted item cannot be removed");
+		}
+		this.status = ItemStatus.VIOLATION_REMOVED;
+	}
+
 	public boolean isEditableBySeller() {
 		return status != ItemStatus.VIOLATION_REMOVED && status != ItemStatus.SOLD && status != ItemStatus.DELETED;
 	}

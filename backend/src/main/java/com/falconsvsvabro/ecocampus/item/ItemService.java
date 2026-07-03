@@ -9,7 +9,12 @@ import com.falconsvsvabro.ecocampus.common.api.PageResponse;
 import com.falconsvsvabro.ecocampus.item.dto.ItemDetailResponse;
 import com.falconsvsvabro.ecocampus.item.dto.ItemRequest;
 import com.falconsvsvabro.ecocampus.item.dto.MyItemResponse;
+import com.falconsvsvabro.ecocampus.item.dto.AdminItemResponse;
+import com.falconsvsvabro.ecocampus.item.dto.AdminItemReviewRequest;
+import com.falconsvsvabro.ecocampus.item.dto.PublicItemDetailResponse;
+import com.falconsvsvabro.ecocampus.item.dto.PublicItemListResponse;
 import com.falconsvsvabro.ecocampus.user.User;
+import com.falconsvsvabro.ecocampus.user.UserRepository;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,13 +28,15 @@ public class ItemService {
 	private final CategoryRepository categoryRepository;
 	private final AuditLogRepository auditLogRepository;
 	private final CampusAccessGuard campusAccessGuard;
+	private final UserRepository userRepository;
 
 	public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository,
-			AuditLogRepository auditLogRepository, CampusAccessGuard campusAccessGuard) {
+			AuditLogRepository auditLogRepository, CampusAccessGuard campusAccessGuard, UserRepository userRepository) {
 		this.itemRepository = itemRepository;
 		this.categoryRepository = categoryRepository;
 		this.auditLogRepository = auditLogRepository;
 		this.campusAccessGuard = campusAccessGuard;
+		this.userRepository = userRepository;
 	}
 
 	@Transactional
@@ -97,6 +104,87 @@ public class ItemService {
 		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), itemPage.getTotalElements());
 	}
 
+	@Transactional(readOnly = true)
+	public PageResponse<PublicItemListResponse> searchPublicItems(String keyword, Long categoryId, Long minPriceCent,
+			Long maxPriceCent, DeliveryMode deliveryMode, int page, int size) {
+		Pageable pageable = PageRequest.of(normalizePage(page) - 1, normalizeSize(size));
+		var itemPage = itemRepository.searchPublicItems(normalizeKeyword(keyword), categoryId, minPriceCent,
+				maxPriceCent, deliveryMode, pageable);
+		List<PublicItemListResponse> items = itemPage.getContent()
+			.stream()
+			.map(item -> PublicItemListResponse.from(item, getCategory(item.getCategoryId()).getName()))
+			.toList();
+		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), itemPage.getTotalElements());
+	}
+
+	@Transactional(readOnly = true)
+	public PublicItemDetailResponse getPublicItemDetail(Long itemId) {
+		Item item = itemRepository.findById(itemId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+		if (item.getStatus() != ItemStatus.ON_SALE) {
+			throw new BusinessException(ErrorCode.NOT_FOUND, "item not found");
+		}
+		User seller = getUser(item.getSellerId());
+		return PublicItemDetailResponse.from(item, getCategory(item.getCategoryId()).getName(), seller, false, 0);
+	}
+
+	@Transactional(readOnly = true)
+	public PageResponse<AdminItemResponse> listAdminReviewItems(Long adminUserId, ItemStatus status, int page,
+			int size) {
+		campusAccessGuard.requireAdmin(adminUserId);
+		return listAdminItemsInternal(status, null, null, page, size);
+	}
+
+	@Transactional(readOnly = true)
+	public PageResponse<AdminItemResponse> listAdminItems(Long adminUserId, ItemStatus status, String keyword,
+			Long categoryId, int page, int size) {
+		campusAccessGuard.requireAdmin(adminUserId);
+		return listAdminItemsInternal(status, keyword, categoryId, page, size);
+	}
+
+	@Transactional
+	public AdminItemResponse reviewItem(Long adminUserId, Long itemId, AdminItemReviewRequest request) {
+		User admin = campusAccessGuard.requireAdmin(adminUserId);
+		Item item = itemRepository.findById(itemId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+		try {
+			item.review(Boolean.TRUE.equals(request.approved()));
+		}
+		catch (IllegalStateException exception) {
+			throw new BusinessException(ErrorCode.CONFLICT, exception.getMessage());
+		}
+		writeAudit(admin.getId(), item.getId(), Boolean.TRUE.equals(request.approved()) ? "ITEM_REVIEW_APPROVED"
+				: "ITEM_REVIEW_REJECTED", request.reason());
+		return toAdminItemResponse(item);
+	}
+
+	@Transactional
+	public AdminItemResponse violationRemove(Long adminUserId, Long itemId, String reason) {
+		User admin = campusAccessGuard.requireAdmin(adminUserId);
+		Item item = itemRepository.findById(itemId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+		try {
+			item.violationRemove();
+		}
+		catch (IllegalStateException exception) {
+			throw new BusinessException(ErrorCode.CONFLICT, exception.getMessage());
+		}
+		writeAudit(admin.getId(), item.getId(), "ITEM_VIOLATION_REMOVED", reason);
+		return toAdminItemResponse(item);
+	}
+
+	private PageResponse<AdminItemResponse> listAdminItemsInternal(ItemStatus status, String keyword, Long categoryId,
+			int page, int size) {
+		Pageable pageable = PageRequest.of(normalizePage(page) - 1, normalizeSize(size));
+		var itemPage = itemRepository.searchAdminItems(status, normalizeKeyword(keyword), categoryId, pageable);
+		List<AdminItemResponse> items = itemPage.getContent().stream().map(this::toAdminItemResponse).toList();
+		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), itemPage.getTotalElements());
+	}
+
+	private AdminItemResponse toAdminItemResponse(Item item) {
+		return AdminItemResponse.from(item, getUser(item.getSellerId()), getCategory(item.getCategoryId()).getName());
+	}
+
 	private Item getOwnedItem(Long sellerId, Long itemId) {
 		Item item = itemRepository.findById(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
@@ -109,6 +197,18 @@ public class ItemService {
 	private Category getCategory(Long categoryId) {
 		return categoryRepository.findById(categoryId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "category not found"));
+	}
+
+	private User getUser(Long userId) {
+		return userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "user not found"));
+	}
+
+	private String normalizeKeyword(String keyword) {
+		if (keyword == null || keyword.isBlank()) {
+			return null;
+		}
+		return keyword.trim();
 	}
 
 	private int normalizePage(int page) {
