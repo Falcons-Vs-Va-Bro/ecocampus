@@ -55,4 +55,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 			""")
 	List<Item> findOnSaleCandidatesForDemand(@Param("categoryId") Long categoryId,
 			@Param("budgetMinCent") Long budgetMinCent, @Param("budgetMaxCent") Long budgetMaxCent);
+
+	long countByStatus(ItemStatus status);
+
+	long countByStatusNot(ItemStatus status);
+
+	long countByCategoryIdAndStatusNot(Long categoryId, ItemStatus status);
 }

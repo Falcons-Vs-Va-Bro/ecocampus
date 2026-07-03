@@ -23,4 +23,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 			""")
 	Page<User> searchAdminUsers(@Param("keyword") String keyword,
 			@Param("verificationStatus") VerificationStatus verificationStatus, Pageable pageable);
+
+	long countByVerificationStatus(VerificationStatus verificationStatus);
 }

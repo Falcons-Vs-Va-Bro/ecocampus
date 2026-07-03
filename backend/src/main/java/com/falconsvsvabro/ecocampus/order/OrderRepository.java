@@ -28,4 +28,14 @@ public interface OrderRepository extends JpaRepository<TradeOrder, Long> {
 			""")
 	Page<TradeOrder> findSellerOrders(@Param("sellerId") Long sellerId, @Param("status") OrderStatus status,
 			Pageable pageable);
+
+	long countByStatus(OrderStatus status);
+
+	@Query("""
+			select count(tradeOrder) from TradeOrder tradeOrder
+			join Item item on item.id = tradeOrder.itemId
+			where tradeOrder.status = com.falconsvsvabro.ecocampus.order.OrderStatus.COMPLETED
+			  and item.categoryId = :categoryId
+			""")
+	long countCompletedOrdersByCategoryId(@Param("categoryId") Long categoryId);
 }
