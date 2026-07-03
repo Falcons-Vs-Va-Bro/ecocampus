@@ -18,3 +18,4 @@ ecocampus:
   file-storage:
     type: ${FILE_STORAGE_TYPE:local}
     local-dir: ${FILE_STORAGE_LOCAL_DIR:./storage/uploads}
+    public-url-prefix: ${FILE_STORAGE_PUBLIC_URL_PREFIX:/uploads}
