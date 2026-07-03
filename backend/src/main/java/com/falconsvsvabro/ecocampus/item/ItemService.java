@@ -6,6 +6,7 @@ import com.falconsvsvabro.ecocampus.category.CategoryRepository;
 import com.falconsvsvabro.ecocampus.common.api.BusinessException;
 import com.falconsvsvabro.ecocampus.common.api.ErrorCode;
 import com.falconsvsvabro.ecocampus.common.api.PageResponse;
+import com.falconsvsvabro.ecocampus.favorite.FavoriteRepository;
 import com.falconsvsvabro.ecocampus.item.dto.ItemDetailResponse;
 import com.falconsvsvabro.ecocampus.item.dto.ItemRequest;
 import com.falconsvsvabro.ecocampus.item.dto.MyItemResponse;
@@ -29,14 +30,17 @@ public class ItemService {
 	private final AuditLogRepository auditLogRepository;
 	private final CampusAccessGuard campusAccessGuard;
 	private final UserRepository userRepository;
+	private final FavoriteRepository favoriteRepository;
 
 	public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository,
-			AuditLogRepository auditLogRepository, CampusAccessGuard campusAccessGuard, UserRepository userRepository) {
+			AuditLogRepository auditLogRepository, CampusAccessGuard campusAccessGuard, UserRepository userRepository,
+			FavoriteRepository favoriteRepository) {
 		this.itemRepository = itemRepository;
 		this.categoryRepository = categoryRepository;
 		this.auditLogRepository = auditLogRepository;
 		this.campusAccessGuard = campusAccessGuard;
 		this.userRepository = userRepository;
+		this.favoriteRepository = favoriteRepository;
 	}
 
 	@Transactional
@@ -118,14 +122,16 @@ public class ItemService {
 	}
 
 	@Transactional(readOnly = true)
-	public PublicItemDetailResponse getPublicItemDetail(Long itemId) {
+	public PublicItemDetailResponse getPublicItemDetail(Long itemId, Long viewerUserId) {
 		Item item = itemRepository.findById(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
 		if (item.getStatus() != ItemStatus.ON_SALE) {
 			throw new BusinessException(ErrorCode.NOT_FOUND, "item not found");
 		}
 		User seller = getUser(item.getSellerId());
-		return PublicItemDetailResponse.from(item, getCategory(item.getCategoryId()).getName(), seller, false, 0);
+		boolean favorited = viewerUserId != null && favoriteRepository.existsByUserIdAndItemId(viewerUserId, itemId);
+		return PublicItemDetailResponse.from(item, getCategory(item.getCategoryId()).getName(), seller, favorited,
+				favoriteRepository.countByItemId(itemId));
 	}
 
 	@Transactional(readOnly = true)
