@@ -1,0 +1,63 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Java and Maven
+target/
+*.class
+*.log
+*.jar
+*.war
+*.ear
+!.mvn/wrapper/maven-wrapper.jar
+
+# Gradle, if introduced later
+.gradle/
+build/
+
+# Spring Boot local config
+application-local.yml
+application-local.yaml
+application-local.properties
+application-*.local.yml
+application-*.local.yaml
+application-*.local.properties
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Logs and runtime files
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# Uploaded files and local storage
+uploads/
+storage/
+tmp/
+temp/
+
+# Frontend dependencies and build output
+node_modules/
+dist/
+.vite/
+.next/
+.nuxt/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
