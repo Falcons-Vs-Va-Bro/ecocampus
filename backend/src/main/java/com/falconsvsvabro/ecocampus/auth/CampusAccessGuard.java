@@ -4,6 +4,7 @@ import com.falconsvsvabro.ecocampus.common.api.BusinessException;
 import com.falconsvsvabro.ecocampus.common.api.ErrorCode;
 import com.falconsvsvabro.ecocampus.user.User;
 import com.falconsvsvabro.ecocampus.user.UserRepository;
+import com.falconsvsvabro.ecocampus.user.UserRole;
 import com.falconsvsvabro.ecocampus.user.VerificationStatus;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +29,14 @@ public class CampusAccessGuard {
 		}
 		if (user.getVerificationStatus() != VerificationStatus.VERIFIED) {
 			throw new BusinessException(ErrorCode.FORBIDDEN, "campus verification required");
+		}
+		return user;
+	}
+
+	public User requireAdmin(Long userId) {
+		User user = requireUser(userId);
+		if (user.getRole() != UserRole.ADMIN) {
+			throw new BusinessException(ErrorCode.FORBIDDEN, "admin role required");
 		}
 		return user;
 	}
