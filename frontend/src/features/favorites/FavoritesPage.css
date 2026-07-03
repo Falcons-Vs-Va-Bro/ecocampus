@@ -1,4 +1,5 @@
 .favorites-shell {
+  position: relative;
   min-height: 100vh;
   overflow-x: hidden;
   color: #25211c;
@@ -13,6 +14,23 @@
   font-family:
     "Kaiti SC", "STKaiti", "Songti SC", "Noto Serif SC", ui-serif, Georgia,
     serif;
+}
+
+.favorites-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(75, 145, 208, 0.035), transparent 18rem),
+    radial-gradient(circle at 86% 12%, rgba(221, 61, 52, 0.025), transparent 16rem);
+  animation: paper-wash-breathe 9s ease-in-out infinite alternate;
+  content: "";
+}
+
+.favorites-shell > * {
+  position: relative;
+  z-index: 1;
 }
 
 .favorites-shell button,
@@ -64,6 +82,90 @@
   mix-blend-mode: multiply;
 }
 
+.painted-asset {
+  --paint-delay: 0s;
+  --paint-duration: 1.4s;
+  --paint-angle: 104deg;
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  isolation: isolate;
+  vertical-align: middle;
+}
+
+.painted-asset img {
+  animation: painted-image-reveal var(--paint-duration) cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--paint-delay);
+  clip-path: inset(0 100% 0 0);
+  filter: saturate(0.82) contrast(0.96);
+  transform-origin: left center;
+  will-change: clip-path, filter, opacity;
+}
+
+.painted-asset::after {
+  position: absolute;
+  inset: -18%;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      var(--paint-angle),
+      transparent 0%,
+      transparent 38%,
+      rgba(70, 134, 194, 0.18) 45%,
+      rgba(255, 255, 255, 0.34) 50%,
+      rgba(238, 185, 112, 0.14) 55%,
+      transparent 63%,
+      transparent 100%
+    );
+  mix-blend-mode: multiply;
+  transform: translateX(-125%) skewX(-9deg);
+  animation: painted-brush-sweep var(--paint-duration) cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--paint-delay);
+  content: "";
+  will-change: transform, opacity;
+}
+
+.painted-asset--gate {
+  --paint-delay: 0.16s;
+  --paint-duration: 1.35s;
+}
+
+.painted-asset--sidebar {
+  --paint-delay: 0.85s;
+  --paint-duration: 2.2s;
+  --paint-angle: 82deg;
+  display: block;
+}
+
+.painted-asset--sidebar img {
+  clip-path: inset(100% 0 0 0);
+  transform-origin: center bottom;
+  animation-name: painted-image-rise;
+}
+
+.painted-asset--sidebar::after {
+  transform: translateY(120%) skewY(-7deg);
+  animation-name: painted-brush-rise;
+}
+
+.painted-asset--empty,
+.painted-asset--empty-inline {
+  --paint-delay: 1.05s;
+  --paint-duration: 2s;
+  display: block;
+}
+
+.painted-asset--empty {
+  width: min(320px, 88%);
+  margin: 72px auto 28px;
+}
+
+.painted-asset--empty-inline {
+  width: min(220px, 80%);
+  margin: 0 auto;
+}
+
 .favorites-search {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr) 108px;
@@ -106,6 +208,25 @@
   font-size: 24px;
   font-weight: 900;
   cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.favorites-search button:hover {
+  filter: saturate(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.25),
+    0 4px 0 #235f9b;
+}
+
+.favorites-search button:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 1px 0 #235f9b;
 }
 
 .favorites-userbar {
@@ -126,6 +247,14 @@
   color: #282520;
   background: transparent;
   cursor: pointer;
+  transition:
+    color 160ms ease,
+    transform 180ms ease;
+}
+
+.icon-button:hover {
+  color: #2d77bd;
+  transform: translateY(-2px) rotate(-2deg);
 }
 
 .icon-button span {
@@ -142,6 +271,7 @@
   font-weight: 800;
   line-height: 18px;
   text-align: center;
+  animation: unread-dot-breathe 1.8s ease-in-out infinite;
 }
 
 .student-profile {
@@ -229,6 +359,18 @@
   color: #2f2a25;
   font-size: 18px;
   font-weight: 800;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.nav-section a:hover {
+  border-color: rgba(62, 131, 199, 0.26);
+  color: #235f9b;
+  background: rgba(224, 239, 255, 0.45);
+  transform: translateX(3px);
 }
 
 .nav-section svg {
@@ -284,11 +426,29 @@
 }
 
 .favorites-heading h1 {
+  position: relative;
+  display: inline-block;
   margin: 0 0 18px;
   color: #181613;
   font-size: 35px;
   font-weight: 900;
   line-height: 1.1;
+}
+
+.favorites-heading h1::after {
+  position: absolute;
+  left: 4px;
+  bottom: -8px;
+  width: 106%;
+  height: 10px;
+  background:
+    repeating-linear-gradient(-12deg, rgba(75, 145, 208, 0.22) 0 4px, transparent 4px 8px),
+    linear-gradient(90deg, rgba(75, 145, 208, 0.18), rgba(75, 145, 208, 0.05));
+  border-radius: 999px;
+  clip-path: inset(0 100% 0 0);
+  content: "";
+  transform: rotate(-1deg);
+  animation: heading-ink-draw 0.95s 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .favorite-tabs {
@@ -308,6 +468,15 @@
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.favorite-tabs button:hover {
+  transform: translateY(-2px);
 }
 
 .favorite-tabs button.active {
@@ -316,6 +485,7 @@
   background:
     repeating-linear-gradient(-18deg, rgba(73, 145, 210, 0.12) 0 3px, transparent 3px 7px),
     #eef7ff;
+  animation: pencil-hatch-flow 7s linear infinite;
 }
 
 .favorites-content-grid {
@@ -366,6 +536,15 @@
   font-size: 17px;
   font-weight: 800;
   cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.filter-row button:hover {
+  color: #2f78bf;
+  transform: translateY(-1px) rotate(-0.4deg);
 }
 
 .filter-row button.selected {
@@ -416,6 +595,17 @@
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.sort-button:hover,
+.page-size-button:hover {
+  border-color: rgba(47, 120, 191, 0.58);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(55, 95, 130, 0.08);
 }
 
 .favorites-card-grid {
@@ -433,6 +623,16 @@
   border-radius: 8px;
   background: rgba(255, 252, 246, 0.82);
   overflow: hidden;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.favorite-card:hover {
+  border-color: rgba(75, 145, 208, 0.48);
+  box-shadow: 0 14px 26px rgba(66, 82, 102, 0.1);
 }
 
 .favorite-card::before,
@@ -489,6 +689,14 @@
   color: #ef5b55;
   background: transparent;
   cursor: pointer;
+  transition:
+    transform 160ms ease,
+    filter 160ms ease;
+}
+
+.heart-button:hover {
+  filter: saturate(1.25);
+  transform: scale(1.16) rotate(-7deg);
 }
 
 .favorite-image {
@@ -505,6 +713,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition:
+    filter 220ms ease,
+    transform 260ms ease;
+}
+
+.favorite-card:hover .favorite-image img {
+  filter: saturate(1.03) contrast(1.02);
+  transform: scale(1.025);
 }
 
 .favorite-card h2 {
@@ -587,6 +803,18 @@
   font-size: 15px;
   font-weight: 900;
   cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.card-actions a:hover,
+.card-actions button:hover,
+.favorites-empty-state button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 rgba(47, 120, 191, 0.12);
 }
 
 .card-actions button {
@@ -686,8 +914,8 @@
 
 .empty-favorites-art {
   display: block;
-  width: min(320px, 88%);
-  margin: 72px auto 28px;
+  width: 100%;
+  margin: 0 auto;
   mix-blend-mode: multiply;
 }
 
@@ -723,9 +951,9 @@
   gap: 12px;
 }
 
-.favorites-empty-state.compact img {
+.favorites-empty-state.compact .painted-asset img {
   display: block;
-  width: min(220px, 80%);
+  width: 100%;
   mix-blend-mode: multiply;
 }
 
@@ -747,6 +975,169 @@
 
   100% {
     background-position: -100% 0;
+  }
+}
+
+@keyframes painted-image-reveal {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    filter: saturate(0.65) contrast(0.92);
+    opacity: 0.08;
+  }
+
+  18% {
+    opacity: 0.68;
+  }
+
+  72% {
+    clip-path: inset(0 6% 0 0);
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+    filter: saturate(1) contrast(1);
+    opacity: 1;
+  }
+}
+
+@keyframes painted-image-rise {
+  0% {
+    clip-path: inset(100% 0 0 0);
+    filter: saturate(0.68) contrast(0.92);
+    opacity: 0.06;
+  }
+
+  24% {
+    opacity: 0.7;
+  }
+
+  76% {
+    clip-path: inset(5% 0 0 0);
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+    filter: saturate(1) contrast(1);
+    opacity: 1;
+  }
+}
+
+@keyframes painted-brush-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-125%) skewX(-9deg);
+  }
+
+  16% {
+    opacity: 0.95;
+  }
+
+  68% {
+    opacity: 0.72;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(125%) skewX(-9deg);
+  }
+}
+
+@keyframes painted-brush-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(120%) skewY(-7deg);
+  }
+
+  18% {
+    opacity: 0.9;
+  }
+
+  72% {
+    opacity: 0.58;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-120%) skewY(-7deg);
+  }
+}
+
+@keyframes heading-ink-draw {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+
+  32% {
+    opacity: 1;
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+@keyframes pencil-hatch-flow {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+
+  100% {
+    background-position: 42px 0, 0 0;
+  }
+}
+
+@keyframes paper-wash-breathe {
+  0% {
+    opacity: 0.58;
+    transform: translate3d(-4px, -3px, 0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(5px, 4px, 0);
+  }
+}
+
+@keyframes unread-dot-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .favorites-shell::before,
+  .painted-asset img,
+  .painted-asset::after,
+  .favorites-heading h1::after,
+  .favorite-tabs button.active,
+  .icon-button span,
+  .favorite-card.skeleton div,
+  .favorite-card.skeleton span {
+    animation: none;
+  }
+
+  .painted-asset img,
+  .painted-asset--sidebar img {
+    clip-path: inset(0 0 0 0);
+    filter: none;
+    opacity: 1;
+  }
+
+  .painted-asset::after {
+    content: none;
+  }
+}
+
+@media (max-width: 1600px) {
+  .favorites-card-grid {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
   }
 }
 

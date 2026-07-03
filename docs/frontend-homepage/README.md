@@ -73,6 +73,16 @@ The user-side frontend should follow the provided reference style:
 
 This does not override the technical stack. Implement with React, TypeScript, Vite, React Router, TanStack Query, Zustand where needed, Tailwind CSS, Ant Design for admin-heavy surfaces, lucide-react icons, and Motion for React within the limits in `docs/frontend-stack.md`.
 
+## Painted Animation Direction
+
+User-side pages should extend the same hand-painted style through animation. The animation source of truth is `docs/frontend-animation/README.md`.
+
+- Emphasize the drawing process: brush sweeps, sketched reveals, ink-line drawing, and soft paper texture motion.
+- Use Motion for React for page, region, card, and interaction transitions.
+- Use CSS keyframes for painted image reveals, brush overlays, paper wash, and pencil texture effects.
+- Keep mock mode renderable without backend startup, including illustrated empty states and animated cards.
+- Respect `prefers-reduced-motion` and keep animation secondary to browsing and transaction tasks.
+
 ## Favorites Page Reference
 
 The provided reference is the content and visual target for `/favorites`.

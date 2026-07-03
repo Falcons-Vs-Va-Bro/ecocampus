@@ -127,6 +127,8 @@ frontend/
 
 动画只用于增强理解和反馈，不做装饰性堆叠。
 
+用户端彩绘、手绘动画的具体风格以 `docs/frontend-animation/README.md` 为准。当前默认组合仍是 Motion for React + CSS keyframes：Motion 负责页面区域、卡片和交互反馈，CSS keyframes 负责插画绘制感、笔触扫过、纸面和铅笔纹理。
+
 推荐使用场景：
 
 - 商品卡片进入列表时使用轻量 fade + translate。
@@ -146,6 +148,7 @@ frontend/
 - 尊重 `prefers-reduced-motion`。
 - 列表动画不要阻塞数据加载。
 - H5 低端设备优先使用 opacity/transform。
+- 不新增动画库，除非先更新 `docs/frontend-animation/README.md` 和本技术栈文档，说明引入原因、影响范围和降级策略。
 
 ## 7. API 对接策略
 

@@ -37,7 +37,7 @@ pnpm dev
 
 遵循现有包和目录边界。Java 类使用 `PascalCase`；包名在 `com.falconsvsvabro.ecocampus` 下保持小写。TypeScript 中 React 组件使用 `PascalCase`，函数使用 `camelCase`，API 模块使用 `*.api.ts`。路由/API 变更需与 `docs/api-contract.md` 和 `docs/frontend-stack.md` 保持一致。
 
-面向用户的前端 UI 必须遵循 `docs/frontend-homepage/README.md` 中固定的视觉与内容方向。尤其要保持 `/` 为公开的市场首页/推荐流，将个人收藏管理保留在 `/favorites`，并采用 mock-first 方式实现业务 UI，使前端开发可独立于后端可用性推进。
+面向用户的前端 UI 必须遵循 `docs/frontend-homepage/README.md` 中固定的视觉与内容方向，并遵循 `docs/frontend-animation/README.md` 中的彩绘、手绘动画规范。尤其要保持 `/` 为公开的市场首页/推荐流，将个人收藏管理保留在 `/favorites`，并采用 mock-first 方式实现业务 UI，使前端开发可独立于后端可用性推进。
 
 对于较大的功能、API、路由、架构或设计变更，需要重新核对当前改动影响面与既有文档是否一致，并保持 `docs/` 下的真实源文档及时更新。根目录 `README.md` 和本 `AGENTS.md` 仅作为入口和提醒；当持久化内容应归属 `docs/` 时，不要只编辑这两个文件来完成文档维护。
 

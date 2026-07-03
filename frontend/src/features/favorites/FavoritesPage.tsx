@@ -22,6 +22,7 @@ import {
   Store,
   User,
 } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
@@ -72,6 +73,7 @@ type PickupMode = (typeof pickupModes)[number]
 
 export function FavoritesPage() {
   const queryClient = useQueryClient()
+  const shouldReduceMotion = useReducedMotion()
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('全部')
   const [priceRange, setPriceRange] = useState(priceRanges[0])
@@ -135,9 +137,16 @@ export function FavoritesPage() {
 
   return (
     <div className="favorites-shell">
-      <header className="favorites-topbar">
+      <motion.header
+        className="favorites-topbar"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: -12 }}
+        animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+      >
         <a className="favorites-logo" href="/">
-          <img className="campus-gate-image" src={campusGateImage} alt="" aria-hidden="true" />
+          <span className="painted-asset painted-asset--gate">
+            <img className="campus-gate-image" src={campusGateImage} alt="" aria-hidden="true" />
+          </span>
           <span>
             <strong>厦大闲置</strong>
             <small>厦门大学校园二手交易平台</small>
@@ -177,36 +186,64 @@ export function FavoritesPage() {
             <ChevronDown size={18} />
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <div className="favorites-workspace">
-        <aside className="favorites-sidebar">
+        <motion.aside
+          className="favorites-sidebar"
+          initial={shouldReduceMotion ? false : { opacity: 0, x: -16 }}
+          animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+          transition={{ duration: 0.46, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+        >
           <nav className="nav-section" aria-label="商品分类">
-            {categoryNav.map((item) => (
-              <a key={item.label} href={item.to}>
+            {categoryNav.map((item, index) => (
+              <motion.a
+                key={item.label}
+                href={item.to}
+                initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+                transition={{ duration: 0.22, delay: 0.18 + index * 0.025 }}
+              >
                 <item.icon size={20} />
                 <span>{item.label}</span>
-              </a>
+              </motion.a>
             ))}
           </nav>
 
           <nav className="nav-section user-routes" aria-label="个人中心">
-            {userNav.map((item) => (
-              <a className={item.active ? 'active' : undefined} href="/favorites" key={item.label}>
+            {userNav.map((item, index) => (
+              <motion.a
+                className={item.active ? 'active' : undefined}
+                href="/favorites"
+                key={item.label}
+                initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+                transition={{ duration: 0.22, delay: 0.45 + index * 0.035 }}
+              >
                 <item.icon size={20} />
                 <span>{item.label}</span>
                 {item.badge ? <b>{item.badge}</b> : null}
-              </a>
+              </motion.a>
             ))}
           </nav>
 
-          <div className="campus-sketch" aria-hidden="true">
+          <div className="campus-sketch painted-asset painted-asset--sidebar" aria-hidden="true">
             <img src={campusSidebarImage} alt="" loading="lazy" />
           </div>
-        </aside>
+        </motion.aside>
 
-        <main className="favorites-main">
-          <section className="favorites-heading">
+        <motion.main
+          className="favorites-main"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.44, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <motion.section
+            className="favorites-heading"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, delay: 0.26 }}
+          >
             <h1>我的收藏</h1>
             <div className="favorite-tabs" role="tablist" aria-label="收藏类型">
               <button type="button" className="active" role="tab" aria-selected="true">
@@ -219,7 +256,7 @@ export function FavoritesPage() {
                 降价提醒（3）
               </button>
             </div>
-          </section>
+          </motion.section>
 
           <section className="favorites-content-grid">
             <div className="favorites-list-panel">
@@ -293,7 +330,9 @@ export function FavoritesPage() {
 
               {favoritesQuery.isError ? (
                 <div className="favorites-empty-state compact">
-                  <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+                  <span className="painted-asset painted-asset--empty-inline">
+                    <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+                  </span>
                   <h2>收藏加载失败</h2>
                   <p>请确认已启用 mock 模式或后端接口可用。</p>
                   <button type="button" onClick={() => favoritesQuery.refetch()}>
@@ -304,7 +343,9 @@ export function FavoritesPage() {
 
               {!favoritesQuery.isLoading && !favoritesQuery.isError && visibleItems.length === 0 ? (
                 <div className="favorites-empty-state compact">
-                  <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+                  <span className="painted-asset painted-asset--empty-inline">
+                    <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+                  </span>
                   <h2>没有符合条件的收藏</h2>
                   <p>换个分类、价格或关键词再试试。</p>
                 </div>
@@ -312,12 +353,14 @@ export function FavoritesPage() {
 
               {!favoritesQuery.isLoading && !favoritesQuery.isError && visibleItems.length > 0 ? (
                 <div className="favorites-card-grid">
-                  {visibleItems.map((item) => (
+                  {visibleItems.map((item, index) => (
                     <FavoriteCard
                       item={item}
                       batchMode={batchMode}
                       isRemoving={unfavoriteMutation.isPending}
                       onRemove={() => unfavoriteMutation.mutate(item.id)}
+                      motionIndex={index}
+                      reduceMotion={shouldReduceMotion}
                       key={item.id}
                     />
                   ))}
@@ -360,12 +403,14 @@ export function FavoritesPage() {
 
             <aside className="expired-panel">
               <h2>已失效的收藏（{invalidItems.length}）</h2>
-              <img className="empty-favorites-art" src={emptyFavoritesImage} alt="" loading="lazy" aria-hidden="true" />
+              <span className="painted-asset painted-asset--empty">
+                <img className="empty-favorites-art" src={emptyFavoritesImage} alt="" loading="lazy" aria-hidden="true" />
+              </span>
               <h3>暂无失效的收藏</h3>
               <p>已下架或不再可购买的商品会在这里展示</p>
             </aside>
           </section>
-        </main>
+        </motion.main>
       </div>
     </div>
   )
@@ -390,11 +435,19 @@ interface FavoriteCardProps {
   batchMode: boolean
   isRemoving: boolean
   onRemove: () => void
+  motionIndex: number
+  reduceMotion: boolean | null
 }
 
-function FavoriteCard({ item, batchMode, isRemoving, onRemove }: FavoriteCardProps) {
+function FavoriteCard({ item, batchMode, isRemoving, onRemove, motionIndex, reduceMotion }: FavoriteCardProps) {
   return (
-    <article className="favorite-card">
+    <motion.article
+      className="favorite-card"
+      initial={reduceMotion ? false : { opacity: 0, y: 18, rotate: -0.45 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0, rotate: 0 }}
+      transition={{ duration: 0.34, delay: 0.48 + motionIndex * 0.045, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={reduceMotion ? undefined : { y: -4, rotate: motionIndex % 2 === 0 ? -0.25 : 0.25 }}
+    >
       <label className="card-checkbox" aria-label={`选择 ${item.title}`}>
         <input type="checkbox" disabled={!batchMode} />
       </label>
@@ -418,7 +471,7 @@ function FavoriteCard({ item, batchMode, isRemoving, onRemove }: FavoriteCardPro
           取消收藏
         </button>
       </div>
-    </article>
+    </motion.article>
   )
 }
 
