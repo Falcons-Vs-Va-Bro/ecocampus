@@ -124,6 +124,13 @@ public class Item {
 		this.status = ItemStatus.VIOLATION_REMOVED;
 	}
 
+	public void markSold() {
+		if (status != ItemStatus.ON_SALE) {
+			throw new IllegalStateException("item is not on sale");
+		}
+		this.status = ItemStatus.SOLD;
+	}
+
 	public boolean isEditableBySeller() {
 		return status != ItemStatus.VIOLATION_REMOVED && status != ItemStatus.SOLD && status != ItemStatus.DELETED;
 	}
