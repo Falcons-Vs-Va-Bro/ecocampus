@@ -4,10 +4,18 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
+import { FavoritesPage } from '../features/favorites/FavoritesPage'
 import type { RouteMeta } from '../types/routes'
 import { routeCatalog } from './routeCatalog'
 
 function createRoute(meta: RouteMeta): RouteObject {
+  if (meta.path === '/favorites') {
+    return {
+      path: 'favorites',
+      element: <FavoritesPage />,
+    }
+  }
+
   const element = (
     <RouteGuard meta={meta}>
       <PlaceholderPage meta={meta} />

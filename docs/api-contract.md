@@ -320,6 +320,47 @@ Content-Type: `multipart/form-data`
 
 `GET /users/me/favorites`
 
+权限：`USER`
+
+查询参数：
+
+| 参数 | 说明 |
+| --- | --- |
+| `page` / `size` | 分页 |
+
+响应：
+
+```json
+{
+  "items": [
+    {
+      "id": 1001,
+      "title": "数据结构教材",
+      "categoryName": "教材",
+      "priceCent": 3200,
+      "status": "ON_SALE",
+      "coverImageUrl": "https://cdn.example.com/item/1001.png",
+      "createdAt": "2026-07-03T15:00:00+08:00",
+      "deliveryModes": ["SELF_PICKUP"],
+      "seller": {
+        "id": 7,
+        "nickname": "匿名同学",
+        "verificationStatus": "VERIFIED"
+      },
+      "favorited": true,
+      "favoriteCount": 8,
+      "favoritedAt": "2026-07-03T16:00:00+08:00",
+      "invalidReason": null
+    }
+  ],
+  "page": 1,
+  "size": 20,
+  "total": 1
+}
+```
+
+说明：`status != ON_SALE` 时前端可归入“已失效的收藏”，`invalidReason` 用于展示下架、售出或违规移除等原因。
+
 ## 9. 私信聊天
 
 ### 9.1 创建/获取商品会话

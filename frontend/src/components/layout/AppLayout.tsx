@@ -1,13 +1,18 @@
 import { GitBranch, Leaf, ShieldCheck } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { routeCatalog } from '../../app/routeCatalog'
 
 const primaryPaths = ['/', '/items', '/demands', '/publish', '/orders', '/profile']
 const adminPaths = ['/admin', '/admin/items/review', '/admin/users']
 
 export function AppLayout() {
+  const location = useLocation()
   const primaryRoutes = routeCatalog.filter((route) => primaryPaths.includes(route.path))
   const adminRoutes = routeCatalog.filter((route) => adminPaths.includes(route.path))
+
+  if (location.pathname === '/favorites') {
+    return <Outlet />
+  }
 
   return (
     <div className="app-shell">
