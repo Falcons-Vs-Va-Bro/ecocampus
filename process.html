@@ -406,6 +406,123 @@
         font-weight: 900;
       }
 
+      .advantage-layout {
+        display: grid;
+        grid-template-columns: 0.82fr 1.18fr;
+        gap: 42px;
+        align-items: center;
+      }
+
+      .advantage-copy {
+        min-width: 0;
+      }
+
+      .advantage-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: -10px 0 18px;
+        color: var(--red);
+        font-size: 14px;
+        font-weight: 850;
+      }
+
+      .advantage-kicker::before {
+        content: "";
+        width: 18px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--red);
+      }
+
+      .advantage-lead {
+        margin: 0 0 26px;
+        color: #3d463f;
+        font-size: 17px;
+        line-height: 1.7;
+        font-weight: 560;
+      }
+
+      .advantage-cards {
+        display: grid;
+        gap: 14px;
+      }
+
+      .advantage-card {
+        padding: 18px 18px 17px;
+        border: 1px solid rgba(11, 143, 34, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 12px 28px rgba(23, 23, 23, 0.06);
+      }
+
+      .advantage-label {
+        margin: 0 0 8px;
+        color: var(--green);
+        font-size: 14px;
+        font-weight: 840;
+      }
+
+      .advantage-value {
+        margin: 0;
+        color: #172033;
+        font-size: 22px;
+        line-height: 1.26;
+        font-weight: 880;
+      }
+
+      .advantage-value.emphasis {
+        color: var(--red-deep);
+      }
+
+      .quota-proof {
+        overflow: hidden;
+        border: 1px solid rgba(23, 23, 23, 0.16);
+        border-radius: 8px;
+        background: #15120f;
+        box-shadow: 0 18px 40px rgba(23, 23, 23, 0.15);
+      }
+
+      .quota-window {
+        position: relative;
+        overflow: hidden;
+        min-height: 438px;
+        background: #15120f;
+      }
+
+      .quota-window img {
+        width: 100%;
+        height: 438px;
+        object-fit: cover;
+        object-position: center 52%;
+        filter: brightness(0.9) contrast(1.03);
+      }
+
+      .quota-window::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(21, 18, 15, 0.22), transparent 22%, transparent 72%, rgba(21, 18, 15, 0.18)),
+          linear-gradient(180deg, rgba(21, 18, 15, 0.22), transparent 28%, transparent 72%, rgba(21, 18, 15, 0.18));
+        pointer-events: none;
+      }
+
+      .quota-caption {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px 16px;
+        color: #d6d2c9;
+        font-size: 14px;
+        font-weight: 720;
+      }
+
+      .quota-caption span {
+        color: #22bf83;
+      }
+
       .progress-layout {
         display: grid;
         grid-template-columns: 238px minmax(0, 1fr);
@@ -846,6 +963,7 @@
         }
 
         .split,
+        .advantage-layout,
         .progress-layout,
         .route-plan {
           grid-template-columns: 1fr;
@@ -921,6 +1039,20 @@
           grid-template-columns: 1fr;
         }
 
+        .advantage-value {
+          font-size: 20px;
+        }
+
+        .quota-window,
+        .quota-window img {
+          min-height: 0;
+          height: 260px;
+        }
+
+        .quota-caption {
+          display: block;
+        }
+
         .progress-intro {
           margin-left: 0;
         }
@@ -979,6 +1111,7 @@
         </a>
         <nav class="nav" aria-label="进度汇报章节">
           <a href="#background">项目概览</a>
+          <a href="#advantages">我组优势</a>
           <a href="#progress">当前进度</a>
           <a href="#route">技术路线</a>
           <a href="#plan">后续计划</a>
@@ -1070,6 +1203,45 @@
             </article>
           </div>
           <p class="section-footnote">分工只表示主要职责，实际执行允许交叉协作，重点是保持沟通和交付同步。</p>
+        </div>
+      </section>
+
+      <section class="section" id="advantages" aria-labelledby="advantages-title">
+        <div class="band advantage-layout">
+          <article class="advantage-copy">
+            <p class="advantage-kicker">AI 资源与交付保障</p>
+            <h2 class="section-title" id="advantages-title">我组优势</h2>
+            <p class="advantage-lead">
+              小组自建服务器 API中转服务，统一承载开发、测试、文档整理与演示辅助所需的模型调用能力。
+            </p>
+            <div class="advantage-cards" aria-label="我组资源优势">
+              <article class="advantage-card">
+                <p class="advantage-label">服务能力</p>
+                <p class="advantage-value">自建服务器 API中转服务</p>
+              </article>
+              <article class="advantage-card">
+                <p class="advantage-label">订阅配置</p>
+                <p class="advantage-value">2 个 ChatGPT Pro + 1 个 Pro Lite</p>
+              </article>
+              <article class="advantage-card">
+                <p class="advantage-label">额度支持</p>
+                <p class="advantage-value emphasis">Openai全系模型周额度约 20000美金</p>
+              </article>
+              <article class="advantage-card">
+                <p class="advantage-label">使用方式</p>
+                <p class="advantage-value">Token 使用自由</p>
+              </article>
+            </div>
+          </article>
+          <figure class="quota-proof">
+            <div class="quota-window">
+              <img src="assets/process/cliproxyapi-quota.png" alt="cliproxyapi 配额管理截图" />
+            </div>
+            <figcaption class="quota-caption">
+              <span>cliproxyapi 配额管理截图</span>
+              为开发、测试、文档与演示提供稳定支持
+            </figcaption>
+          </figure>
         </div>
       </section>
 
