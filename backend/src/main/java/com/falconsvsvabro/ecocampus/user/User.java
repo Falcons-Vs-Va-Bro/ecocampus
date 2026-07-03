@@ -87,6 +87,18 @@ public class User {
 		this.avatarUrl = avatarUrl;
 	}
 
+	public void blacklist(String reason, OffsetDateTime expireAt) {
+		this.blacklistReason = reason;
+		this.blacklistExpireAt = expireAt;
+		this.verificationStatus = VerificationStatus.BLACKLISTED;
+	}
+
+	public void removeBlacklist() {
+		this.blacklistReason = null;
+		this.blacklistExpireAt = null;
+		this.verificationStatus = studentNo == null ? VerificationStatus.UNVERIFIED : VerificationStatus.VERIFIED;
+	}
+
 	public boolean isBlacklisted() {
 		return verificationStatus == VerificationStatus.BLACKLISTED
 				&& (blacklistExpireAt == null || blacklistExpireAt.isAfter(OffsetDateTime.now()));
