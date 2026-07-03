@@ -1,9 +1,13 @@
 import { RotateCw } from 'lucide-react'
+import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useAuthStore } from '../../stores/auth.store'
 import './LoginPage.css'
 
 const xmuLogoUrl = 'https://ids.xmu.edu.cn/authserver/qrcodeTheme/static/dzimages/logo.png'
+const accountStorageKey = 'ecocampus.mock.login.accounts'
 const xmuBackgrounds = [
   'https://ids.xmu.edu.cn/authserver/qrcodeTheme/static/dzimages/1.jpg',
   'https://ids.xmu.edu.cn/authserver/qrcodeTheme/static/dzimages/2.jpg',
@@ -30,7 +34,9 @@ const copy = {
     forgetPassword: 'Forget password',
     alumniReset: 'Student and alumni account disabled can be reset through forget password.',
     firstLogin: 'For first login, please click forget password to reset; for more, please click online help.',
-    mockNotice: 'Local SSO preview only. Production login should redirect to the official XMU identity platform.',
+    accountPrefixError: 'The account must start with 2292024.',
+    passwordRequired: 'Please enter Password.',
+    mockNotice: 'Local account will be created automatically if it does not exist. Password is not stored locally.',
     copyright: 'Copyright © Xiamen University',
   },
   zh: {
@@ -48,15 +54,22 @@ const copy = {
     forgetPassword: '忘记密码',
     alumniReset: '学生校友账号禁用可通过忘记密码进行重置',
     firstLogin: '首次登录请点击忘记密码进行重置;更多请点在线帮助',
-    mockNotice: '本地仅为统一身份认证外观预览；生产登录应跳转厦大官方统一身份认证平台。',
+    accountPrefixError: '账号前 7 位必须为 2292024。',
+    passwordRequired: '请输入密码。',
+    mockNotice: '账号不存在时会自动建档；密码不会保存在本地。',
     copyright: 'Copyright © 厦门大学',
   },
 } as const
 
 export function LoginPage() {
+  const navigate = useNavigate()
+  const setSession = useAuthStore((state) => state.setSession)
   const [mode, setMode] = useState<LoginMode>('qr')
   const [locale, setLocale] = useState<Locale>('en')
   const [backgroundIndex, setBackgroundIndex] = useState(0)
+  const [account, setAccount] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
   const [notice, setNotice] = useState('')
   const t = copy[locale]
 
@@ -73,10 +86,37 @@ export function LoginPage() {
   function switchMode(nextMode: LoginMode) {
     setMode(nextMode)
     setNotice('')
+    setLoginError('')
   }
 
-  function handleMockLogin() {
+  function handleAccountLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const normalizedAccount = account.trim()
+    const normalizedPassword = password.trim()
+
+    if (!normalizedAccount.startsWith('2292024')) {
+      setLoginError(t.accountPrefixError)
+      setNotice('')
+      return
+    }
+
+    if (!normalizedPassword) {
+      setLoginError(t.passwordRequired)
+      setNotice('')
+      return
+    }
+
+    provisionMockAccount(normalizedAccount)
+    setSession({
+      accessToken: `mock-${normalizedAccount}-${Date.now()}`,
+      role: 'USER',
+      verificationStatus: 'VERIFIED',
+    })
+
     setNotice(t.mockNotice)
+    setLoginError('')
+    navigate('/')
   }
 
   return (
@@ -152,16 +192,30 @@ export function LoginPage() {
             <p>{t.warning}</p>
           </div>
         ) : (
-          <form className="xmu-account-panel" onSubmit={(event) => event.preventDefault()}>
+          <form autoComplete="off" className="xmu-account-panel" onSubmit={handleAccountLogin}>
             <label>
               <span>{t.username}</span>
-              <input aria-label={t.username} placeholder={t.username} readOnly />
+              <input
+                aria-label={t.username}
+                autoComplete="off"
+                inputMode="numeric"
+                onChange={(event) => setAccount(event.target.value)}
+                placeholder={t.username}
+                value={account}
+              />
             </label>
             <label>
               <span>{t.password}</span>
-              <input aria-label={t.password} placeholder={t.password} readOnly type="password" />
+              <input
+                aria-label={t.password}
+                autoComplete="new-password"
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder={t.password}
+                type="password"
+                value={password}
+              />
             </label>
-            <button className="xmu-login-submit" type="button" onClick={handleMockLogin}>
+            <button className="xmu-login-submit" type="submit">
               {t.login}
             </button>
             <div className="xmu-account-links">
@@ -173,6 +227,7 @@ export function LoginPage() {
               <p>{t.firstLogin}</p>
             </div>
             <p className="xmu-account-warning">{t.warning}</p>
+            {loginError ? <p className="xmu-login-error">{loginError}</p> : null}
             {notice ? <p className="xmu-mock-notice">{notice}</p> : null}
           </form>
         )}
@@ -193,4 +248,18 @@ export function LoginPage() {
       <footer className="xmu-login-footer">{t.copyright}</footer>
     </main>
   )
+}
+
+function provisionMockAccount(account: string) {
+  try {
+    const storedValue = window.localStorage.getItem(accountStorageKey)
+    const accounts = storedValue ? (JSON.parse(storedValue) as unknown) : []
+    const accountList = Array.isArray(accounts) ? accounts.filter((item): item is string => typeof item === 'string') : []
+
+    if (!accountList.includes(account)) {
+      window.localStorage.setItem(accountStorageKey, JSON.stringify([...accountList, account]))
+    }
+  } catch {
+    // localStorage is a convenience for mock auto-provisioning; login should still work without it.
+  }
 }

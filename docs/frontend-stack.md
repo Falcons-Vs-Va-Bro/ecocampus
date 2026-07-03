@@ -63,7 +63,7 @@ frontend/
 
 | 路由 | 页面 | 权限 |
 | --- | --- | --- |
-| `/login` | 手机号登录 | 公开 |
+| `/login` | 统一身份认证登录 | 公开 |
 | `/` | 商品首页/推荐流 | 公开 |
 | `/items` | 商品搜索与分类筛选 | 公开 |
 | `/items/:id` | 商品详情 | 公开，互动需登录 |
@@ -80,7 +80,7 @@ frontend/
 | `/profile` | 个人信息/地址 | `USER` |
 | `/verify` | 校园核验 | 登录用户 |
 
-说明：`/login` 当前按厦门大学统一身份认证对接页处理，视觉上独立复现学校 SSO 登录页，不纳入用户端彩绘风格统一；本地页面只做 mock/占位交互，生产登录应跳转官方 SSO。
+说明：`/login` 当前按厦门大学统一身份认证对接页处理，视觉上独立复现学校 SSO 登录页，不纳入用户端彩绘风格统一。系统不提供注册功能；mock 与正式环境均只校验账号前 7 位是否为 `2292024`，账号不存在时在登录流程中自动建档。
 
 ### 4.2 后台管理端
 
@@ -98,7 +98,7 @@ frontend/
 
 | 路由 | 主要接口 | 对接状态 |
 | --- | --- | --- |
-| `/login` | `POST /auth/sms-code`, `POST /auth/login` | 已覆盖 |
+| `/login` | `POST /auth/login` | 已覆盖 |
 | `/` | `GET /items`, `GET /categories` | 已覆盖 |
 | `/items` | `GET /items`, `GET /categories` | 已覆盖 |
 | `/items/:id` | `GET /items/{itemId}`, `POST /items/{itemId}/favorite`, `DELETE /items/{itemId}/favorite`, `POST /conversations`, `POST /orders` | 已覆盖 |

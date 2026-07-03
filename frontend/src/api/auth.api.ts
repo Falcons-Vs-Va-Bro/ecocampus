@@ -1,13 +1,9 @@
 import type { ApiResponse, CurrentUser, VerificationStatus } from '../types/api'
 import { apiClient } from './http'
 
-export interface SmsCodeRequest {
-  phone: string
-}
-
 export interface LoginRequest {
-  phone: string
-  code: string
+  account: string
+  password: string
 }
 
 export interface LoginResponse {
@@ -25,11 +21,6 @@ export interface CampusVerificationRequest {
   studentNo: string
   college: string
   grade: string
-}
-
-export async function sendSmsCode(payload: SmsCodeRequest) {
-  const response = await apiClient.post<ApiResponse<void>>('/auth/sms-code', payload)
-  return response.data
 }
 
 export async function login(payload: LoginRequest) {
