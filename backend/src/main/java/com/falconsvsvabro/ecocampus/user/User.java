@@ -82,6 +82,11 @@ public class User {
 		this.verificationStatus = VerificationStatus.VERIFIED;
 	}
 
+	public void updateProfile(String nickname, String avatarUrl) {
+		this.nickname = nickname;
+		this.avatarUrl = avatarUrl;
+	}
+
 	public boolean isBlacklisted() {
 		return verificationStatus == VerificationStatus.BLACKLISTED
 				&& (blacklistExpireAt == null || blacklistExpireAt.isAfter(OffsetDateTime.now()));

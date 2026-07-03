@@ -58,8 +58,7 @@ public class AuthService {
 	}
 
 	private MeResponse toMeResponse(User user) {
-		return new MeResponse(user.getId(), user.getNickname(), maskPhone(user.getPhone()), user.getRole(),
-				user.getVerificationStatus(), maskStudentNo(user.getStudentNo()));
+		return MeResponse.from(user);
 	}
 
 	private User getUser(Long userId) {
@@ -67,17 +66,4 @@ public class AuthService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "current user not found"));
 	}
 
-	private String maskPhone(String phone) {
-		if (phone == null || phone.length() < 7) {
-			return "****";
-		}
-		return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
-	}
-
-	private String maskStudentNo(String studentNo) {
-		if (studentNo == null || studentNo.length() < 8) {
-			return null;
-		}
-		return studentNo.substring(0, 4) + "****" + studentNo.substring(studentNo.length() - 3);
-	}
 }
