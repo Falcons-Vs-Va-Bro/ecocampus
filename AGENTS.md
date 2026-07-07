@@ -6,7 +6,7 @@ EcoCampus 是一个 monorepo，包含两个主要应用：
 
 - `backend/`：Java 21 Spring Boot 服务。源码位于 `src/main/java/com/falconsvsvabro/ecocampus`，资源文件位于 `src/main/resources`，测试位于 `src/test/java`。
 - `frontend/`：React + TypeScript + Vite Web/H5 应用。源码位于 `src/`，路由元数据位于 `src/app/routeCatalog.ts`，API 客户端位于 `src/api/`，可复用 UI 位于 `src/components/`，功能模块位于 `src/features/`。
-- `docs/`：RBAC、API 契约和前端技术栈决策文档。
+- `docs/`：项目状态、RBAC、API 契约和前端技术栈决策文档。
 - `assets/process/` 和 `process.html`：演示/展示资产。`process-standalone.html` 为生成文件，已被忽略。
 
 ## 构建、测试与开发命令
@@ -32,6 +32,12 @@ pnpm dev
 ```
 
 `pnpm lint` 运行 Oxlint。`pnpm build` 执行 TypeScript 项目检查并构建 Vite 输出。`pnpm dev` 启动本地应用，通常运行在 `http://127.0.0.1:5173/`。
+
+## 项目状态维护约定
+
+开始任何任务前，优先阅读 `docs/project-state.md`，再按任务影响面阅读相关真实源文档和代码文件。不要默认每次全仓库扫描，除非任务影响面不明确、`docs/project-state.md` 明显过期，或用户明确要求完整项目阅读。
+
+完成代码、路由、API、架构、设计或文档变更后，必须同步维护 `docs/project-state.md` 中的当前状态、已知问题、验证基线或最近变更。长期规则和完整契约仍应写入 `docs/` 下对应源文档，`docs/project-state.md` 只保留短摘要和跳转索引。
 
 ## 编码风格与命名约定
 
