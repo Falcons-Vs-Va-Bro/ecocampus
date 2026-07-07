@@ -42,7 +42,7 @@ public class ConversationService {
 		if (currentUser.getId().equals(targetUser.getId())) {
 			throw new BusinessException(ErrorCode.CONFLICT, "cannot create conversation with self");
 		}
-		Item item = getItem(request.itemId());
+		Item item = getItemForUpdate(request.itemId());
 		if (!item.getSellerId().equals(currentUser.getId()) && !item.getSellerId().equals(targetUser.getId())) {
 			throw new BusinessException(ErrorCode.FORBIDDEN, "conversation must include item seller");
 		}
@@ -77,7 +77,7 @@ public class ConversationService {
 	@Transactional
 	public MessageResponse sendMessage(Long userId, Long conversationId, SendMessageRequest request) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
-		Conversation conversation = getConversation(conversationId);
+		Conversation conversation = getConversationForUpdate(conversationId);
 		ensureParticipant(conversation, user.getId());
 		ConversationMessage message = messageRepository
 			.save(new ConversationMessage(conversation.getId(), user.getId(), request.content()));
@@ -97,6 +97,11 @@ public class ConversationService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "conversation not found"));
 	}
 
+	private Conversation getConversationForUpdate(Long conversationId) {
+		return conversationRepository.findByIdForUpdate(conversationId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "conversation not found"));
+	}
+
 	private void ensureParticipant(Conversation conversation, Long userId) {
 		if (!conversation.involves(userId)) {
 			throw new BusinessException(ErrorCode.FORBIDDEN, "conversation does not belong to current user");
@@ -105,6 +110,11 @@ public class ConversationService {
 
 	private Item getItem(Long itemId) {
 		return itemRepository.findById(itemId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+	}
+
+	private Item getItemForUpdate(Long itemId) {
+		return itemRepository.findByIdForUpdate(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
 	}
 

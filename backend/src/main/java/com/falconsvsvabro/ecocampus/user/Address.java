@@ -36,6 +36,9 @@ public class Address {
 	@Column(nullable = false)
 	private boolean defaultAddress;
 
+	@Column
+	private Long defaultOwnerId;
+
 	@Column(nullable = false)
 	private OffsetDateTime createdAt;
 
@@ -52,7 +55,7 @@ public class Address {
 		this.receiverPhone = receiverPhone;
 		this.campusArea = campusArea;
 		this.detail = detail;
-		this.defaultAddress = defaultAddress;
+		setDefaultAddress(defaultAddress);
 	}
 
 	public void update(String receiverName, String receiverPhone, String campusArea, String detail,
@@ -61,11 +64,13 @@ public class Address {
 		this.receiverPhone = receiverPhone;
 		this.campusArea = campusArea;
 		this.detail = detail;
-		this.defaultAddress = defaultAddress;
+		setDefaultAddress(defaultAddress);
 	}
 
 	public void setDefaultAddress(boolean defaultAddress) {
 		this.defaultAddress = defaultAddress;
+		// 默认地址唯一约束使用该辅助列：默认时写 userId，非默认时写 null。
+		this.defaultOwnerId = defaultAddress ? userId : null;
 	}
 
 	@PrePersist
@@ -106,6 +111,10 @@ public class Address {
 
 	public boolean isDefaultAddress() {
 		return defaultAddress;
+	}
+
+	public Long getDefaultOwnerId() {
+		return defaultOwnerId;
 	}
 
 	public OffsetDateTime getCreatedAt() {

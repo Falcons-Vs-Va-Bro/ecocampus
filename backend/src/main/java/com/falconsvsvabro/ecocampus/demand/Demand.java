@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,11 @@ public class Demand {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 30)
 	private DemandStatus status;
+
+	// 乐观锁版本号：防止用户关闭求购和后续系统匹配任务并发覆盖状态。
+	@Version
+	@Column(nullable = false)
+	private long version;
 
 	@Column(nullable = false)
 	private OffsetDateTime createdAt;

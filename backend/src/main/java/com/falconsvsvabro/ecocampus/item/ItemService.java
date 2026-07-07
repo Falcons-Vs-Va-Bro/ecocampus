@@ -151,7 +151,7 @@ public class ItemService {
 	@Transactional
 	public AdminItemResponse reviewItem(Long adminUserId, Long itemId, AdminItemReviewRequest request) {
 		User admin = campusAccessGuard.requireAdmin(adminUserId);
-		Item item = itemRepository.findById(itemId)
+		Item item = itemRepository.findByIdForUpdate(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
 		try {
 			item.review(Boolean.TRUE.equals(request.approved()));
@@ -167,7 +167,7 @@ public class ItemService {
 	@Transactional
 	public AdminItemResponse violationRemove(Long adminUserId, Long itemId, String reason) {
 		User admin = campusAccessGuard.requireAdmin(adminUserId);
-		Item item = itemRepository.findById(itemId)
+		Item item = itemRepository.findByIdForUpdate(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
 		try {
 			item.violationRemove();
@@ -192,7 +192,7 @@ public class ItemService {
 	}
 
 	private Item getOwnedItem(Long sellerId, Long itemId) {
-		Item item = itemRepository.findById(itemId)
+		Item item = itemRepository.findByIdForUpdate(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
 		if (!item.getSellerId().equals(sellerId)) {
 			throw new BusinessException(ErrorCode.FORBIDDEN, "item does not belong to current user");

@@ -42,8 +42,8 @@ public class OrderService {
 	@Transactional
 	public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
 		User buyer = campusAccessGuard.requireVerifiedUser(userId);
-		Item item = itemRepository.findById(request.itemId())
-			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+		Item item = getItemForUpdate(request.itemId());
+		campusAccessGuard.requireVerifiedUser(item.getSellerId());
 		if (item.getStatus() != ItemStatus.ON_SALE) {
 			throw new BusinessException(ErrorCode.CONFLICT, "item is not on sale");
 		}
@@ -87,10 +87,11 @@ public class OrderService {
 	@Transactional
 	public OrderResponse updateStatus(Long userId, Long orderId, UpdateOrderStatusRequest request) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
-		TradeOrder order = getOrder(orderId);
+		TradeOrder order = getOrderForUpdate(orderId);
 		if (!order.involves(user.getId())) {
 			throw new BusinessException(ErrorCode.FORBIDDEN, "order does not belong to current user");
 		}
+		ensureTransitionActor(user, order, request.targetStatus());
 		try {
 			order.transitionTo(request.targetStatus(), request.remark());
 		}
@@ -98,7 +99,7 @@ public class OrderService {
 			throw new BusinessException(ErrorCode.CONFLICT, exception.getMessage());
 		}
 		if (request.targetStatus() == OrderStatus.COMPLETED) {
-			Item item = getItem(order.getItemId());
+			Item item = getItemForUpdate(order.getItemId());
 			item.markSold();
 		}
 		writeAudit(user.getId(), order.getId(), "ORDER_STATUS_CHANGED", request.targetStatus().name());
@@ -110,6 +111,11 @@ public class OrderService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "order not found"));
 	}
 
+	private TradeOrder getOrderForUpdate(Long orderId) {
+		return orderRepository.findByIdForUpdate(orderId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "order not found"));
+	}
+
 	private OrderResponse toResponse(TradeOrder order) {
 		return OrderResponse.from(order, getItem(order.getItemId()).getTitle());
 	}
@@ -117,6 +123,20 @@ public class OrderService {
 	private Item getItem(Long itemId) {
 		return itemRepository.findById(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+	}
+
+	private Item getItemForUpdate(Long itemId) {
+		return itemRepository.findByIdForUpdate(itemId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+	}
+
+	private void ensureTransitionActor(User user, TradeOrder order, OrderStatus targetStatus) {
+		if (targetStatus == OrderStatus.WAITING_PICKUP && !order.getSellerId().equals(user.getId())) {
+			throw new BusinessException(ErrorCode.FORBIDDEN, "only seller can confirm pickup arrangement");
+		}
+		if (targetStatus == OrderStatus.COMPLETED && !order.getBuyerId().equals(user.getId())) {
+			throw new BusinessException(ErrorCode.FORBIDDEN, "only buyer can confirm order completion");
+		}
 	}
 
 	private int normalizePage(int page) {

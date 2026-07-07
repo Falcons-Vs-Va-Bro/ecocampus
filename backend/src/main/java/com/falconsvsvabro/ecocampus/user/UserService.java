@@ -44,10 +44,12 @@ public class UserService {
 	@Transactional
 	public AddressResponse createAddress(Long userId, AddressRequest request) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
-		boolean firstAddress = !addressRepository.existsByUserId(user.getId());
+		List<Address> lockedAddresses = addressRepository.findByUserIdForUpdate(user.getId());
+		boolean firstAddress = lockedAddresses.isEmpty();
 		boolean defaultAddress = firstAddress || Boolean.TRUE.equals(request.isDefault());
 		if (defaultAddress) {
-			clearDefaultAddress(user.getId());
+			clearDefaultAddress(lockedAddresses);
+			addressRepository.flush();
 		}
 		Address address = new Address(user.getId(), request.receiverName(), request.receiverPhone(),
 				request.campusArea(), request.detail(), defaultAddress);
@@ -57,10 +59,12 @@ public class UserService {
 	@Transactional
 	public AddressResponse updateAddress(Long userId, Long addressId, AddressRequest request) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
-		Address address = getOwnedAddress(user.getId(), addressId);
+		List<Address> lockedAddresses = addressRepository.findByUserIdForUpdate(user.getId());
+		Address address = getOwnedAddress(lockedAddresses, addressId);
 		boolean defaultAddress = Boolean.TRUE.equals(request.isDefault());
 		if (defaultAddress) {
-			clearDefaultAddress(user.getId());
+			clearDefaultAddress(lockedAddresses);
+			addressRepository.flush();
 		}
 		address.update(request.receiverName(), request.receiverPhone(), request.campusArea(), request.detail(),
 				defaultAddress);
@@ -70,24 +74,30 @@ public class UserService {
 	@Transactional
 	public void deleteAddress(Long userId, Long addressId) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
-		Address address = getOwnedAddress(user.getId(), addressId);
+		List<Address> lockedAddresses = addressRepository.findByUserIdForUpdate(user.getId());
+		Address address = getOwnedAddress(lockedAddresses, addressId);
 		boolean wasDefault = address.isDefaultAddress();
-		addressRepository.delete(address);
 		if (wasDefault) {
-			addressRepository.findByUserIdOrderByDefaultAddressDescIdDesc(user.getId())
-				.stream()
+			address.setDefaultAddress(false);
+		}
+		addressRepository.delete(address);
+		addressRepository.flush();
+		if (wasDefault) {
+			lockedAddresses.stream()
+				.filter(nextAddress -> !nextAddress.getId().equals(addressId))
 				.findFirst()
 				.ifPresent(nextDefault -> nextDefault.setDefaultAddress(true));
 		}
 	}
 
-	private Address getOwnedAddress(Long userId, Long addressId) {
-		return addressRepository.findByIdAndUserId(addressId, userId)
+	private Address getOwnedAddress(List<Address> lockedAddresses, Long addressId) {
+		return lockedAddresses.stream()
+			.filter(address -> address.getId().equals(addressId))
+			.findFirst()
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "address not found"));
 	}
 
-	private void clearDefaultAddress(Long userId) {
-		addressRepository.findByUserIdOrderByDefaultAddressDescIdDesc(userId)
-			.forEach(address -> address.setDefaultAddress(false));
+	private void clearDefaultAddress(List<Address> lockedAddresses) {
+		lockedAddresses.forEach(address -> address.setDefaultAddress(false));
 	}
 }

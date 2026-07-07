@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -53,6 +54,11 @@ public class User {
 	private String blacklistReason;
 
 	private OffsetDateTime blacklistExpireAt;
+
+	// 乐观锁版本号：防止资料更新、校园核验和黑名单治理并发覆盖。
+	@Version
+	@Column(nullable = false)
+	private long version;
 
 	@Column(nullable = false)
 	private OffsetDateTime createdAt;

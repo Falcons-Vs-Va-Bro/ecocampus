@@ -5,6 +5,10 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -43,6 +47,15 @@ public class GlobalExceptionHandler {
 			.toList();
 		return ResponseEntity.status(ErrorCode.VALIDATION_FAILED.httpStatus())
 			.body(ApiResponse.error(ErrorCode.VALIDATION_FAILED, null, Map.of("errors", errors), traceId(request)));
+	}
+
+	@ExceptionHandler({ DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class,
+			PessimisticLockingFailureException.class, CannotAcquireLockException.class })
+	ResponseEntity<ApiResponse<Void>> handleStateConflict(Exception exception, HttpServletRequest request) {
+		// 数据库约束、乐观锁和悲观锁冲突都代表当前资源状态已变化，统一返回 409 让前端刷新后重试。
+		return ResponseEntity.status(ErrorCode.CONFLICT.httpStatus())
+			.body(ApiResponse.error(ErrorCode.CONFLICT, "resource state changed, please retry", null,
+					traceId(request)));
 	}
 
 	@ExceptionHandler(Exception.class)

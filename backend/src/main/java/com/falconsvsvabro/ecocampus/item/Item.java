@@ -15,6 +15,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -47,6 +48,11 @@ public class Item {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 30)
 	private ItemStatus status;
+
+	// 乐观锁版本号：防止卖家编辑、管理员审核和订单完成等并发修改互相覆盖。
+	@Version
+	@Column(nullable = false)
+	private long version;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "item_delivery_modes", joinColumns = @JoinColumn(name = "item_id"))

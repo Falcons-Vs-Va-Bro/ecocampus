@@ -7,6 +7,7 @@ import com.falconsvsvabro.ecocampus.common.api.BusinessException;
 import com.falconsvsvabro.ecocampus.common.api.ErrorCode;
 import com.falconsvsvabro.ecocampus.user.User;
 import com.falconsvsvabro.ecocampus.user.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,7 @@ public class AuthService {
 	@Transactional
 	public LoginResponse login(String phone, String code) {
 		smsCodeService.verify(phone, code);
-		User user = userRepository.findByPhone(phone).orElseGet(() -> userRepository.save(User.registerByPhone(phone)));
+		User user = userRepository.findByPhone(phone).orElseGet(() -> createUserByPhone(phone));
 		return toLoginResponse(user);
 	}
 
@@ -59,6 +60,17 @@ public class AuthService {
 
 	private MeResponse toMeResponse(User user) {
 		return MeResponse.from(user);
+	}
+
+	private User createUserByPhone(String phone) {
+		try {
+			return userRepository.saveAndFlush(User.registerByPhone(phone));
+		}
+		catch (DataIntegrityViolationException exception) {
+			// 手机号唯一约束兜底：并发登录同一手机号时，后提交的请求改为读取已创建账号。
+			return userRepository.findByPhone(phone)
+				.orElseThrow(() -> new BusinessException(ErrorCode.CONFLICT, "phone already exists"));
+		}
 	}
 
 	private User getUser(Long userId) {
