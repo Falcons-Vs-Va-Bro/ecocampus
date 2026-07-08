@@ -37,6 +37,7 @@ frontend/
       admin.api.ts
     components/
       common/
+      marketplace/
       item/
       order/
       chat/
@@ -106,12 +107,12 @@ frontend/
 | `/items/mine` | `GET /users/me/items`, `POST /items/{itemId}/on-sale`, `POST /items/{itemId}/off-shelf` | 已覆盖 |
 | `/items/:id/edit` | `GET /items/{itemId}`, `POST /files/images`, `GET /categories`, `PUT /items/{itemId}` | 已覆盖 |
 | `/favorites` | `GET /users/me/favorites`, `DELETE /items/{itemId}/favorite` | 已覆盖 |
-| `/messages` | `GET /conversations` | 已覆盖 |
-| `/messages/:conversationId` | `GET /conversations/{conversationId}/messages`, `POST /conversations/{conversationId}/messages` | 已覆盖 |
+| `/messages` | `GET /conversations?page=1&size=20` | 已覆盖 |
+| `/messages/:conversationId` | `GET /conversations/{conversationId}/messages?page=1&size=20`, `POST /conversations/{conversationId}/messages` | 已覆盖 |
 | `/orders` | `GET /orders`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
 | `/demands` | `GET /demands` | 已覆盖 |
 | `/demands/new` | `GET /categories`, `POST /demands` | 已覆盖 |
-| `/demands/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches`, `POST /demands/{demandId}/close` | 已覆盖 |
+| `/demands/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches?limit=20`, `POST /demands/{demandId}/close` | 已覆盖 |
 | `/profile` | `GET /auth/me`, `PUT /users/me`, `GET /users/me/addresses`, `POST /users/me/addresses`, `PUT /users/me/addresses/{addressId}`, `DELETE /users/me/addresses/{addressId}` | 已覆盖 |
 | `/verify` | `GET /auth/me`, `POST /auth/campus-verification` | 已覆盖 |
 
@@ -173,6 +174,7 @@ frontend/
 
 用户端应强调校园交易场景：
 
+- `/`、`/favorites` 和公开/用户侧占位路由应复用 `frontend/src/components/marketplace/` 下的市场端公共壳、商品卡片和手绘动画样式；不要再从某个 feature 目录交叉引用页面级 CSS。
 - 商品卡片优先展示图片、标题、价格、类目、取货方式。
 - 类目固定覆盖教材、数码、宿舍用品、运动器材。
 - H5 下筛选使用底部抽屉，桌面端使用侧栏或顶部筛选条。

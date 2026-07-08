@@ -387,11 +387,52 @@ Content-Type: `multipart/form-data`
 
 ### 9.2 会话列表
 
-`GET /conversations`
+`GET /conversations?page=1&size=20`
+
+响应 `data` 为分页对象，`size` 默认 20，最大 100：
+
+```json
+{
+  "items": [
+    {
+      "id": 501,
+      "itemId": 1001,
+      "itemTitle": "二手显示器",
+      "targetUserId": 7,
+      "targetNickname": "张三",
+      "lastMessage": "你好，请问今天下午可以自提吗？",
+      "lastMessageAt": "2026-07-03T16:00:00+08:00",
+      "createdAt": "2026-07-03T15:30:00+08:00"
+    }
+  ],
+  "page": 1,
+  "size": 20,
+  "total": 1
+}
+```
 
 ### 9.3 消息列表
 
-`GET /conversations/{conversationId}/messages`
+`GET /conversations/{conversationId}/messages?page=1&size=20`
+
+响应 `data` 为分页对象，`size` 默认 20，最大 100。消息按 `createdAt asc, id asc` 返回：
+
+```json
+{
+  "items": [
+    {
+      "id": 9001,
+      "conversationId": 501,
+      "senderId": 7,
+      "content": "你好，请问今天下午可以自提吗？",
+      "createdAt": "2026-07-03T16:00:00+08:00"
+    }
+  ],
+  "page": 1,
+  "size": 20,
+  "total": 1
+}
+```
 
 ### 9.4 发送消息
 
@@ -482,7 +523,9 @@ Content-Type: `multipart/form-data`
 
 ### 11.5 求购匹配结果
 
-`GET /demands/{demandId}/matches`
+`GET /demands/{demandId}/matches?limit=20`
+
+`limit` 默认 20，最大 50。匹配查询在数据库侧按求购关键词、类目和预算过滤，再返回有限数量结果。
 
 响应：
 

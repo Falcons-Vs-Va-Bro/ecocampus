@@ -2,13 +2,13 @@ package com.falconsvsvabro.ecocampus.conversation;
 
 import com.falconsvsvabro.ecocampus.auth.AuthenticatedUser;
 import com.falconsvsvabro.ecocampus.common.api.ApiResponse;
+import com.falconsvsvabro.ecocampus.common.api.PageResponse;
 import com.falconsvsvabro.ecocampus.conversation.dto.ConversationResponse;
 import com.falconsvsvabro.ecocampus.conversation.dto.CreateConversationRequest;
 import com.falconsvsvabro.ecocampus.conversation.dto.MessageResponse;
 import com.falconsvsvabro.ecocampus.conversation.dto.SendMessageRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -35,15 +36,18 @@ public class ConversationController {
 	}
 
 	@GetMapping
-	ApiResponse<List<ConversationResponse>> listConversations(@AuthenticationPrincipal AuthenticatedUser currentUser,
-			HttpServletRequest request) {
-		return ApiResponse.ok(conversationService.listConversations(currentUser.id()), traceId(request));
+	ApiResponse<PageResponse<ConversationResponse>> listConversations(
+			@AuthenticationPrincipal AuthenticatedUser currentUser, @RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
+		return ApiResponse.ok(conversationService.listConversations(currentUser.id(), page, size), traceId(request));
 	}
 
 	@GetMapping("/{conversationId}/messages")
-	ApiResponse<List<MessageResponse>> listMessages(@AuthenticationPrincipal AuthenticatedUser currentUser,
-			@PathVariable Long conversationId, HttpServletRequest request) {
-		return ApiResponse.ok(conversationService.listMessages(currentUser.id(), conversationId), traceId(request));
+	ApiResponse<PageResponse<MessageResponse>> listMessages(@AuthenticationPrincipal AuthenticatedUser currentUser,
+			@PathVariable Long conversationId, @RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
+		return ApiResponse.ok(conversationService.listMessages(currentUser.id(), conversationId, page, size),
+				traceId(request));
 	}
 
 	@PostMapping("/{conversationId}/messages")

@@ -61,10 +61,17 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 			  and item.categoryId = :categoryId
 			  and (:budgetMinCent is null or item.priceCent >= :budgetMinCent)
 			  and (:budgetMaxCent is null or item.priceCent <= :budgetMaxCent)
+			  and exists (
+			    select keyword from Demand demand join demand.keywords keyword
+			    where demand.id = :demandId
+			      and (lower(item.title) like lower(concat('%', keyword, '%'))
+			        or lower(item.description) like lower(concat('%', keyword, '%')))
+			  )
 			order by item.createdAt desc
 			""")
-	List<Item> findOnSaleCandidatesForDemand(@Param("categoryId") Long categoryId,
-			@Param("budgetMinCent") Long budgetMinCent, @Param("budgetMaxCent") Long budgetMaxCent);
+	List<Item> findLimitedOnSaleMatchesForDemand(@Param("demandId") Long demandId,
+			@Param("categoryId") Long categoryId, @Param("budgetMinCent") Long budgetMinCent,
+			@Param("budgetMaxCent") Long budgetMaxCent, Pageable pageable);
 
 	long countByStatus(ItemStatus status);
 
