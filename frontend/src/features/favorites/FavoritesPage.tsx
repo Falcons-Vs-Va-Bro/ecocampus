@@ -61,12 +61,12 @@ const categoryNav = [
 ]
 
 const userNav = [
-  { label: '我的收藏', icon: Star, active: true },
-  { label: '我的发布', icon: Store },
-  { label: '购买订单', icon: ClipboardList },
-  { label: '出售订单', icon: Store },
-  { label: '消息中心', icon: MessageCircle, badge: 3 },
-  { label: '个人中心', icon: User },
+  { label: '我的收藏', icon: Star, to: '/favorites', active: true },
+  { label: '我的发布', icon: Store, to: '/items/mine' },
+  { label: '购买订单', icon: ClipboardList, to: '/orders' },
+  { label: '出售订单', icon: Store, to: '/orders' },
+  { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
+  { label: '个人中心', icon: User, to: '/profile' },
 ]
 
 type PickupMode = (typeof pickupModes)[number]
@@ -214,7 +214,7 @@ export function FavoritesPage() {
             {userNav.map((item, index) => (
               <motion.a
                 className={item.active ? 'active' : undefined}
-                href="/favorites"
+                href={item.to}
                 key={item.label}
                 initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
                 animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}

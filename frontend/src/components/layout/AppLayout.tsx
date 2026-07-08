@@ -10,7 +10,14 @@ export function AppLayout() {
   const primaryRoutes = routeCatalog.filter((route) => primaryPaths.includes(route.path))
   const adminRoutes = routeCatalog.filter((route) => adminPaths.includes(route.path))
 
-  if (location.pathname === '/' || location.pathname === '/favorites' || location.pathname === '/login') {
+  if (
+    location.pathname === '/' ||
+    location.pathname === '/favorites' ||
+    location.pathname === '/items/mine' ||
+    /^\/items\/[^/]+\/edit$/.test(location.pathname) ||
+    location.pathname === '/publish' ||
+    location.pathname === '/login'
+  ) {
     return <Outlet />
   }
 
