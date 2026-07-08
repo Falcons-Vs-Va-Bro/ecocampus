@@ -7,6 +7,13 @@
 - 使用 Flyway 管理表结构和种子数据，避免开发、测试和真实 MySQL 环境使用不同建表脚本。
 - `application.yml` 已关闭旧的 `schema.sql` / `data.sql` 自动初始化，防止重复建表或重复写入种子数据。
 
+## 生产数据库配置
+
+- `application-prod.yml` 只在 `prod` profile 下生效，并强制使用 MySQL driver、Flyway migration、`spring.sql.init.mode=never` 和 `spring.jpa.hibernate.ddl-auto=validate`。
+- 生产数据库连接必须通过 `DB_URL`、`DB_USERNAME` 和 `DB_PASSWORD` 显式提供；`prod` profile 不提供可工作的默认数据库地址、账号或密码。
+- 生产 Hikari 连接池通过 `DB_POOL_MAX_SIZE`、`DB_POOL_MIN_IDLE`、`DB_POOL_CONNECTION_TIMEOUT_MS`、`DB_POOL_VALIDATION_TIMEOUT_MS`、`DB_POOL_IDLE_TIMEOUT_MS`、`DB_POOL_MAX_LIFETIME_MS` 和 `DB_POOL_LEAK_DETECTION_MS` 配置，并在启动阶段校验基础取值。
+- `ProdDatabaseSafetyEnvironmentPostProcessor` 在配置加载后、应用上下文创建前执行防呆校验：`prod` profile 下非 MySQL URL、非 MySQL driver、默认账号、示例密码、不安全 DDL 策略、SQL 自动初始化或非法连接池参数都会直接阻止启动。
+
 ## 核心约束
 
 - 用户表保留手机号、学号唯一约束，防止多账号绑定同一校园身份。
