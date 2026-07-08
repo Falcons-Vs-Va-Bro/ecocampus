@@ -37,6 +37,7 @@ frontend/
       admin.api.ts
     components/
       common/
+      marketplace/
       item/
       order/
       chat/
@@ -173,6 +174,7 @@ frontend/
 
 用户端应强调校园交易场景：
 
+- `/`、`/favorites` 和公开/用户侧占位路由应复用 `frontend/src/components/marketplace/` 下的市场端公共壳、商品卡片和手绘动画样式；不要再从某个 feature 目录交叉引用页面级 CSS。
 - 商品卡片优先展示图片、标题、价格、类目、取货方式。
 - 类目固定覆盖教材、数码、宿舍用品、运动器材。
 - H5 下筛选使用底部抽屉，桌面端使用侧栏或顶部筛选条。

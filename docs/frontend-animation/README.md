@@ -40,10 +40,12 @@
 
 ## 4. `/favorites` 参考实现
 
-当前 `/favorites` 是彩绘动画的第一版参考实现：
+当前 `/favorites` 是彩绘动画的第一版参考实现，市场端共享壳和卡片已抽到公共组件：
 
 - 页面入口：`frontend/src/features/favorites/FavoritesPage.tsx`
-- 样式入口：`frontend/src/features/favorites/FavoritesPage.css`
+- 共享组件入口：`frontend/src/components/marketplace/MarketplaceShell.tsx`、`frontend/src/components/marketplace/MarketplaceItemCard.tsx`
+- 样式入口：`frontend/src/components/marketplace/MarketplaceShell.css`
+- 公开/用户侧占位页入口：`frontend/src/components/marketplace/MarketplacePlaceholderPage.tsx`
 
 已形成的可复用模式：
 
@@ -55,7 +57,7 @@
 - `pencil-hatch-flow` 控制轻量铅笔纹理流动。
 - `paper-wash-breathe` 控制纸面底色微动。
 
-后续页面可以复用这些语义和节奏，但不要直接复制整页 CSS。若多个页面都需要同类动画，应沉淀到共享样式或组件中，并同步更新本规范。
+后续页面应优先复用这些共享组件、语义和节奏，不要直接复制整页 CSS。若多个页面都需要同类动画，应继续沉淀到共享样式或组件中，并同步更新本规范。
 
 ## 5. 降级与性能要求
 

@@ -9,8 +9,9 @@ export function AppLayout() {
   const location = useLocation()
   const primaryRoutes = routeCatalog.filter((route) => primaryPaths.includes(route.path))
   const adminRoutes = routeCatalog.filter((route) => adminPaths.includes(route.path))
+  const isAdminRoute = location.pathname === '/admin' || location.pathname.startsWith('/admin/')
 
-  if (location.pathname === '/' || location.pathname === '/favorites' || location.pathname === '/login') {
+  if (location.pathname === '/login' || !isAdminRoute) {
     return <Outlet />
   }
 
