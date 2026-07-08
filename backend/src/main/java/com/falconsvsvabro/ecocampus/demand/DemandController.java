@@ -50,8 +50,8 @@ public class DemandController {
 
 	@GetMapping("/{demandId}/matches")
 	ApiResponse<List<DemandMatchResponse>> matchDemand(@AuthenticationPrincipal AuthenticatedUser currentUser,
-			@PathVariable Long demandId, HttpServletRequest request) {
-		return ApiResponse.ok(demandService.matchDemand(currentUser.id(), demandId), traceId(request));
+			@PathVariable Long demandId, @RequestParam(defaultValue = "20") int limit, HttpServletRequest request) {
+		return ApiResponse.ok(demandService.matchDemand(currentUser.id(), demandId, limit), traceId(request));
 	}
 
 	private String traceId(HttpServletRequest request) {

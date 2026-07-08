@@ -106,12 +106,12 @@ frontend/
 | `/items/mine` | `GET /users/me/items`, `POST /items/{itemId}/on-sale`, `POST /items/{itemId}/off-shelf` | 已覆盖 |
 | `/items/:id/edit` | `GET /items/{itemId}`, `POST /files/images`, `GET /categories`, `PUT /items/{itemId}` | 已覆盖 |
 | `/favorites` | `GET /users/me/favorites`, `DELETE /items/{itemId}/favorite` | 已覆盖 |
-| `/messages` | `GET /conversations` | 已覆盖 |
-| `/messages/:conversationId` | `GET /conversations/{conversationId}/messages`, `POST /conversations/{conversationId}/messages` | 已覆盖 |
+| `/messages` | `GET /conversations?page=1&size=20` | 已覆盖 |
+| `/messages/:conversationId` | `GET /conversations/{conversationId}/messages?page=1&size=20`, `POST /conversations/{conversationId}/messages` | 已覆盖 |
 | `/orders` | `GET /orders`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
 | `/demands` | `GET /demands` | 已覆盖 |
 | `/demands/new` | `GET /categories`, `POST /demands` | 已覆盖 |
-| `/demands/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches`, `POST /demands/{demandId}/close` | 已覆盖 |
+| `/demands/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches?limit=20`, `POST /demands/{demandId}/close` | 已覆盖 |
 | `/profile` | `GET /auth/me`, `PUT /users/me`, `GET /users/me/addresses`, `POST /users/me/addresses`, `PUT /users/me/addresses/{addressId}`, `DELETE /users/me/addresses/{addressId}` | 已覆盖 |
 | `/verify` | `GET /auth/me`, `POST /auth/campus-verification` | 已覆盖 |
 

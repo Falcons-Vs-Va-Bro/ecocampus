@@ -62,8 +62,10 @@ class DemandControllerTests {
 			.andExpect(jsonPath("$.data.items[0].title").value("Looking for monitor"));
 
 		mockMvc.perform(get("/api/v1/demands/{demandId}/matches", demandId)
-			.header("Authorization", "Bearer " + buyerToken))
+			.header("Authorization", "Bearer " + buyerToken)
+			.param("limit", "1"))
 			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.length()").value(1))
 			.andExpect(jsonPath("$.data[0].itemId").value(itemId))
 			.andExpect(jsonPath("$.data[0].matchReason").value("keyword and budget matched"));
 

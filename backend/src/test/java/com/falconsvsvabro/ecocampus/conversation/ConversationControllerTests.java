@@ -57,14 +57,33 @@ class ConversationControllerTests {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.senderId").value(buyer.userId()));
 
-		mockMvc.perform(get("/api/v1/conversations").header("Authorization", "Bearer " + seller.token()))
+		mockMvc.perform(post("/api/v1/conversations/{conversationId}/messages", conversationId)
+			.header("Authorization", "Bearer " + seller.token())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"content":"Sure, after 4 pm works."}
+					"""))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data[0].lastMessage").value("Can I pick it up this afternoon?"));
+			.andExpect(jsonPath("$.data.senderId").value(seller.userId()));
+
+		mockMvc.perform(get("/api/v1/conversations").header("Authorization", "Bearer " + seller.token())
+			.param("page", "1")
+			.param("size", "1"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.items[0].lastMessage").value("Sure, after 4 pm works."))
+			.andExpect(jsonPath("$.data.page").value(1))
+			.andExpect(jsonPath("$.data.size").value(1))
+			.andExpect(jsonPath("$.data.total").value(1));
 
 		mockMvc.perform(get("/api/v1/conversations/{conversationId}/messages", conversationId)
-			.header("Authorization", "Bearer " + seller.token()))
+			.header("Authorization", "Bearer " + seller.token())
+			.param("page", "1")
+			.param("size", "1"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data[0].content").value("Can I pick it up this afternoon?"));
+			.andExpect(jsonPath("$.data.items[0].content").value("Can I pick it up this afternoon?"))
+			.andExpect(jsonPath("$.data.page").value(1))
+			.andExpect(jsonPath("$.data.size").value(1))
+			.andExpect(jsonPath("$.data.total").value(2));
 	}
 
 	@Test

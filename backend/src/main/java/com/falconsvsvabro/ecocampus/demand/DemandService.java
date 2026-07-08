@@ -9,11 +9,9 @@ import com.falconsvsvabro.ecocampus.common.api.PageResponse;
 import com.falconsvsvabro.ecocampus.demand.dto.DemandMatchResponse;
 import com.falconsvsvabro.ecocampus.demand.dto.DemandRequest;
 import com.falconsvsvabro.ecocampus.demand.dto.DemandResponse;
-import com.falconsvsvabro.ecocampus.item.Item;
 import com.falconsvsvabro.ecocampus.item.ItemRepository;
 import com.falconsvsvabro.ecocampus.user.User;
 import java.util.List;
-import java.util.Locale;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -79,16 +77,16 @@ public class DemandService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<DemandMatchResponse> matchDemand(Long userId, Long demandId) {
+	public List<DemandMatchResponse> matchDemand(Long userId, Long demandId, int limit) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
 		Demand demand = getDemand(demandId);
 		if (!demand.getUserId().equals(user.getId())) {
 			throw new BusinessException(ErrorCode.FORBIDDEN, "demand does not belong to current user");
 		}
-		return itemRepository.findOnSaleCandidatesForDemand(demand.getCategoryId(), demand.getBudgetMinCent(),
-				demand.getBudgetMaxCent())
+		Pageable pageable = PageRequest.of(0, normalizeMatchLimit(limit));
+		return itemRepository.findLimitedOnSaleMatchesForDemand(demand.getId(), demand.getCategoryId(),
+				demand.getBudgetMinCent(), demand.getBudgetMaxCent(), pageable)
 			.stream()
-			.filter(item -> keywordMatches(demand, item))
 			.map(item -> new DemandMatchResponse(item.getId(), item.getTitle(), item.getPriceCent(),
 					"keyword and budget matched"))
 			.toList();
@@ -106,14 +104,6 @@ public class DemandService {
 	private Category getCategory(Long categoryId) {
 		return categoryRepository.findById(categoryId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "category not found"));
-	}
-
-	private boolean keywordMatches(Demand demand, Item item) {
-		String haystack = (item.getTitle() + " " + item.getDescription()).toLowerCase(Locale.ROOT);
-		return demand.getKeywords()
-			.stream()
-			.map(keyword -> keyword.toLowerCase(Locale.ROOT))
-			.anyMatch(haystack::contains);
 	}
 
 	private void validateBudget(Long budgetMinCent, Long budgetMaxCent) {
@@ -142,5 +132,12 @@ public class DemandService {
 			return 20;
 		}
 		return Math.min(size, 100);
+	}
+
+	private int normalizeMatchLimit(int limit) {
+		if (limit < 1) {
+			return 20;
+		}
+		return Math.min(limit, 50);
 	}
 }

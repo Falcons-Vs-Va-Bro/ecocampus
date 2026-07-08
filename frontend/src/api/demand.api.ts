@@ -50,7 +50,7 @@ export async function closeDemand(demandId: string | number) {
   return response.data
 }
 
-export async function listDemandMatches(demandId: string | number) {
-  const response = await apiClient.get<ApiResponse<DemandMatch[]>>(`/demands/${demandId}/matches`)
+export async function listDemandMatches(demandId: string | number, params?: { limit?: number }) {
+  const response = await apiClient.get<ApiResponse<DemandMatch[]>>(`/demands/${demandId}/matches`, { params })
   return response.data
 }
