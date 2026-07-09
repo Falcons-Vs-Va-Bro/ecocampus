@@ -36,12 +36,42 @@ import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import emptyFavoritesImage from '../../assets/favorites/empty-favorites.png'
 import airpodsImage from '../../assets/favorites/items/airpods.jpg'
+import basketballImage from '../../assets/favorites/items/basketball.jpg'
 import calculatorImage from '../../assets/favorites/items/calculator.jpg'
+import dailyCeramicSetImage from '../../assets/favorites/items/daily-ceramic-set.png'
+import dailyThermosImage from '../../assets/favorites/items/daily-thermos.png'
+import dailyUmbrellaImage from '../../assets/favorites/items/daily-umbrella.png'
+import dailyWaterBottleImage from '../../assets/favorites/items/daily-water-bottle.png'
 import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
+import instrumentsColoredPencilsImage from '../../assets/favorites/items/instruments-colored-pencils.png'
+import instrumentsDrawingTabletImage from '../../assets/favorites/items/instruments-drawing-tablet.png'
+import instrumentsFolderImage from '../../assets/favorites/items/instruments-folder.png'
+import instrumentsGuitarImage from '../../assets/favorites/items/instruments-guitar.png'
+import instrumentsHarmonicaImage from '../../assets/favorites/items/instruments-harmonica.png'
+import instrumentsJournalImage from '../../assets/favorites/items/instruments-journal.png'
+import instrumentsMarkersImage from '../../assets/favorites/items/instruments-markers.png'
 import macbookAirImage from '../../assets/favorites/items/macbook-air.jpg'
+import makeupCurlingIronImage from '../../assets/favorites/items/makeup-curling-iron.png'
+import makeupLotionSetImage from '../../assets/favorites/items/makeup-lotion-set.png'
+import makeupMirrorImage from '../../assets/favorites/items/makeup-mirror.png'
+import makeupShampooImage from '../../assets/favorites/items/makeup-shampoo.png'
+import makeupSunscreenImage from '../../assets/favorites/items/makeup-sunscreen.png'
 import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
 import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.jpg'
+import othersBadgeImage from '../../assets/favorites/items/others-badge.png'
+import othersCeramicCatImage from '../../assets/favorites/items/others-ceramic-cat.png'
+import othersFigureImage from '../../assets/favorites/items/others-figure.png'
+import othersKeychainImage from '../../assets/favorites/items/others-keychain.png'
+import othersPostcardsImage from '../../assets/favorites/items/others-postcards.png'
+import othersSunflowerImage from '../../assets/favorites/items/others-sunflower.png'
 import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
+import ticketsBandImage from '../../assets/favorites/items/tickets-band.png'
+import ticketsConcertImage from '../../assets/favorites/items/tickets-concert.png'
+import ticketsFootballImage from '../../assets/favorites/items/tickets-football.png'
+import ticketsGraduationImage from '../../assets/favorites/items/tickets-graduation.png'
+import ticketsLectureImage from '../../assets/favorites/items/tickets-lecture.png'
+import ticketsMovieImage from '../../assets/favorites/items/tickets-movie.png'
+import ticketsTheaterImage from '../../assets/favorites/items/tickets-theater.png'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './HomePage.css'
 import './ItemsPage.css'
@@ -90,6 +120,45 @@ const digitalPriceRanges = [
 const digitalSubcategories = ['全部', '电脑平板', '耳机音响', '键盘鼠标', '摄影设备', '充电配件', '计算器', '存储设备']
 const digitalConditions = ['全部', '全新', '九成新', '八成新', '轻微使用痕迹']
 const dormSubcategories = ['全部', '照明台灯', '收纳整理', '床上用品', '桌面用品', '小家电', '行李箱', '插排']
+const outdoorsSubcategories = ['全部', '球类运动', '球拍器材', '运动鞋服', '健身器材', '自行车', '户外用品']
+const outdoorsConditions = ['全部', '全新', '九成新', '八成新', '轻微磨损']
+const dailyGoodsSubcategories = ['全部', '杯壶餐具', '雨伞雨具', '清洁用品', '整理收纳', '小电器', '日常杂物']
+const dailyGoodsPriceRanges = [
+  { label: '全部', min: 0, max: Number.POSITIVE_INFINITY },
+  { label: '0-10', min: 0, max: 1000 },
+  { label: '10-30', min: 1000, max: 3000 },
+  { label: '30-80', min: 3000, max: 8000 },
+  { label: '80以上', min: 8000, max: Number.POSITIVE_INFINITY },
+]
+const makeupSubcategories = ['全部', '护肤用品', '彩妆工具', '香水香氛', '洗护用品', '美发工具', '美甲用品']
+const makeupPriceRanges = [
+  { label: '全部', min: 0, max: Number.POSITIVE_INFINITY },
+  { label: '0-30', min: 0, max: 3000 },
+  { label: '30-80', min: 3000, max: 8000 },
+  { label: '80-200', min: 8000, max: 20000 },
+  { label: '200以上', min: 20000, max: Number.POSITIVE_INFINITY },
+]
+const makeupConditions = ['全部', '全新未拆', '仅试用', '九成新', '可小刀']
+const instrumentsSubcategories = ['全部', '乐器', '绘画工具', '书写文具', '文件收纳', '手账用品', '创作工具']
+const instrumentsPriceRanges = [
+  { label: '全部', min: 0, max: Number.POSITIVE_INFINITY },
+  { label: '0-20', min: 0, max: 2000 },
+  { label: '20-80', min: 2000, max: 8000 },
+  { label: '80-300', min: 8000, max: 30000 },
+  { label: '300以上', min: 30000, max: Number.POSITIVE_INFINITY },
+]
+const ticketSubcategories = ['全部', '演出门票', '讲座活动', '电影票', '展览票', '赛事票', '校园活动']
+const ticketPriceRanges = [
+  { label: '全部', min: 0, max: Number.POSITIVE_INFINITY },
+  { label: '0-20', min: 0, max: 2000 },
+  { label: '20-50', min: 2000, max: 5000 },
+  { label: '50-100', min: 5000, max: 10000 },
+  { label: '100以上', min: 10000, max: Number.POSITIVE_INFINITY },
+]
+const ticketTimeFilters = ['今天', '本周', '本月', '长期有效']
+const ticketPickupFilters = ['电子票', '线下交接']
+const othersSubcategories = ['全部', '校园纪念', '手工制品', '装饰摆件', '杂物组合', '兴趣收藏', '未分类']
+const othersConditions = ['全部', '九成新', '八成新', '可小刀']
 
 const pickupModes = ['全部', '可自提', '校内配送'] as const
 const conditionFilters = ['全部', '全新', '九成新', '八成新', '可小刀'] as const
@@ -140,6 +209,74 @@ const dormItems: ItemSummary[] = [
   createTextbookItem(5008, '20寸行李箱 九成新', '行李箱', 8000, '吴同学', ['SELF_PICKUP'], 8, suitcaseImage),
 ]
 
+const outdoorsItems: ItemSummary[] = [
+  createTextbookItem(6001, '斯伯丁篮球 室内外7号球', '球类运动', 6000, '张同学', ['SELF_PICKUP'], 1, basketballImage),
+  createTextbookItem(6002, '羽毛球拍 双拍套装', '球拍器材', 8800, '林同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 2, basketballImage),
+  createTextbookItem(6003, '网球拍 九成新', '球拍器材', 12000, '王同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 3, basketballImage),
+  createTextbookItem(6004, '瑜伽垫 加厚防滑', '健身器材', 3500, '刘同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 4, suitcaseImage),
+  createTextbookItem(6005, '运动鞋 42码', '运动鞋服', 15000, '陈同学', ['SELF_PICKUP'], 5, macbookAirImage),
+  createTextbookItem(6006, '校园自行车', '自行车', 26000, '黄同学', ['SELF_PICKUP'], 6, basketballImage),
+  createTextbookItem(6007, '护膝护腕套装', '运动鞋服', 2500, '周同学', ['SELF_PICKUP'], 7, mechanicalKeyboardImage),
+  createTextbookItem(6008, '跳绳 计数款', '健身器材', 1800, '吴同学', ['SELF_PICKUP'], 8, calculatorImage),
+]
+
+const dailyGoodsItems: ItemSummary[] = [
+  createTextbookItem(7001, '保温水杯 500ml', '杯壶餐具', 1800, '林同学', ['SELF_PICKUP'], 1, dailyWaterBottleImage),
+  createTextbookItem(7002, '折叠雨伞 深蓝色', '雨伞雨具', 1200, '陈同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 2, dailyUmbrellaImage),
+  createTextbookItem(7003, '陶瓷餐具 三件套', '杯壶餐具', 2000, '周同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 3, dailyCeramicSetImage),
+  createTextbookItem(7004, '保温壶 九成新', '杯壶餐具', 3500, '黄同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 4, dailyThermosImage),
+  createTextbookItem(7005, '吹风机 小功率', '小电器', 4000, '吴同学', ['SELF_PICKUP'], 5, deskLampImage),
+  createTextbookItem(7006, '桌面镜 可折叠', '日常杂物', 1000, '刘同学', ['SELF_PICKUP'], 6, dailyWaterBottleImage),
+  createTextbookItem(7007, '整理盒 三格', '整理收纳', 1500, '张同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 7, suitcaseImage),
+  createTextbookItem(7008, '洗衣篮 可折叠', '整理收纳', 1600, '李同学', ['SELF_PICKUP'], 8, suitcaseImage),
+]
+
+const makeupItems: ItemSummary[] = [
+  createTextbookItem(8001, '护肤水乳套装', '护肤用品', 6800, '林同学', ['SELF_PICKUP'], 1, makeupLotionSetImage),
+  createTextbookItem(8002, '化妆刷 8支装', '彩妆工具', 3500, '周同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 2, makeupMirrorImage),
+  createTextbookItem(8003, '小样香水 30ml', '香水香氛', 8000, '王同学', ['SELF_PICKUP'], 3, dailyThermosImage),
+  createTextbookItem(8004, '防晒霜 SPF50', '护肤用品', 2800, '刘同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 4, makeupSunscreenImage),
+  createTextbookItem(8005, '卷发棒 32mm', '美发工具', 5500, '张同学', ['SELF_PICKUP'], 5, makeupCurlingIronImage),
+  createTextbookItem(8006, '桌面化妆镜', '彩妆工具', 1800, '黄同学', ['SELF_PICKUP'], 6, makeupMirrorImage),
+  createTextbookItem(8007, '美甲工具套装', '美甲用品', 2200, '吴同学', ['SELF_PICKUP'], 7, makeupCurlingIronImage),
+  createTextbookItem(8008, '洗发水 未拆封', '洗护用品', 4500, '陈同学', ['SELF_PICKUP'], 8, makeupShampooImage),
+]
+
+const instrumentsItems: ItemSummary[] = [
+  createTextbookItem(9001, '民谣吉他 41寸', '乐器', 18000, '林同学', ['SELF_PICKUP'], 1, instrumentsGuitarImage),
+  createTextbookItem(9002, '尤克里里 23寸', '乐器', 9500, '周同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 2, instrumentsGuitarImage),
+  createTextbookItem(9003, '口琴 C调', '乐器', 2500, '王同学', ['SELF_PICKUP'], 3, instrumentsHarmonicaImage),
+  createTextbookItem(9004, '水彩画笔套装', '绘画工具', 3000, '陈同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 4, instrumentsColoredPencilsImage),
+  createTextbookItem(9005, '马克笔 48色', '绘画工具', 5500, '吴同学', ['SELF_PICKUP'], 5, instrumentsMarkersImage),
+  createTextbookItem(9006, '文件夹 五只装', '文件收纳', 800, '张同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 6, instrumentsFolderImage),
+  createTextbookItem(9007, '手账本 未使用', '手账用品', 1800, '黄同学', ['SELF_PICKUP'], 7, instrumentsJournalImage),
+  createTextbookItem(9008, '绘图板 小号', '创作工具', 12000, '赵同学', ['SELF_PICKUP'], 8, instrumentsDrawingTabletImage),
+]
+
+const ticketItems: ItemSummary[] = [
+  createTextbookItem(10001, '厦大芙蓉湖音乐会门票', '演出门票', 6000, '林同学', ['DELIVER_TO_SCHOOL'], 1, ticketsConcertImage),
+  createTextbookItem(10002, '人工智能与未来 讲座票', '讲座活动', 0, '周同学', ['DELIVER_TO_SCHOOL'], 2, ticketsLectureImage),
+  createTextbookItem(10003, '电影票《银河漫游指南》', '电影票', 2800, '陈同学', ['DELIVER_TO_SCHOOL'], 3, ticketsMovieImage),
+  createTextbookItem(10004, '话剧《暗恋桃花源》门票', '演出门票', 8000, '王同学', ['SELF_PICKUP'], 4, ticketsTheaterImage),
+  createTextbookItem(10005, '《山海有声》艺术展门票', '展览票', 1500, '张同学', ['DELIVER_TO_SCHOOL'], 5, ticketsTheaterImage),
+  createTextbookItem(10006, '厦大毕业晚会 入场券', '校园活动', 1000, '黄同学', ['DELIVER_TO_SCHOOL'], 6, ticketsGraduationImage),
+  createTextbookItem(10007, '厦大 vs 集大 足球赛门票', '赛事票', 2000, '李同学', ['SELF_PICKUP'], 7, ticketsFootballImage),
+  createTextbookItem(10008, '海韵音乐节 2日通票', '演出门票', 12000, '吴同学', ['DELIVER_TO_SCHOOL'], 8, ticketsBandImage),
+]
+
+const othersItems: ItemSummary[] = [
+  createTextbookItem(11001, '鼓浪屿船票钥匙扣', '校园纪念', 600, '林同学', ['SELF_PICKUP'], 1, othersKeychainImage),
+  createTextbookItem(11002, '小猫陶瓷摆件', '装饰摆件', 1200, '周同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 2, othersCeramicCatImage),
+  createTextbookItem(11003, '厦大风景明信片套装', '校园纪念', 800, '王同学', ['SELF_PICKUP'], 3, othersPostcardsImage),
+  createTextbookItem(11004, '手工钩织向日葵', '手工制品', 1500, '陈同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 4, othersSunflowerImage),
+  createTextbookItem(11005, '厦大校徽徽章', '校园纪念', 500, '张同学', ['SELF_PICKUP'], 5, othersBadgeImage),
+  createTextbookItem(11006, '厦大主题盲盒', '兴趣收藏', 1800, '吴同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 6, othersFigureImage),
+  createTextbookItem(11007, '迷你场景小夜灯', '装饰摆件', 2000, '李同学', ['SELF_PICKUP'], 7, deskLampImage),
+  createTextbookItem(11008, '杂物组合一打包出', '杂物组合', 1000, '赵同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 8, suitcaseImage),
+  createTextbookItem(11009, '厦大香囊挂件', '手工制品', 900, '黄同学', ['SELF_PICKUP'], 9, othersBadgeImage),
+  createTextbookItem(11010, '动漫手办小摆件', '兴趣收藏', 1600, '林同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 10, othersFigureImage),
+]
+
 type PriceRange = { label: string; min: number; max: number }
 type PickupMode = (typeof pickupModes)[number]
 
@@ -149,13 +286,43 @@ export function ItemsPage() {
   const isTextbookPage = location.pathname === '/items/textbook'
   const isDigitalPage = location.pathname === '/items/digital'
   const isDormPage = location.pathname === '/items/dorm'
-  const pageTitle = isTextbookPage ? '教材教辅' : isDigitalPage ? '数码电子' : isDormPage ? '宿舍用品' : routeCategory === '全部' ? '全部商品' : routeCategory
+  const isOutdoorsPage = location.pathname === '/items/outdoors'
+  const isDailyGoodsPage = location.pathname === '/items/daily-goods'
+  const isMakeupPage = location.pathname === '/items/make-up'
+  const isInstrumentsPage = location.pathname === '/items/instruments'
+  const isTicketsPage = location.pathname === '/items/tickets'
+  const isOthersPage = location.pathname === '/items/others'
+  const hasSpecialItems =
+    isTextbookPage || isDigitalPage || isDormPage || isOutdoorsPage || isDailyGoodsPage || isMakeupPage || isInstrumentsPage || isTicketsPage || isOthersPage
+  const pageTitle = isTextbookPage
+    ? '教材教辅'
+    : isDigitalPage
+      ? '数码电子'
+      : isDormPage
+        ? '宿舍用品'
+        : isOutdoorsPage
+          ? '运动户外'
+          : isDailyGoodsPage
+            ? '生活日用'
+            : isMakeupPage
+              ? '美妆个护'
+              : isInstrumentsPage
+                ? '乐器文具'
+                : isTicketsPage
+                  ? '票务转让'
+                  : isOthersPage
+                    ? '其他'
+          : routeCategory === '全部'
+            ? '全部商品'
+            : routeCategory
   useDocumentTitle(`厦大闲置 - ${pageTitle}`)
   const [keyword, setKeyword] = useState('')
-  const [category, setCategory] = useState<string>(isTextbookPage || isDigitalPage || isDormPage ? '全部' : routeCategory)
+  const [category, setCategory] = useState<string>(hasSpecialItems ? '全部' : routeCategory)
   const [priceRange, setPriceRange] = useState<PriceRange>(priceRanges[0])
   const [pickupMode, setPickupMode] = useState<PickupMode>('全部')
   const [condition, setCondition] = useState('全部')
+  const [ticketTime, setTicketTime] = useState('')
+  const [ticketPickup, setTicketPickup] = useState('')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [page, setPage] = useState(1)
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(() => new Set([1002]))
@@ -166,24 +333,94 @@ export function ItemsPage() {
   })
 
   const allItems = itemsQuery.data?.data.items ?? emptyItems
-  const sourceItems = isTextbookPage ? textbookItems : isDigitalPage ? digitalItems : isDormPage ? dormItems : allItems
+  const sourceItems = isTextbookPage
+    ? textbookItems
+    : isDigitalPage
+      ? digitalItems
+      : isDormPage
+        ? dormItems
+        : isOutdoorsPage
+          ? outdoorsItems
+          : isDailyGoodsPage
+            ? dailyGoodsItems
+            : isMakeupPage
+              ? makeupItems
+              : isInstrumentsPage
+                ? instrumentsItems
+                : isTicketsPage
+                ? ticketItems
+                : isOthersPage
+                  ? othersItems
+              : allItems
   const categoryOptions = isTextbookPage
     ? textbookSubcategories
     : isDigitalPage
       ? digitalSubcategories
       : isDormPage
         ? dormSubcategories
-        : categoryRoutes.map((item) => item.label)
-  const priceOptions = isTextbookPage || isDormPage ? textbookPriceRanges : isDigitalPage ? digitalPriceRanges : priceRanges
-  const conditionOptions = isDigitalPage ? digitalConditions : conditionFilters
+        : isOutdoorsPage
+          ? outdoorsSubcategories
+          : isDailyGoodsPage
+            ? dailyGoodsSubcategories
+            : isMakeupPage
+              ? makeupSubcategories
+              : isInstrumentsPage
+              ? instrumentsSubcategories
+              : isTicketsPage
+                ? ticketSubcategories
+                : isOthersPage
+                  ? othersSubcategories
+          : categoryRoutes.map((item) => item.label)
+  const priceOptions = isInstrumentsPage
+    ? instrumentsPriceRanges
+    : isTicketsPage
+      ? ticketPriceRanges
+    : isMakeupPage
+      ? makeupPriceRanges
+      : isDailyGoodsPage
+        ? dailyGoodsPriceRanges
+        : isTextbookPage || isDormPage
+          ? textbookPriceRanges
+          : isDigitalPage
+            ? digitalPriceRanges
+            : priceRanges
+  const conditionOptions = isOthersPage ? othersConditions : isMakeupPage ? makeupConditions : isDigitalPage ? digitalConditions : isOutdoorsPage ? outdoorsConditions : conditionFilters
   const helperTags = isTextbookPage
     ? ['考研资料', '四六级', '线代', '高数', '教材']
     : isDigitalPage
       ? ['AirPods', 'MacBook', '键盘', '显示器', '计算器']
       : isDormPage
         ? ['台灯', '收纳箱', '床帘', '小风扇', '行李箱']
-        : ['考研资料', '自行车', '显示器', '台灯']
-  const helperStats = isTextbookPage ? { today: 24, cheap: 16 } : isDormPage ? { today: 32, cheap: 20 } : { today: 36, cheap: 18 }
+        : isOutdoorsPage
+          ? ['篮球', '羽毛球拍', '自行车', '瑜伽垫', '运动鞋']
+          : isDailyGoodsPage
+            ? ['水杯', '雨伞', '吹风机', '餐具', '整理盒']
+            : isMakeupPage
+            ? ['防晒霜', '洗发水', '水乳', '化妆镜', '卷发棒']
+            : isInstrumentsPage
+              ? ['吉他', '马克笔', '画笔', '文件夹', '笔记本']
+              : isTicketsPage
+              ? ['讲座', '演唱会', '电影票', '活动票', '展览']
+              : isOthersPage
+                ? ['纪念品', '明信片', '摆件', '盲盒', '钥匙扣']
+          : ['考研资料', '自行车', '显示器', '台灯']
+  const helperStats = isTextbookPage
+    ? { today: 24, cheap: 16 }
+    : isDormPage
+      ? { today: 32, cheap: 20 }
+      : isOutdoorsPage
+        ? { today: 28, cheap: 14 }
+        : isDailyGoodsPage
+          ? { today: 30, cheap: 22 }
+          : isMakeupPage
+          ? { today: 26, cheap: 15 }
+          : isInstrumentsPage
+            ? { today: 22, cheap: 13 }
+            : isTicketsPage
+              ? { today: 18, cheap: 11 }
+              : isOthersPage
+                ? { today: 20, cheap: 15 }
+          : { today: 36, cheap: 18 }
   const filteredItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
 
@@ -193,7 +430,7 @@ export function ItemsPage() {
           return true
         }
 
-        return isTextbookPage || isDigitalPage || isDormPage ? item.categoryName === category : displayCategoryName(item.categoryName) === category
+        return hasSpecialItems ? item.categoryName === category : displayCategoryName(item.categoryName) === category
       })
       .filter((item) => item.priceCent >= priceRange.min && item.priceCent < priceRange.max)
       .filter((item) => {
@@ -207,6 +444,24 @@ export function ItemsPage() {
 
         return true
       })
+      .filter((item) => {
+        if (!isTicketsPage) {
+          return true
+        }
+
+        if (!ticketPickup) {
+          return true
+        }
+
+        if (ticketPickup === '电子票') {
+          return item.deliveryModes.includes('DELIVER_TO_SCHOOL')
+        }
+
+        return item.deliveryModes.includes('SELF_PICKUP')
+      })
+      .filter((item) => (isTicketsPage && ticketTime === '今天' ? item.id === 10002 || item.id === 10003 : true))
+      .filter((item) => (isTicketsPage && ticketTime === '本周' ? item.id <= 10005 : true))
+      .filter((item) => (isTicketsPage && ticketTime === '本月' ? item.id <= 10008 : true))
       .filter((item) => (verifiedOnly ? item.seller.verificationStatus === 'VERIFIED' : true))
       .filter((item) => (condition === '全部' ? true : inferCondition(item) === condition))
       .filter((item) => {
@@ -217,7 +472,7 @@ export function ItemsPage() {
         return `${item.title} ${displayCategoryName(item.categoryName)} ${item.seller.nickname}`.toLowerCase().includes(normalizedKeyword)
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [category, condition, isDigitalPage, isDormPage, isTextbookPage, keyword, pickupMode, priceRange, sourceItems, verifiedOnly])
+  }, [category, condition, hasSpecialItems, isTicketsPage, keyword, pickupMode, priceRange, sourceItems, ticketPickup, ticketTime, verifiedOnly])
 
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -339,20 +594,41 @@ export function ItemsPage() {
                     </button>
                   ))}
                 </FilterRow>
-                <FilterRow label="取货">
-                  {pickupModes.map((item) => (
-                    <button type="button" className={pickupMode === item ? 'selected' : undefined} onClick={() => resetPage(() => setPickupMode(item))} key={item}>
-                      {item}
-                    </button>
-                  ))}
-                </FilterRow>
-                <FilterRow label="成色">
-                  {conditionOptions.map((item) => (
-                    <button type="button" className={condition === item ? 'selected' : undefined} onClick={() => resetPage(() => setCondition(item))} key={item}>
-                      {item}
-                    </button>
-                  ))}
-                </FilterRow>
+                {isTicketsPage ? (
+                  <>
+                    <FilterRow label="时间">
+                      {ticketTimeFilters.map((item) => (
+                        <button type="button" className={ticketTime === item ? 'selected' : undefined} onClick={() => resetPage(() => setTicketTime(item))} key={item}>
+                          {item}
+                        </button>
+                      ))}
+                    </FilterRow>
+                    <FilterRow label="取票">
+                      {ticketPickupFilters.map((item) => (
+                        <button type="button" className={ticketPickup === item ? 'selected' : undefined} onClick={() => resetPage(() => setTicketPickup(item))} key={item}>
+                          {item}
+                        </button>
+                      ))}
+                    </FilterRow>
+                  </>
+                ) : (
+                  <>
+                    <FilterRow label="取货">
+                      {pickupModes.map((item) => (
+                        <button type="button" className={pickupMode === item ? 'selected' : undefined} onClick={() => resetPage(() => setPickupMode(item))} key={item}>
+                          {item}
+                        </button>
+                      ))}
+                    </FilterRow>
+                    <FilterRow label="成色">
+                      {conditionOptions.map((item) => (
+                        <button type="button" className={condition === item ? 'selected' : undefined} onClick={() => resetPage(() => setCondition(item))} key={item}>
+                          {item}
+                        </button>
+                      ))}
+                    </FilterRow>
+                  </>
+                )}
               </section>
 
               <div className="items-toolbar">
@@ -377,7 +653,7 @@ export function ItemsPage() {
                 </div>
               </div>
 
-              {!isTextbookPage && itemsQuery.isLoading ? (
+              {!hasSpecialItems && itemsQuery.isLoading ? (
                 <div className="product-grid" aria-label="商品加载中">
                   {Array.from({ length: 8 }).map((_, index) => (
                     <div className="product-card skeleton" key={index}>
@@ -389,13 +665,13 @@ export function ItemsPage() {
                 </div>
               ) : null}
 
-              {!isTextbookPage && itemsQuery.isError ? <EmptyState title="商品加载失败" action="重新加载" onClick={() => itemsQuery.refetch()} /> : null}
+              {!hasSpecialItems && itemsQuery.isError ? <EmptyState title="商品加载失败" action="重新加载" onClick={() => itemsQuery.refetch()} /> : null}
 
-              {(isTextbookPage || (!itemsQuery.isLoading && !itemsQuery.isError)) && visibleItems.length === 0 ? (
+              {(hasSpecialItems || (!itemsQuery.isLoading && !itemsQuery.isError)) && visibleItems.length === 0 ? (
                 <EmptyState title="暂无符合条件的商品" description="换个分类、价格或关键词再试试。" />
               ) : null}
 
-              {(isTextbookPage || (!itemsQuery.isLoading && !itemsQuery.isError)) && visibleItems.length > 0 ? (
+              {(hasSpecialItems || (!itemsQuery.isLoading && !itemsQuery.isError)) && visibleItems.length > 0 ? (
                 <div className="product-grid items-product-grid">
                   {visibleItems.map((item) => (
                     <ProductCard

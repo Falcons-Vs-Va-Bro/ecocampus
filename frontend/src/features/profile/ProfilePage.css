@@ -333,7 +333,7 @@
 }
 
 .student-card p,
-.verify-card p,
+.profile-verify-info p,
 .address-card p,
 .setting-card p {
   margin: 8px 0 0;
@@ -376,7 +376,7 @@
 }
 
 .profile-tags span,
-.verify-card a {
+.profile-verify-info a {
   padding: 3px 12px;
   border: 1px solid rgba(47, 120, 191, 0.55);
   border-radius: 7px;
@@ -384,12 +384,21 @@
   background: rgba(237, 247, 255, 0.78);
 }
 
-.verify-card {
+.profile-verify-info {
+  display: grid;
+  align-content: center;
+  gap: 12px;
   padding-left: 30px;
   border-left: 1px solid rgba(112, 133, 149, 0.4);
 }
 
-.verify-card strong {
+.profile-verify-info p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-verify-info strong {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -630,9 +639,15 @@
 }
 
 .profile-panel-art {
+  position: relative;
+  width: min(250px, 100%);
+  margin: 14px auto 0;
+}
+
+.profile-panel-art-image {
   display: block;
-  margin: 20px auto 0;
-  color: rgba(47, 120, 191, 0.35);
+  width: 100%;
+  height: auto;
 }
 
 .address-steps {

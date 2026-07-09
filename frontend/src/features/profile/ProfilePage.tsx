@@ -11,7 +11,6 @@ import {
   Dumbbell,
   Grid3X3,
   Home,
-  IdCard,
   Lock,
   LogOut,
   Mail,
@@ -32,6 +31,7 @@ import type { ChangeEvent } from 'react'
 import { useRef, useState } from 'react'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
+import profileVerifyCardImage from '../../assets/favorites/profile-verify-card.png'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './ProfilePage.css'
 
@@ -232,7 +232,7 @@ export function ProfilePage() {
                   </div>
                 </div>
               </div>
-              <div className="verify-card">
+              <div className="profile-verify-info">
                 <p>
                   校园核验：
                   <strong>
@@ -330,7 +330,9 @@ export function ProfilePage() {
                   <span>默认地址会优先用于自提和校内配送</span>
                 </li>
               </ul>
-              <IdCard className="profile-panel-art" size={136} />
+              <div className="profile-panel-art" aria-hidden="true">
+                <img className="profile-panel-art-image" src={profileVerifyCardImage} alt="" />
+              </div>
             </section>
 
             <section className="profile-panel profile-address-help">
