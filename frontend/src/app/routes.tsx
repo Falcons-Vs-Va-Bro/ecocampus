@@ -6,6 +6,7 @@ import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
 import { MarketplacePlaceholderPage } from '../components/marketplace'
 import { LoginPage } from '../features/auth/LoginPage'
+import { ConversationDetailPage, MessagesPage } from '../features/conversations'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
 import { HomePage } from '../features/item-market/HomePage'
 import type { RouteMeta } from '../types/routes'
@@ -23,6 +24,20 @@ function createRoute(meta: RouteMeta): RouteObject {
     return {
       path: 'favorites',
       element: <FavoritesPage />,
+    }
+  }
+
+  if (meta.path === '/messages') {
+    return {
+      path: 'messages',
+      element: <MessagesPage />,
+    }
+  }
+
+  if (meta.path === '/messages/:conversationId') {
+    return {
+      path: 'messages/:conversationId',
+      element: <ConversationDetailPage />,
     }
   }
 
