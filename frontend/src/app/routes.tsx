@@ -5,14 +5,17 @@ import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
 import { MarketplacePlaceholderPage } from '../components/marketplace'
+import { AdminItemsPage, AdminReviewPage } from '../features/admin'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ConversationDetailPage, MessagesPage } from '../features/conversations'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
+import { ItemDetailPage } from '../features/item-detail'
 import { HomePage } from '../features/item-market/HomePage'
 import { ItemsPage } from '../features/item-market/ItemsPage'
 import { EditItemPage } from '../features/item-publish/EditItemPage'
 import { MyItemsPage } from '../features/item-publish/MyItemsPage'
 import { PublishPage } from '../features/item-publish/PublishPage'
+import { OrdersPage } from '../features/orders'
 import { ProfilePage } from '../features/profile/ProfilePage'
 import { VerifyPage } from '../features/profile/VerifyPage'
 import type { RouteMeta } from '../types/routes'
@@ -99,6 +102,42 @@ function createRoute(meta: RouteMeta): RouteObject {
     return {
       path: 'verify',
       element: <VerifyPage />,
+    }
+  }
+
+  if (meta.path === '/items/:id') {
+    return {
+      path: 'items/:id',
+      element: <ItemDetailPage />,
+    }
+  }
+
+  if (meta.path === '/orders') {
+    return {
+      path: 'orders',
+      element: <OrdersPage />,
+    }
+  }
+
+  if (meta.path === '/admin/items/review') {
+    return {
+      path: 'admin/items/review',
+      element: (
+        <RouteGuard meta={meta} showNotice={false}>
+          <AdminReviewPage />
+        </RouteGuard>
+      ),
+    }
+  }
+
+  if (meta.path === '/admin/items') {
+    return {
+      path: 'admin/items',
+      element: (
+        <RouteGuard meta={meta} showNotice={false}>
+          <AdminItemsPage />
+        </RouteGuard>
+      ),
     }
   }
 

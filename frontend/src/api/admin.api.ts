@@ -1,6 +1,9 @@
 import type { ApiResponse, ItemStatus, PageResult, VerificationStatus } from '../types/api'
 import { apiClient } from './http'
 import type { ItemSummary } from './item.api'
+import { listMockAdminItems, listMockReviewItems, mockViolationRemoveItem, reviewMockItem } from './mock/admin.mock'
+
+const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
 
 export interface DashboardOverview {
   publishedCount: number
@@ -24,6 +27,16 @@ export interface ReviewItemRequest {
   reason: string
 }
 
+export interface AdminReviewItemSummary extends ItemSummary {
+  description?: string
+  imageCount?: number
+  reviewFlags?: string[]
+  reviewReason?: string
+  sellerViolationCount?: number
+  studentNoMasked?: string
+  submittedAt?: string
+}
+
 export interface ViolationRemoveRequest {
   reason: string
 }
@@ -34,11 +47,19 @@ export async function getDashboardOverview() {
 }
 
 export async function listReviewItems(params?: { status?: Extract<ItemStatus, 'PENDING_REVIEW'>; page?: number; size?: number }) {
-  const response = await apiClient.get<ApiResponse<PageResult<ItemSummary>>>('/admin/items/review', { params })
+  if (useMocks) {
+    return listMockReviewItems(params)
+  }
+
+  const response = await apiClient.get<ApiResponse<PageResult<AdminReviewItemSummary>>>('/admin/items/review', { params })
   return response.data
 }
 
 export async function reviewItem(itemId: string | number, payload: ReviewItemRequest) {
+  if (useMocks) {
+    return reviewMockItem(itemId, payload)
+  }
+
   const response = await apiClient.post<ApiResponse<void>>(`/admin/items/${itemId}/review`, payload)
   return response.data
 }
@@ -50,11 +71,19 @@ export async function listAdminItems(params?: {
   page?: number
   size?: number
 }) {
+  if (useMocks) {
+    return listMockAdminItems(params)
+  }
+
   const response = await apiClient.get<ApiResponse<PageResult<ItemSummary>>>('/admin/items', { params })
   return response.data
 }
 
 export async function violationRemoveItem(itemId: string | number, payload: ViolationRemoveRequest) {
+  if (useMocks) {
+    return mockViolationRemoveItem(itemId)
+  }
+
   const response = await apiClient.post<ApiResponse<void>>(`/admin/items/${itemId}/violation-remove`, payload)
   return response.data
 }

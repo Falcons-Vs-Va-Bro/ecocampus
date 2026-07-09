@@ -1,1 +1,1 @@
-export {}
+export { AdminShell } from './AdminShell'

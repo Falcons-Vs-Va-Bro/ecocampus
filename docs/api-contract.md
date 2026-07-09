@@ -464,13 +464,43 @@ Content-Type: `multipart/form-data`
 
 创建后状态为 `PENDING_COMMUNICATION`。
 
+响应 `data` 为订单摘要：
+
+```json
+{
+  "id": 7001,
+  "itemId": 1001,
+  "itemTitle": "高等数学（第七版）上下册",
+  "buyerId": 12,
+  "sellerId": 7,
+  "deliveryMode": "SELF_PICKUP",
+  "status": "PENDING_COMMUNICATION",
+  "remark": "想约图书馆门口自提",
+  "createdAt": "2026-07-03T15:00:00+08:00"
+}
+```
+
 ### 10.2 我的订单
 
 `GET /orders?role=BUYER|SELLER&status=PENDING_COMMUNICATION`
 
+权限：`USER`
+
+查询参数：
+
+| 参数 | 说明 |
+| --- | --- |
+| `role` | `BUYER` 或 `SELLER`，默认 `BUYER` |
+| `status` | 可选订单状态 |
+| `page` / `size` | 分页，`size` 默认 20，最大 100 |
+
+响应 `data` 为分页对象，`items` 字段使用 10.1 的订单摘要结构。
+
 ### 10.3 订单详情
 
 `GET /orders/{orderId}`
+
+响应 `data` 使用 10.1 的订单摘要结构。当前订单接口不直接返回商品图片、价格、买家昵称或卖家昵称；需要展示这些信息时，前端应通过商品/用户资料接口或 mock 展示元数据补充。
 
 ### 10.4 更新订单状态
 

@@ -7,14 +7,20 @@ import macbookAirImage from '../../assets/favorites/items/macbook-air.jpg'
 import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
 import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.jpg'
 import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
-import type { ItemListParams, ItemSummary } from '../item.api'
+import lampMainImage from '../../assets/item-detail/lamp-main.jpg'
+import lampThumb2Image from '../../assets/item-detail/lamp-thumb-2.png'
+import lampThumb3Image from '../../assets/item-detail/lamp-thumb-3.png'
+import lampThumb4Image from '../../assets/item-detail/lamp-thumb-4.png'
+import type { ItemDetail, ItemListParams, ItemSummary } from '../item.api'
 
 const mockLatencyMs = 180
 
 const mockItems: ItemSummary[] = [
   createItem(1001, '高等数学（第七版）上下册', '教材', 2800, mathBooksImage, '李同学', ['SELF_PICKUP'], 18, 1),
   createItem(1002, 'MacBook Air 2019 13 寸', '数码', 235000, macbookAirImage, '林同学', ['SELF_PICKUP'], 42, 2),
-  createItem(1003, '护眼台灯 可调光', '宿舍用品', 4500, deskLampImage, '王同学', ['DELIVER_TO_SCHOOL'], 9, 3),
+  createItem(1003, '护眼台灯 可调光', '宿舍用品', 4500, deskLampImage, '林同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 23, 3, {
+    createdAt: '2026-07-06T14:20:00+08:00',
+  }),
   createItem(1004, '斯伯丁篮球 室内外 7 号球', '运动户外', 6000, basketballImage, '陈同学', ['SELF_PICKUP'], 15, 4),
   createItem(1005, '机械键盘 青轴', '数码', 12000, mechanicalKeyboardImage, '张同学', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 27, 5),
   createItem(1006, '20 寸行李箱 九成新', '生活日用', 8000, suitcaseImage, '刘同学', ['SELF_PICKUP'], 16, 6),
@@ -59,6 +65,25 @@ export async function listMockItems(params?: ItemListParams): Promise<ApiRespons
   }
 }
 
+export async function getMockItem(itemId: string | number): Promise<ApiResponse<ItemDetail>> {
+  await delay(mockLatencyMs)
+
+  const item = mockItems.find((mockItem) => mockItem.id === Number(itemId))
+
+  if (!item) {
+    throw new Error('mock item not found')
+  }
+
+  const detail = createDetail(item)
+
+  return {
+    code: 'OK',
+    message: 'success',
+    data: detail,
+    traceId: 'mock-item-detail',
+  }
+}
+
 function createItem(
   id: number,
   title: string,
@@ -69,6 +94,7 @@ function createItem(
   deliveryModes: ItemSummary['deliveryModes'],
   favoriteCount: number,
   dayOffset: number,
+  options?: { createdAt?: string },
 ): ItemSummary {
   return {
     id,
@@ -77,7 +103,9 @@ function createItem(
     priceCent,
     status: 'ON_SALE',
     coverImageUrl,
-    createdAt: `2026-07-${String(Math.max(1, 3 - Math.floor(dayOffset / 6))).padStart(2, '0')}T${String(9 + (dayOffset % 10)).padStart(2, '0')}:20:00+08:00`,
+    createdAt:
+      options?.createdAt ??
+      `2026-07-${String(Math.max(1, 3 - Math.floor(dayOffset / 6))).padStart(2, '0')}T${String(9 + (dayOffset % 10)).padStart(2, '0')}:20:00+08:00`,
     deliveryModes,
     seller: {
       id: 2000 + id,
@@ -87,6 +115,40 @@ function createItem(
     favorited: id % 3 === 0,
     favoriteCount,
   }
+}
+
+function createDetail(item: ItemSummary): ItemDetail {
+  if (item.id === 1003) {
+    return {
+      ...item,
+      description: '台灯亮度三档可调，适合宿舍书桌使用，灯头角度可旋转，功能正常。',
+      categoryId: 3,
+      imageUrls: [lampMainImage, lampThumb2Image, lampThumb3Image, lampThumb4Image],
+    }
+  }
+
+  return {
+    ...item,
+    description: `${item.title}，校内同学闲置转让，成色良好，支持当面验货后确认。`,
+    categoryId: getCategoryId(item.categoryName),
+    imageUrls: item.coverImageUrl ? [item.coverImageUrl] : [],
+  }
+}
+
+function getCategoryId(categoryName: string) {
+  const categoryIds: Record<string, number> = {
+    教材: 1,
+    数码: 2,
+    宿舍用品: 3,
+    运动户外: 4,
+    生活日用: 5,
+    美妆个护: 6,
+    乐器文具: 7,
+    票务转让: 8,
+    其他: 9,
+  }
+
+  return categoryIds[categoryName] ?? 9
 }
 
 function delay(ms: number) {
