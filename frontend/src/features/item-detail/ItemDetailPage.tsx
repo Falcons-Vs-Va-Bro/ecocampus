@@ -208,97 +208,103 @@ export function ItemDetailPage() {
               </div>
             </motion.div>
 
-            <motion.article
-              className="item-info-card"
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
-              animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.42, delay: 0.24 }}
-            >
-              <h2>{item.title}</h2>
-              <strong>{formatPrice(item.priceCent)}</strong>
-              <div className="item-tags">
-                <span>九成新</span>
-                <span>{item.categoryName}</span>
-                <span>发布时间 {formatMonthDay(item.createdAt)}</span>
-              </div>
-              <dl className="item-facts">
-                <div>
-                  <Truck size={20} />
-                  <dt>交易方式：</dt>
-                  <dd>{formatDelivery(item.deliveryModes)}</dd>
+            <div className="item-purchase-panel">
+              <motion.article
+                className="item-info-card"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.42, delay: 0.24 }}
+              >
+                <div className="item-info-summary">
+                  <h2>{item.title}</h2>
+                  <strong>{formatPrice(item.priceCent)}</strong>
+                  <div className="item-tags">
+                    <span>九成新</span>
+                    <span>{item.categoryName}</span>
+                    <span>发布时间 {formatMonthDay(item.createdAt)}</span>
+                  </div>
+                  <dl className="item-facts">
+                    <div>
+                      <Truck size={20} />
+                      <dt>交易方式：</dt>
+                      <dd>{formatDelivery(item.deliveryModes)}</dd>
+                    </div>
+                    <div>
+                      <MapPin size={20} />
+                      <dt>自提地点：</dt>
+                      <dd>芙蓉园门口</dd>
+                    </div>
+                    <div>
+                      <Eye size={20} />
+                      <dt>浏览</dt>
+                      <dd>128</dd>
+                      <Heart size={20} />
+                      <dt>收藏</dt>
+                      <dd>{favoriteCount}</dd>
+                    </div>
+                  </dl>
                 </div>
-                <div>
-                  <MapPin size={20} />
-                  <dt>自提地点：</dt>
-                  <dd>芙蓉园门口</dd>
+                <div className="item-info-extension">
+                  <section className="item-description">
+                    <h3>商品描述</h3>
+                    <p>{item.description}</p>
+                  </section>
+                  <div className="item-action-row">
+                    <button
+                      type="button"
+                      className={isFavorited ? 'favorited' : undefined}
+                      disabled={favoriteMutation.isPending}
+                      onClick={() => favoriteMutation.mutate()}
+                    >
+                      <Heart size={25} fill={isFavorited ? 'currentColor' : 'none'} />
+                      {isFavorited ? '已收藏' : '收藏'}
+                    </button>
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={contactMutation.isPending}
+                      onClick={() => contactMutation.mutate(item)}
+                    >
+                      <MessageCircle size={23} />
+                      立即联系
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={orderMutation.isPending}
+                      onClick={() => orderMutation.mutate(item)}
+                    >
+                      预约自提
+                    </button>
+                  </div>
+                  <p className="item-action-note">{actionNotice || '预约后将创建待沟通意向订单'}</p>
                 </div>
-                <div>
-                  <Eye size={20} />
-                  <dt>浏览</dt>
-                  <dd>128</dd>
-                  <Heart size={20} />
-                  <dt>收藏</dt>
-                  <dd>{favoriteCount}</dd>
-                </div>
-              </dl>
-              <section className="item-description">
-                <h3>商品描述</h3>
-                <p>{item.description}</p>
-              </section>
-              <div className="item-action-row">
-                <button
-                  type="button"
-                  className={isFavorited ? 'favorited' : undefined}
-                  disabled={favoriteMutation.isPending}
-                  onClick={() => favoriteMutation.mutate()}
-                >
-                  <Heart size={25} fill={isFavorited ? 'currentColor' : 'none'} />
-                  {isFavorited ? '已收藏' : '收藏'}
-                </button>
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={contactMutation.isPending}
-                  onClick={() => contactMutation.mutate(item)}
-                >
-                  <MessageCircle size={23} />
-                  立即联系
-                </button>
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={orderMutation.isPending}
-                  onClick={() => orderMutation.mutate(item)}
-                >
-                  预约自提
-                </button>
-              </div>
-              <p className="item-action-note">{actionNotice || '预约后将创建待沟通意向订单'}</p>
-            </motion.article>
+              </motion.article>
 
-            <motion.aside
-              className="seller-card"
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
-              animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.42, delay: 0.3 }}
-            >
-              <h2>发布者信息</h2>
-              <div className="seller-profile-card">
-                <img src={sellerAvatarImage} alt="发布者头像" />
-                <div>
-                  <strong>{item.seller.nickname}</strong>
-                  <span>
-                    <CheckCircle2 size={16} />
-                    已认证
-                  </span>
+              <motion.aside
+                className="seller-card"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.42, delay: 0.3 }}
+              >
+                <h2>发布者信息</h2>
+                <div className="seller-profile-card">
+                  <img src={sellerAvatarImage} alt="发布者头像" />
+                  <div>
+                    <strong>{item.seller.nickname}</strong>
+                    <span>
+                      <CheckCircle2 size={16} />
+                      已认证
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <p>厦门大学 · 学生认证</p>
-              <p>在售 6 件 · 回复较快</p>
-              <button type="button" onClick={() => contactMutation.mutate(item)}>
-                进入私信
-              </button>
-            </motion.aside>
+                <p>厦门大学 · 学生认证</p>
+                <p>在售 6 件 · 回复较快</p>
+                <button type="button" onClick={() => contactMutation.mutate(item)}>
+                  进入私信
+                </button>
+              </motion.aside>
+            </div>
           </section>
 
           <section className="item-detail-bottom-grid">

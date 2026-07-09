@@ -45,13 +45,14 @@
 
 .item-detail-top-grid {
   display: grid;
-  grid-template-columns: minmax(520px, 0.92fr) minmax(390px, 0.64fr) minmax(280px, 0.45fr);
+  grid-template-columns: minmax(520px, 0.92fr) minmax(700px, 1.09fr);
   gap: 20px;
   align-items: start;
 }
 
 .item-gallery-card,
-.item-info-card,
+.item-info-summary,
+.item-info-extension,
 .seller-card,
 .trade-instruction-card,
 .related-items-card {
@@ -64,6 +65,41 @@
 .item-gallery-card {
   border-color: transparent;
   background: transparent;
+}
+
+.item-purchase-panel {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(390px, 1.45fr) minmax(280px, 1fr);
+  column-gap: 20px;
+  align-items: start;
+}
+
+.item-info-card {
+  display: grid;
+  min-width: 0;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  grid-template-columns: minmax(390px, 1.45fr) minmax(280px, 1fr);
+  column-gap: 20px;
+  background: transparent;
+}
+
+.item-info-summary {
+  min-height: 286px;
+  grid-column: 1;
+  grid-row: 1;
+  padding: 20px 20px 16px;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+}
+
+.item-info-extension {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: -2px;
+  padding: 0 20px 18px;
+  border-radius: 0 0 8px 8px;
 }
 
 .item-gallery-main {
@@ -131,11 +167,6 @@
   object-fit: cover;
 }
 
-.item-info-card {
-  min-height: 500px;
-  padding: 20px 20px 18px;
-}
-
 .item-info-card h2,
 .seller-card h2,
 .trade-instruction-card h2,
@@ -147,7 +178,7 @@
   line-height: 1.18;
 }
 
-.item-info-card > strong {
+.item-info-summary > strong {
   display: block;
   margin-top: 12px;
   color: #d92823;
@@ -292,12 +323,15 @@
   border-color: #2d77bd;
   color: #ffffff;
   background:
-    repeating-linear-gradient(-18deg, rgba(255, 255, 255, 0.14) 0 3px, transparent 3px 7px),
-    #3e83c7;
+    repeating-linear-gradient(-17deg, rgba(255, 255, 255, 0.24) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-17deg, transparent 0 7px, rgba(26, 83, 148, 0.28) 7px 9px),
+    linear-gradient(90deg, #2f77bf 0%, #4a8fd0 52%, #347dc5 100%);
+  background-blend-mode: soft-light, multiply, normal;
   box-shadow:
     inset 0 0 0 2px rgba(255, 255, 255, 0.18),
     0 3px 0 #235f9b;
   font-size: 24px;
+  text-shadow: 0 1px 0 rgba(30, 72, 122, 0.46);
 }
 
 .item-action-row .primary:hover {
@@ -324,7 +358,11 @@
 }
 
 .seller-card {
+  position: relative;
+  z-index: 2;
   min-height: 266px;
+  grid-column: 2;
+  grid-row: 1;
   padding: 20px 20px 22px;
 }
 
@@ -550,7 +588,7 @@
 
 .item-detail-skeleton {
   display: grid;
-  grid-template-columns: minmax(520px, 0.92fr) minmax(390px, 0.64fr) minmax(280px, 0.45fr);
+  grid-template-columns: minmax(520px, 0.92fr) minmax(700px, 1.09fr);
   gap: 20px;
   margin-top: 56px;
 }
@@ -565,11 +603,13 @@
 
 @media (max-width: 1500px) {
   .item-detail-top-grid {
-    grid-template-columns: minmax(480px, 0.92fr) minmax(360px, 0.7fr);
+    grid-template-columns: minmax(460px, 0.88fr) minmax(620px, 1.12fr);
   }
 
-  .seller-card {
-    grid-column: 2;
+  .item-purchase-panel,
+  .item-info-card {
+    grid-template-columns: minmax(350px, 1.38fr) minmax(240px, 0.95fr);
+    column-gap: 18px;
   }
 
   .item-detail-bottom-grid {
@@ -583,8 +623,19 @@
     grid-template-columns: 1fr;
   }
 
+  .item-purchase-panel,
+  .item-info-card {
+    grid-template-columns: 1fr;
+  }
+
+  .item-info-card {
+    grid-column: auto;
+  }
+
   .seller-card {
     grid-column: auto;
+    grid-row: auto;
+    margin-top: 20px;
   }
 
   .item-gallery-main {
@@ -620,7 +671,10 @@
 
   .item-detail-main,
   .item-gallery-card,
+  .item-purchase-panel,
   .item-info-card,
+  .item-info-summary,
+  .item-info-extension,
   .seller-card,
   .trade-instruction-card,
   .related-items-card {
@@ -641,14 +695,15 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .item-info-card,
+  .item-info-summary,
+  .item-info-extension,
   .seller-card,
   .trade-instruction-card,
   .related-items-card {
     padding: 16px;
   }
 
-  .item-info-card > strong {
+  .item-info-summary > strong {
     font-size: 30px;
   }
 
