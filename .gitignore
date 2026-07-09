@@ -34,6 +34,7 @@ application-*.local.properties
 .env
 .env.*
 !.env.example
+!frontend/.env.mock
 *.pem
 *.key
 *.crt

@@ -1,6 +1,6 @@
 import type { ApiResponse, DeliveryMode, ItemStatus, PageResult, VerificationStatus } from '../types/api'
 import { apiClient } from './http'
-import { listMockItems } from './mock/items.mock'
+import { getMockItem, listMockItems } from './mock/items.mock'
 
 const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
 
@@ -59,6 +59,10 @@ export async function listItems(params?: ItemListParams) {
 }
 
 export async function getItem(itemId: string | number) {
+  if (useMocks) {
+    return getMockItem(itemId)
+  }
+
   const response = await apiClient.get<ApiResponse<ItemDetail>>(`/items/${itemId}`)
   return response.data
 }

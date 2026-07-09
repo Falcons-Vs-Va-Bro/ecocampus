@@ -246,9 +246,9 @@ export async function createMockOrder(payload: CreateOrderRequest): Promise<ApiR
   const order: OrderSummary = {
     id: Date.now(),
     itemId: payload.itemId,
-    itemTitle: `闲置商品 #${payload.itemId}`,
+    itemTitle: payload.itemId === 1003 ? '护眼台灯 可调光' : `闲置商品 #${payload.itemId}`,
     buyerId: currentUserId,
-    sellerId: 1,
+    sellerId: payload.itemId === 1003 ? 9 : 1,
     deliveryMode: payload.deliveryMode,
     status: 'PENDING_COMMUNICATION',
     remark: payload.remark,
