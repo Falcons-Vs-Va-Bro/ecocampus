@@ -8,6 +8,7 @@ import { MarketplacePlaceholderPage } from '../components/marketplace'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ConversationDetailPage, MessagesPage } from '../features/conversations'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
+import { ItemDetailPage } from '../features/item-detail'
 import { HomePage } from '../features/item-market/HomePage'
 import type { RouteMeta } from '../types/routes'
 import { routeCatalog } from './routeCatalog'
@@ -38,6 +39,13 @@ function createRoute(meta: RouteMeta): RouteObject {
     return {
       path: 'messages/:conversationId',
       element: <ConversationDetailPage />,
+    }
+  }
+
+  if (meta.path === '/items/:id') {
+    return {
+      path: 'items/:id',
+      element: <ItemDetailPage />,
     }
   }
 
