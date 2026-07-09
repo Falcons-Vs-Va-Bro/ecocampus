@@ -5,10 +5,12 @@ import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
 import { MarketplacePlaceholderPage } from '../components/marketplace'
+import { AdminItemsPage, AdminReviewPage } from '../features/admin'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ConversationDetailPage, MessagesPage } from '../features/conversations'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
 import { HomePage } from '../features/item-market/HomePage'
+import { OrdersPage } from '../features/orders'
 import type { RouteMeta } from '../types/routes'
 import { routeCatalog } from './routeCatalog'
 
@@ -38,6 +40,35 @@ function createRoute(meta: RouteMeta): RouteObject {
     return {
       path: 'messages/:conversationId',
       element: <ConversationDetailPage />,
+    }
+  }
+
+  if (meta.path === '/orders') {
+    return {
+      path: 'orders',
+      element: <OrdersPage />,
+    }
+  }
+
+  if (meta.path === '/admin/items/review') {
+    return {
+      path: 'admin/items/review',
+      element: (
+        <RouteGuard meta={meta} showNotice={false}>
+          <AdminReviewPage />
+        </RouteGuard>
+      ),
+    }
+  }
+
+  if (meta.path === '/admin/items') {
+    return {
+      path: 'admin/items',
+      element: (
+        <RouteGuard meta={meta} showNotice={false}>
+          <AdminItemsPage />
+        </RouteGuard>
+      ),
     }
   }
 

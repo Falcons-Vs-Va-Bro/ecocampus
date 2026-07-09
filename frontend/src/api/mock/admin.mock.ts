@@ -1,0 +1,284 @@
+import type { ApiResponse, ItemStatus, PageResult } from '../../types/api'
+import airpodsImage from '../../assets/favorites/items/airpods.jpg'
+import calculatorImage from '../../assets/favorites/items/calculator.jpg'
+import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
+import macbookAirImage from '../../assets/favorites/items/macbook-air.jpg'
+import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
+import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
+import type { AdminReviewItemSummary, ReviewItemRequest } from '../admin.api'
+import type { ItemSummary } from '../item.api'
+
+interface MockAdminItemsParams {
+  status?: ItemStatus
+  keyword?: string
+  categoryId?: number
+  page?: number
+  size?: number
+}
+
+const mockLatencyMs = 180
+
+const categoryIdsByName = new Map([
+  ['教材', 1],
+  ['数码', 2],
+  ['宿舍用品', 3],
+  ['运动户外', 4],
+  ['生活日用', 5],
+  ['美妆个护', 6],
+  ['乐器文具', 7],
+  ['票务转让', 8],
+  ['其他', 9],
+])
+
+const mockAdminItems: ItemSummary[] = [
+  createAdminItem(1002, 'MacBook Air 2019 13 寸', '数码', 268000, macbookAirImage, '林同学', 'ON_SALE', 42, 1),
+  createAdminItem(1007, 'AirPods 二代', '数码', 32000, airpodsImage, '周同学', 'ON_SALE', 31, 2),
+  createAdminItem(1017, '演唱会门票转让', '票务转让', 58000, calculatorImage, '黄同学', 'PENDING_REVIEW', 8, 3),
+  createAdminItem(1003, '护眼台灯 可调光', '宿舍用品', 4500, deskLampImage, '许同学', 'ON_SALE', 9, 4),
+  createAdminItem(1018, '蓝牙音箱 便携款', '数码', 7600, airpodsImage, '陈同学', 'ON_SALE', 12, 5),
+  createAdminItem(1011, '考研英语真题 近五年', '教材', 1800, mathBooksImage, '何同学', 'OFF_SHELF', 5, 6),
+  createAdminItem(1006, '20 寸行李箱 九成新', '生活日用', 8000, suitcaseImage, '刘同学', 'SOLD', 16, 7),
+  createAdminItem(1019, '疑似批量耳机转售', '数码', 19900, airpodsImage, '匿名用户', 'VIOLATION_REMOVED', 3, 8),
+]
+
+let mockReviewItems: AdminReviewItemSummary[] = [
+  createReviewItem({
+    id: 9001,
+    title: 'MacBook Air 2019 13 寸',
+    categoryName: '数码电子',
+    priceCent: 268000,
+    coverImageUrl: macbookAirImage,
+    sellerNickname: '林同学',
+    studentNoMasked: '2023****5123',
+    createdAt: '2026-07-09T10:24:00+08:00',
+    description: '电池健康 86%，配原装充电器，可在嘉庚二楼自提。',
+    reviewFlags: ['图片清晰', '价格偏高', '有序列号'],
+    sellerViolationCount: 0,
+  }),
+  createReviewItem({
+    id: 9002,
+    title: '高等数学（第七版）上下册',
+    categoryName: '教材教辅',
+    priceCent: 2800,
+    coverImageUrl: mathBooksImage,
+    sellerNickname: '陈同学',
+    studentNoMasked: '2022****1048',
+    createdAt: '2026-07-09T09:58:00+08:00',
+    description: '少量笔记，适合期末复习使用。',
+    reviewFlags: ['描述完整', '图片清晰'],
+    sellerViolationCount: 0,
+  }),
+  createReviewItem({
+    id: 9003,
+    title: '宿舍台灯 可调光',
+    categoryName: '宿舍用品',
+    priceCent: 4500,
+    coverImageUrl: deskLampImage,
+    sellerNickname: '许同学',
+    studentNoMasked: '2024****0831',
+    createdAt: '2026-07-09T09:31:00+08:00',
+    description: '三挡亮度，外观九成新。',
+    reviewFlags: ['图片清晰', '描述偏短'],
+    sellerViolationCount: 0,
+  }),
+  createReviewItem({
+    id: 9004,
+    title: '机械键盘 青轴 87 键',
+    categoryName: '数码电子',
+    priceCent: 12000,
+    coverImageUrl: calculatorImage,
+    sellerNickname: '张同学',
+    studentNoMasked: '2021****3290',
+    createdAt: '2026-07-08T18:18:00+08:00',
+    description: '键帽完整，空格键略有使用痕迹，支持宿舍楼下自提。',
+    reviewFlags: ['描述完整', '图片清晰'],
+    sellerViolationCount: 1,
+  }),
+  createReviewItem({
+    id: 9005,
+    title: '20 寸行李箱 九成新',
+    categoryName: '生活日用',
+    priceCent: 8000,
+    coverImageUrl: suitcaseImage,
+    sellerNickname: '刘同学',
+    studentNoMasked: '2020****7742',
+    createdAt: '2026-07-08T16:42:00+08:00',
+    description: '轮子顺滑，拉杆正常，毕业搬宿舍用过两次。',
+    reviewFlags: ['图片清晰', '描述完整'],
+    sellerViolationCount: 0,
+  }),
+]
+
+export async function listMockAdminItems(params?: MockAdminItemsParams): Promise<ApiResponse<PageResult<ItemSummary>>> {
+  await delay(mockLatencyMs)
+
+  const page = params?.page ?? 1
+  const size = params?.size ?? 20
+  const normalizedKeyword = params?.keyword?.trim().toLowerCase()
+
+  const filteredItems = mockAdminItems
+    .filter((item) => (params?.status ? item.status === params.status : true))
+    .filter((item) => {
+      if (params?.categoryId == null) {
+        return true
+      }
+
+      return categoryIdsByName.get(item.categoryName) === params.categoryId
+    })
+    .filter((item) => {
+      if (!normalizedKeyword) {
+        return true
+      }
+
+      return `${item.title} ${item.categoryName} ${item.seller.nickname}`.toLowerCase().includes(normalizedKeyword)
+    })
+
+  const start = (page - 1) * size
+
+  return {
+    code: 'OK',
+    message: 'success',
+    data: {
+      items: filteredItems.slice(start, start + size),
+      page,
+      size,
+      total: filteredItems.length,
+    },
+    traceId: 'mock-admin-items',
+  }
+}
+
+export async function listMockReviewItems(params?: {
+  status?: 'PENDING_REVIEW'
+  page?: number
+  size?: number
+}): Promise<ApiResponse<PageResult<AdminReviewItemSummary>>> {
+  await delay(mockLatencyMs)
+
+  const page = params?.page ?? 1
+  const size = params?.size ?? 20
+  const filteredItems = mockReviewItems.filter((item) => item.status === (params?.status ?? 'PENDING_REVIEW'))
+  const start = (page - 1) * size
+
+  return {
+    code: 'OK',
+    message: 'success',
+    data: {
+      items: filteredItems.slice(start, start + size),
+      page,
+      size,
+      total: filteredItems.length,
+    },
+    traceId: 'mock-admin-review-items',
+  }
+}
+
+export async function reviewMockItem(itemId: string | number, payload: ReviewItemRequest): Promise<ApiResponse<void>> {
+  await delay(mockLatencyMs)
+
+  mockReviewItems = mockReviewItems.map((item) =>
+    item.id === Number(itemId)
+      ? {
+          ...item,
+          status: payload.approved ? 'ON_SALE' : 'REJECTED',
+          reviewReason: payload.reason,
+        }
+      : item,
+  )
+
+  return {
+    code: 'OK',
+    message: 'success',
+    data: undefined as void,
+    traceId: 'mock-admin-review-item',
+  }
+}
+
+export async function mockViolationRemoveItem(itemId: string | number): Promise<ApiResponse<void>> {
+  await delay(mockLatencyMs)
+
+  const targetItem = mockAdminItems.find((item) => item.id === Number(itemId))
+
+  if (targetItem) {
+    targetItem.status = 'VIOLATION_REMOVED'
+  }
+
+  return {
+    code: 'OK',
+    message: 'success',
+    data: undefined as void,
+    traceId: 'mock-admin-violation-remove',
+  }
+}
+
+function createAdminItem(
+  id: number,
+  title: string,
+  categoryName: string,
+  priceCent: number,
+  coverImageUrl: string,
+  sellerNickname: string,
+  status: ItemStatus,
+  favoriteCount: number,
+  dayOffset: number,
+): ItemSummary {
+  return {
+    id,
+    title,
+    categoryName,
+    priceCent,
+    status,
+    coverImageUrl,
+    createdAt: `2026-07-${String(Math.max(1, 9 - dayOffset)).padStart(2, '0')}T${String(8 + dayOffset).padStart(2, '0')}:20:00+08:00`,
+    deliveryModes: dayOffset % 2 === 0 ? ['DELIVER_TO_SCHOOL'] : ['SELF_PICKUP'],
+    seller: {
+      id: 3000 + id,
+      nickname: sellerNickname,
+      verificationStatus: dayOffset % 3 === 0 ? 'PENDING_REVIEW' : 'VERIFIED',
+    },
+    favorited: false,
+    favoriteCount,
+  }
+}
+
+function createReviewItem(item: {
+  id: number
+  title: string
+  categoryName: string
+  priceCent: number
+  coverImageUrl: string
+  sellerNickname: string
+  studentNoMasked: string
+  createdAt: string
+  description: string
+  reviewFlags: string[]
+  sellerViolationCount: number
+}): AdminReviewItemSummary {
+  return {
+    id: item.id,
+    title: item.title,
+    categoryName: item.categoryName,
+    priceCent: item.priceCent,
+    status: 'PENDING_REVIEW',
+    coverImageUrl: item.coverImageUrl,
+    createdAt: item.createdAt,
+    submittedAt: item.createdAt,
+    deliveryModes: ['SELF_PICKUP'],
+    seller: {
+      id: 7000 + item.id,
+      nickname: item.sellerNickname,
+      verificationStatus: 'VERIFIED',
+    },
+    studentNoMasked: item.studentNoMasked,
+    favorited: false,
+    favoriteCount: 0,
+    description: item.description,
+    imageCount: 3,
+    reviewFlags: item.reviewFlags,
+    sellerViolationCount: item.sellerViolationCount,
+  }
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms))
+}

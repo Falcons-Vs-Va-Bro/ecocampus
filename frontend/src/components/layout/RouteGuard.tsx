@@ -4,6 +4,7 @@ import type { RouteMeta } from '../../types/routes'
 
 interface RouteGuardProps extends PropsWithChildren {
   meta: RouteMeta
+  showNotice?: boolean
 }
 
 const guardMessages = {
@@ -15,10 +16,10 @@ const guardMessages = {
   interaction: '浏览公开，收藏、私信、下单等互动动作需要登录。',
 }
 
-export function RouteGuard({ children, meta }: RouteGuardProps) {
+export function RouteGuard({ children, meta, showNotice = true }: RouteGuardProps) {
   return (
     <div className="space-y-4">
-      {meta.guard !== 'public' ? (
+      {showNotice && meta.guard !== 'public' ? (
         <Alert
           showIcon
           type={meta.guard === 'admin' ? 'warning' : 'info'}
