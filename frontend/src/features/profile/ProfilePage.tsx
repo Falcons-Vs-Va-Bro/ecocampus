@@ -87,6 +87,7 @@ export function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState('')
   const [phoneVisible, setPhoneVisible] = useState(true)
   const [messageReminder, setMessageReminder] = useState(true)
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
 
   function setDefaultAddress(addressId: number) {
     setAddresses((current) => current.map((item) => ({ ...item, isDefault: item.id === addressId })))
@@ -136,6 +137,10 @@ export function ProfilePage() {
     }
     setAvatarPreview(URL.createObjectURL(file))
     event.currentTarget.value = ''
+  }
+
+  function confirmLogout() {
+    window.location.href = '/login'
   }
 
   return (
@@ -307,7 +312,7 @@ export function ProfilePage() {
               </div>
             </section>
 
-            <button type="button" className="logout-button">
+            <button type="button" className="logout-button" onClick={() => setShowLogoutDialog(true)}>
               <LogOut size={22} />
               退出登录
             </button>
@@ -355,6 +360,23 @@ export function ProfilePage() {
           </aside>
         </main>
       </div>
+
+      {showLogoutDialog ? (
+        <div className="logout-dialog-backdrop" role="presentation">
+          <section className="logout-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-dialog-title">
+            <h2 id="logout-dialog-title">真的要退出吗？</h2>
+            <p>退出后需要重新登录才能继续管理收藏、发布和订单。</p>
+            <div className="logout-dialog-actions">
+              <button type="button" className="logout-dialog-cancel" onClick={() => setShowLogoutDialog(false)}>
+                手滑了
+              </button>
+              <button type="button" className="logout-dialog-confirm" onClick={confirmLogout}>
+                我是认真的
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   )
 }
