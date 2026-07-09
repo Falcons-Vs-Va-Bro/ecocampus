@@ -49,15 +49,15 @@ const pickupModes = ['全部', '可自提', '仅配送'] as const
 const categoryNav = [
   { label: '首页', icon: Home, to: '/' },
   { label: '全部分类', icon: Grid3X3, to: '/items' },
-  { label: '教材教辅', icon: BookOpen, to: '/items' },
-  { label: '数码电子', icon: Camera, to: '/items' },
-  { label: '宿舍用品', icon: Package, to: '/items' },
-  { label: '运动户外', icon: Dumbbell, to: '/items' },
-  { label: '生活日用', icon: ShoppingBasket, to: '/items' },
-  { label: '美妆个护', icon: Star, to: '/items' },
-  { label: '乐器文具', icon: BookOpen, to: '/items' },
-  { label: '票务转让', icon: ClipboardList, to: '/items' },
-  { label: '其他', icon: Box, to: '/items' },
+  { label: '教材教辅', icon: BookOpen, to: '/items/textbook' },
+  { label: '数码电子', icon: Camera, to: '/items/digital' },
+  { label: '宿舍用品', icon: Package, to: '/items/dorm' },
+  { label: '运动户外', icon: Dumbbell, to: '/items/outdoors' },
+  { label: '生活日用', icon: ShoppingBasket, to: '/items/daily-goods' },
+  { label: '美妆个护', icon: Star, to: '/items/make-up' },
+  { label: '乐器文具', icon: BookOpen, to: '/items/instruments' },
+  { label: '票务转让', icon: ClipboardList, to: '/items/tickets' },
+  { label: '其他', icon: Box, to: '/items/others' },
 ]
 
 const userNav = [

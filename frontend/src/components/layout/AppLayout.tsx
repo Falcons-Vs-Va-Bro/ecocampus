@@ -4,6 +4,18 @@ import { routeCatalog } from '../../app/routeCatalog'
 
 const primaryPaths = ['/', '/items', '/demands', '/publish', '/orders', '/profile']
 const adminPaths = ['/admin', '/admin/items/review', '/admin/users']
+const itemCategoryPaths = [
+  '/items',
+  '/items/textbook',
+  '/items/digital',
+  '/items/dorm',
+  '/items/outdoors',
+  '/items/daily-goods',
+  '/items/make-up',
+  '/items/instruments',
+  '/items/tickets',
+  '/items/others',
+]
 
 export function AppLayout() {
   const location = useLocation()
@@ -12,10 +24,13 @@ export function AppLayout() {
 
   if (
     location.pathname === '/' ||
+    itemCategoryPaths.includes(location.pathname) ||
     location.pathname === '/favorites' ||
     location.pathname === '/items/mine' ||
     /^\/items\/[^/]+\/edit$/.test(location.pathname) ||
     location.pathname === '/publish' ||
+    location.pathname === '/profile' ||
+    location.pathname === '/verify' ||
     location.pathname === '/login'
   ) {
     return <Outlet />
