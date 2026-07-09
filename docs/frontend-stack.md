@@ -74,7 +74,8 @@ frontend/
 | `/favorites` | 我的收藏 | `USER` |
 | `/messages` | 私信会话列表 | `USER` |
 | `/messages/:conversationId` | 私信详情 | `USER` |
-| `/orders?role=BUYER` / `/orders?role=SELLER` | 我的订单（购买/出售） | `USER` |
+| `/orders` | 购买订单 | `USER` |
+| `/orders/sales` | 出售订单 | `USER` |
 | `/demands` | 求购列表 | 公开 |
 | `/demands/new` | 发布求购 | `USER` |
 | `/demands/mine` | 我的求购/匹配结果 | `USER` |
@@ -109,7 +110,8 @@ frontend/
 | `/favorites` | `GET /users/me/favorites`, `DELETE /items/{itemId}/favorite` | 已覆盖 |
 | `/messages` | `GET /conversations?page=1&size=20` | 已覆盖 |
 | `/messages/:conversationId` | `GET /conversations/{conversationId}/messages?page=1&size=20`, `POST /conversations/{conversationId}/messages` | 已覆盖 |
-| `/orders?role=BUYER` / `/orders?role=SELLER` | `GET /orders?role=BUYER` / `GET /orders?role=SELLER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
+| `/orders` | `GET /orders?role=BUYER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
+| `/orders/sales` | `GET /orders?role=SELLER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
 | `/demands` | `GET /demands` | 已覆盖 |
 | `/demands/new` | `GET /categories`, `POST /demands` | 已覆盖 |
 | `/demands/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches?limit=20`, `POST /demands/{demandId}/close` | 已覆盖 |

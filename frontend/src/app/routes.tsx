@@ -115,7 +115,14 @@ function createRoute(meta: RouteMeta): RouteObject {
   if (meta.path === '/orders') {
     return {
       path: 'orders',
-      element: <OrdersPage />,
+      element: <OrdersPage role="BUYER" />,
+    }
+  }
+
+  if (meta.path === '/orders/sales') {
+    return {
+      path: 'orders/sales',
+      element: <OrdersPage role="SELLER" />,
     }
   }
 

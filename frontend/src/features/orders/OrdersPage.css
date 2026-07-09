@@ -91,13 +91,6 @@
   line-height: 1;
 }
 
-.order-role-tabs {
-  display: flex;
-  gap: 12px;
-  padding: 22px 28px 0;
-}
-
-.order-role-tabs button,
 .order-status-tabs button {
   min-height: 34px;
   padding: 0 16px;
@@ -114,13 +107,11 @@
     transform 160ms ease;
 }
 
-.order-role-tabs button:hover,
 .order-status-tabs button:hover {
   color: #2f78bf;
   transform: translateY(-1px) rotate(-0.4deg);
 }
 
-.order-role-tabs button.active,
 .order-status-tabs button.active {
   color: #fff;
   background:
@@ -335,7 +326,7 @@
 
 .order-card footer {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
@@ -458,7 +449,7 @@
   --paint-duration: 1.6s;
   display: block;
   width: min(100%, 300px);
-  margin: 22px auto 4px;
+  margin: -6px auto 22px;
 }
 
 .order-panel-art img {
@@ -479,7 +470,7 @@
 .order-flow-step {
   position: relative;
   display: inline-flex;
-  min-width: 118px;
+  min-width: 132px;
   min-height: 40px;
   align-items: center;
   justify-content: center;
@@ -511,15 +502,26 @@
   color: #2b9a5e;
 }
 
-.order-flow-panel p {
+.order-flow-cancel-branch {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
   margin: 18px 0 0;
   padding-top: 18px;
   border-top: 2px solid rgba(78, 112, 150, 0.24);
+}
+
+.order-flow-cancel-branch span {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 2px solid rgba(104, 111, 117, 0.55);
+  border-radius: 7px;
   color: #2e2a25;
+  background: rgba(255, 252, 246, 0.76);
   font-size: 17px;
   font-weight: 900;
 }
@@ -563,7 +565,6 @@
     border-right: 0;
   }
 
-  .order-role-tabs,
   .order-toolbar,
   .order-card-grid {
     padding-right: 18px;
@@ -591,13 +592,11 @@
     border-bottom: 0;
   }
 
-  .order-role-tabs,
   .order-status-tabs {
     overflow-x: auto;
     flex-wrap: nowrap;
   }
 
-  .order-role-tabs button,
   .order-status-tabs button {
     flex: 0 0 auto;
   }
