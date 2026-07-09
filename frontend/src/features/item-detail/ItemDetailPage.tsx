@@ -261,7 +261,7 @@ export function ItemDetailPage() {
                     </button>
                     <button
                       type="button"
-                      className="primary"
+                      className="primary market-pencil-primary-button"
                       disabled={contactMutation.isPending}
                       onClick={() => contactMutation.mutate(item)}
                     >

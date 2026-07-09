@@ -320,25 +320,7 @@
 }
 
 .item-action-row .primary {
-  border-color: #2d77bd;
-  color: #ffffff;
-  background:
-    repeating-linear-gradient(-17deg, rgba(255, 255, 255, 0.24) 0 2px, transparent 2px 5px),
-    repeating-linear-gradient(-17deg, transparent 0 7px, rgba(26, 83, 148, 0.28) 7px 9px),
-    linear-gradient(90deg, #2f77bf 0%, #4a8fd0 52%, #347dc5 100%);
-  background-blend-mode: soft-light, multiply, normal;
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 255, 255, 0.18),
-    0 3px 0 #235f9b;
   font-size: 24px;
-  text-shadow: 0 1px 0 rgba(30, 72, 122, 0.46);
-}
-
-.item-action-row .primary:hover {
-  filter: saturate(1.06);
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 255, 255, 0.2),
-    0 5px 0 #235f9b;
 }
 
 .item-action-row .secondary {

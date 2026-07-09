@@ -556,6 +556,26 @@
   box-shadow: 0 2px 0 rgba(45, 119, 189, 0.26);
 }
 
+.market-pencil-primary-button.market-pencil-primary-button {
+  border-color: #2d77bd;
+  color: #fff;
+  background:
+    repeating-linear-gradient(-18deg, rgba(255, 255, 255, 0.15) 0 2px, transparent 2px 5px),
+    #4b91d0;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.16),
+    0 3px 0 #235f9b;
+  text-shadow: 0 1px 0 rgba(30, 72, 122, 0.42);
+  animation: pencil-hatch-flow 7s linear infinite;
+}
+
+.market-pencil-primary-button.market-pencil-primary-button:hover {
+  filter: saturate(1.06);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 5px 0 #235f9b;
+}
+
 .favorites-toolbar {
   display: flex;
   min-height: 54px;
@@ -1285,6 +1305,7 @@
   .painted-asset::after,
   .favorites-heading h1::after,
   .favorite-tabs button.active,
+  .market-pencil-primary-button,
   .icon-button span,
   .favorite-card.skeleton div,
   .favorite-card.skeleton span {
