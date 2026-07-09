@@ -15,6 +15,7 @@ import {
 import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { OrderListParams, OrderRole, OrderSummary } from '../../api/order.api'
 import { listOrders, updateOrderStatus } from '../../api/order.api'
 import { getMockOrderMeta } from '../../api/mock/orders.mock'
@@ -52,8 +53,9 @@ export function OrdersPage() {
 
   const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion() ?? false
+  const [searchParams, setSearchParams] = useSearchParams()
   const [keyword, setKeyword] = useState('')
-  const [role, setRole] = useState<OrderRole>('BUYER')
+  const role = normalizeOrderRole(searchParams.get('role'))
   const [status, setStatus] = useState<OrderStatus | 'ALL'>('ALL')
 
   const orderParams = useMemo<OrderListParams>(() => ({ role, page: 1, size: 50 }), [role])
@@ -97,6 +99,16 @@ export function OrdersPage() {
     updateStatusMutation.mutate({ orderId, targetStatus, remark })
   }
 
+  function selectRole(nextRole: OrderRole) {
+    if (searchParams.get('role') !== nextRole) {
+      const nextSearchParams = new URLSearchParams(searchParams)
+      nextSearchParams.set('role', nextRole)
+      setSearchParams(nextSearchParams)
+    }
+
+    setStatus('ALL')
+  }
+
   return (
     <MarketplaceShell
       activeUserLabel={role === 'BUYER' ? '购买订单' : '出售订单'}
@@ -131,10 +143,7 @@ export function OrdersPage() {
               <button
                 type="button"
                 className={role === item.value ? 'active' : undefined}
-                onClick={() => {
-                  setRole(item.value)
-                  setStatus('ALL')
-                }}
+                onClick={() => selectRole(item.value)}
                 role="tab"
                 aria-selected={role === item.value}
                 key={item.value}
@@ -496,6 +505,10 @@ function getOrderStats(orders: OrderSummary[]) {
       CANCELLED: 0,
     } satisfies Record<OrderStatus, number>,
   )
+}
+
+function normalizeOrderRole(value: string | null): OrderRole {
+  return value === 'SELLER' ? 'SELLER' : 'BUYER'
 }
 
 function formatPrice(priceCent: number) {
