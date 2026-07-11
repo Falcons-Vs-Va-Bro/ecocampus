@@ -1,11 +1,11 @@
-import type { ApiResponse, ItemStatus, PageResult } from '../../types/api'
+import type { ApiResponse, ItemStatus, PageResult, VerificationStatus } from '../../types/api'
 import airpodsImage from '../../assets/favorites/items/airpods.jpg'
 import calculatorImage from '../../assets/favorites/items/calculator.jpg'
 import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
 import macbookAirImage from '../../assets/favorites/items/macbook-air.jpg'
 import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
 import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
-import type { AdminReviewItemSummary, ReviewItemRequest } from '../admin.api'
+import type { AdminReviewItemSummary, AdminUserSummary, ReviewItemRequest } from '../admin.api'
 import type { ItemSummary } from '../item.api'
 
 interface MockAdminItemsParams {
@@ -17,6 +17,32 @@ interface MockAdminItemsParams {
 }
 
 const mockLatencyMs = 180
+
+let mockAdminUsers: AdminUserSummary[] = [
+  { id: 1, nickname: '海风吹过嘉庚楼', phoneMasked: '138****6721', studentNoMasked: '2023****5123', role: 'USER', verificationStatus: 'VERIFIED', blacklisted: false },
+  { id: 2, nickname: '嘉园旧书摊', phoneMasked: '159****3208', studentNoMasked: '2022****1048', role: 'USER', verificationStatus: 'VERIFIED', blacklisted: false },
+  { id: 3, nickname: '临时票务号', phoneMasked: '186****0912', studentNoMasked: '未核验', role: 'USER', verificationStatus: 'PENDING_REVIEW', blacklisted: false },
+  { id: 4, nickname: '重复发布用户', phoneMasked: '177****5601', studentNoMasked: '2021****2256', role: 'USER', verificationStatus: 'VERIFIED', blacklisted: true },
+  { id: 5, nickname: '旧机回收号', phoneMasked: '136****8820', studentNoMasked: '2020****7819', role: 'USER', verificationStatus: 'VERIFIED', blacklisted: true },
+  { id: 6, nickname: '芙蓉湖畔', phoneMasked: '133****1818', studentNoMasked: '2024****6310', role: 'USER', verificationStatus: 'VERIFIED', blacklisted: false },
+]
+
+export async function listMockAdminUsers(params?: { keyword?: string; verificationStatus?: VerificationStatus; page?: number; size?: number }): Promise<ApiResponse<PageResult<AdminUserSummary>>> {
+  await delay(mockLatencyMs)
+  const page = params?.page ?? 1; const size = params?.size ?? 20; const keyword = params?.keyword?.trim().toLowerCase()
+  const filtered = mockAdminUsers.filter((user) => !params?.verificationStatus || user.verificationStatus === params.verificationStatus).filter((user) => !keyword || `${user.nickname} ${user.phoneMasked} ${user.studentNoMasked}`.toLowerCase().includes(keyword))
+  return { code: 'OK', message: 'success', data: { items: filtered.slice((page - 1) * size, page * size), page, size, total: filtered.length }, traceId: 'mock-admin-users' }
+}
+
+export async function mockBlacklistUser(userId: string | number): Promise<ApiResponse<void>> {
+  await delay(mockLatencyMs); mockAdminUsers = mockAdminUsers.map((user) => user.id === Number(userId) ? { ...user, blacklisted: true } : user)
+  return { code: 'OK', message: 'success', data: undefined as void, traceId: 'mock-blacklist-user' }
+}
+
+export async function mockRemoveUserFromBlacklist(userId: string | number): Promise<ApiResponse<void>> {
+  await delay(mockLatencyMs); mockAdminUsers = mockAdminUsers.map((user) => user.id === Number(userId) ? { ...user, blacklisted: false } : user)
+  return { code: 'OK', message: 'success', data: undefined as void, traceId: 'mock-remove-blacklist-user' }
+}
 
 const categoryIdsByName = new Map([
   ['教材', 1],

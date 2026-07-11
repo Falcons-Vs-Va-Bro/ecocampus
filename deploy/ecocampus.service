@@ -1,0 +1,25 @@
+[Unit]
+Description=EcoCampus Spring Boot API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ecocampus
+Group=ecocampus
+WorkingDirectory=/opt/ecocampus
+EnvironmentFile=/etc/ecocampus/ecocampus.env
+ExecStart=/usr/bin/java -Xms128m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/urandom -jar /opt/ecocampus/ecocampus.jar --spring.profiles.active=prod
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+SuccessExitStatus=143
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/ecocampus/storage
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

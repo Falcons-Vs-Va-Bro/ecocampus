@@ -2,6 +2,7 @@ import { RotateCw } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { login, sendSmsCode } from '../../api/auth.api'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAuthStore } from '../../stores/auth.store'
 import './LoginPage.css'
@@ -89,13 +90,13 @@ export function LoginPage() {
     setLoginError('')
   }
 
-  function handleAccountLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleAccountLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const normalizedAccount = account.trim()
     const normalizedPassword = password.trim()
 
-    if (!normalizedAccount.startsWith('2292024')) {
+    if (import.meta.env.VITE_USE_MOCKS === 'true' && !normalizedAccount.startsWith('2292024')) {
       setLoginError(t.accountPrefixError)
       setNotice('')
       return
@@ -107,12 +108,18 @@ export function LoginPage() {
       return
     }
 
-    provisionMockAccount(normalizedAccount)
-    setSession({
-      accessToken: `mock-${normalizedAccount}-${Date.now()}`,
-      role: 'USER',
-      verificationStatus: 'VERIFIED',
-    })
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      provisionMockAccount(normalizedAccount)
+      setSession({ accessToken: `mock-${normalizedAccount}-${Date.now()}`, role: 'USER', verificationStatus: 'VERIFIED' })
+    } else {
+      try {
+        const response = await login({ phone: normalizedAccount, code: normalizedPassword })
+        setSession({ accessToken: response.data.accessToken, role: response.data.user.role, verificationStatus: response.data.user.verificationStatus })
+      } catch (error) {
+        setLoginError(error instanceof Error ? error.message : '登录失败')
+        return
+      }
+    }
 
     setNotice(t.mockNotice)
     setLoginError('')
@@ -203,6 +210,9 @@ export function LoginPage() {
                 placeholder={t.username}
                 value={account}
               />
+              {import.meta.env.VITE_USE_MOCKS !== 'true' ? <button type="button" onClick={async () => {
+                try { await sendSmsCode(account.trim()); setNotice('验证码已发送，有效期 5 分钟。') } catch (error) { setLoginError(error instanceof Error ? error.message : '验证码发送失败') }
+              }}>发送验证码</button> : null}
             </label>
             <label>
               <span>{t.password}</span>

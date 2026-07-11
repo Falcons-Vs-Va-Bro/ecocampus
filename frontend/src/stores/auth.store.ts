@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { UserRole, VerificationStatus } from '../types/api'
 
 interface AuthState {
@@ -13,7 +14,7 @@ interface AuthState {
   clearSession: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>()(persist((set) => ({
   accessToken: undefined,
   role: 'GUEST',
   verificationStatus: 'UNVERIFIED',
@@ -24,6 +25,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       role: 'GUEST',
       verificationStatus: 'UNVERIFIED',
     }),
-}))
+}), { name: 'ecocampus.auth', partialize: (state) => ({ accessToken: state.accessToken, role: state.role, verificationStatus: state.verificationStatus }) }))
 
 export const getAccessToken = () => useAuthStore.getState().accessToken

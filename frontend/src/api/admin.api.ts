@@ -1,7 +1,7 @@
 import type { ApiResponse, ItemStatus, PageResult, VerificationStatus } from '../types/api'
 import { apiClient } from './http'
 import type { ItemSummary } from './item.api'
-import { listMockAdminItems, listMockReviewItems, mockViolationRemoveItem, reviewMockItem } from './mock/admin.mock'
+import { listMockAdminItems, listMockAdminUsers, listMockReviewItems, mockBlacklistUser, mockRemoveUserFromBlacklist, mockViolationRemoveItem, reviewMockItem } from './mock/admin.mock'
 
 const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
 
@@ -94,16 +94,19 @@ export async function listAdminUsers(params?: {
   page?: number
   size?: number
 }) {
+  if (useMocks) return listMockAdminUsers(params)
   const response = await apiClient.get<ApiResponse<PageResult<AdminUserSummary>>>('/admin/users', { params })
   return response.data
 }
 
-export async function blacklistUser(userId: string | number) {
-  const response = await apiClient.post<ApiResponse<void>>(`/admin/users/${userId}/blacklist`)
+export async function blacklistUser(userId: string | number, payload: { reason: string; expireAt?: string }) {
+  if (useMocks) return mockBlacklistUser(userId)
+  const response = await apiClient.post<ApiResponse<AdminUserSummary>>(`/admin/users/${userId}/blacklist`, payload)
   return response.data
 }
 
 export async function removeUserFromBlacklist(userId: string | number) {
+  if (useMocks) return mockRemoveUserFromBlacklist(userId)
   const response = await apiClient.delete<ApiResponse<void>>(`/admin/users/${userId}/blacklist`)
   return response.data
 }

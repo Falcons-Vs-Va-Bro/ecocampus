@@ -5,7 +5,7 @@ import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
 import { MarketplacePlaceholderPage } from '../components/marketplace'
-import { AdminItemsPage, AdminReviewPage } from '../features/admin'
+import { AdminCategoriesPage, AdminItemsPage, AdminReviewPage, AdminUsersPage } from '../features/admin'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ConversationDetailPage, MessagesPage } from '../features/conversations'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
@@ -146,6 +146,14 @@ function createRoute(meta: RouteMeta): RouteObject {
         </RouteGuard>
       ),
     }
+  }
+
+  if (meta.path === '/admin/users') {
+    return { path: 'admin/users', element: <RouteGuard meta={meta} showNotice={false}><AdminUsersPage /></RouteGuard> }
+  }
+
+  if (meta.path === '/admin/categories') {
+    return { path: 'admin/categories', element: <RouteGuard meta={meta} showNotice={false}><AdminCategoriesPage /></RouteGuard> }
   }
 
   if (meta.path === '/') {

@@ -2,8 +2,13 @@ import type { ApiResponse, CurrentUser, VerificationStatus } from '../types/api'
 import { apiClient } from './http'
 
 export interface LoginRequest {
-  account: string
-  password: string
+  phone: string
+  code: string
+}
+
+export async function sendSmsCode(phone: string) {
+  const response = await apiClient.post<ApiResponse<{ expiresInSeconds: number }>>('/auth/sms-code', { phone })
+  return response.data
 }
 
 export interface LoginResponse {
