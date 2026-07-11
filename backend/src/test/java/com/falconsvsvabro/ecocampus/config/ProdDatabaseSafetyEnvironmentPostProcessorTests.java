@@ -56,6 +56,15 @@ class ProdDatabaseSafetyEnvironmentPostProcessorTests {
 	}
 
 	@Test
+	void rejectsWeakJwtSecretInProdProfile() {
+		MockEnvironment environment = validProdEnvironment().withProperty("ecocampus.security.jwt-secret", "short");
+
+		assertThatThrownBy(() -> postProcessor.postProcessEnvironment(environment, application()))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("jwt-secret");
+	}
+
+	@Test
 	void rejectsUnsafeDdlAutoInProdProfile() {
 		MockEnvironment environment = validProdEnvironment()
 			.withProperty("spring.jpa.hibernate.ddl-auto", "update");
@@ -83,6 +92,7 @@ class ProdDatabaseSafetyEnvironmentPostProcessorTests {
 			.withProperty("spring.datasource.driver-class-name", "com.mysql.cj.jdbc.Driver")
 			.withProperty("spring.datasource.username", "ecocampus_app")
 			.withProperty("spring.datasource.password", "prod-secret-value")
+			.withProperty("ecocampus.security.jwt-secret", "a-production-jwt-secret-with-more-than-32-characters")
 			.withProperty("spring.jpa.hibernate.ddl-auto", "validate")
 			.withProperty("spring.sql.init.mode", "never")
 			.withProperty("spring.flyway.enabled", "true")

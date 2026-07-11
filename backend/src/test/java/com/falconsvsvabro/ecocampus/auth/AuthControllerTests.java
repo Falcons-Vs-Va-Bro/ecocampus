@@ -29,19 +29,12 @@ class AuthControllerTests {
 
 	@Test
 	void loginThenVerifyCampusIdentityAndReadMe() throws Exception {
-		String phone = "13800000000";
+		String phone = "229202400000";
 
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("OK"))
-			.andExpect(jsonPath("$.data.expiresInSeconds").value(300));
 
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.user.verificationStatus").value("UNVERIFIED"))
@@ -67,7 +60,7 @@ class AuthControllerTests {
 
 		mockMvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + accessToken))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.phone").value("138****0000"))
+			.andExpect(jsonPath("$.data.phone").value("229****0000"))
 			.andExpect(jsonPath("$.data.verificationStatus").value("VERIFIED"));
 	}
 
@@ -76,6 +69,32 @@ class AuthControllerTests {
 		mockMvc.perform(get("/api/v1/auth/me"))
 			.andExpect(status().isUnauthorized())
 			.andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+	}
+
+	@Test
+	void existingAccountRequiresTheOriginalPasswordAndIsNotDuplicated() throws Exception {
+		String account = "229202499999";
+		MvcResult firstLogin = login(account, "first-password");
+		long firstUserId = read(firstLogin, "/data/user/id").asLong();
+
+		MvcResult secondLogin = login(account, "first-password");
+		org.assertj.core.api.Assertions.assertThat(read(secondLogin, "/data/user/id").asLong()).isEqualTo(firstUserId);
+
+		mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"account":"%s","password":"wrong-password"}
+					""".formatted(account)))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+	}
+
+	private MvcResult login(String account, String password) throws Exception {
+		return mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"account":"%s","password":"%s"}
+					""".formatted(account, password)))
+			.andExpect(status().isOk())
+			.andReturn();
 	}
 
 	private JsonNode read(MvcResult result, String pointer) throws Exception {

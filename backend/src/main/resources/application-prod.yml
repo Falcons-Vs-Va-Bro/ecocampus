@@ -35,6 +35,7 @@ spring:
     lazy-initialization: true
 
 server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
   tomcat:
     threads:
       max: ${SERVER_THREADS_MAX:40}

@@ -29,7 +29,7 @@ class UserControllerTests {
 
 	@Test
 	void updateProfileAndManageAddresses() throws Exception {
-		String accessToken = loginAndVerify("13800000011", "2026000011");
+		String accessToken = loginAndVerify("229202400011", "2026000011");
 
 		mockMvc.perform(put("/api/v1/users/me")
 			.header("Authorization", "Bearer " + accessToken)
@@ -89,7 +89,7 @@ class UserControllerTests {
 
 	@Test
 	void unverifiedUsersCannotManageAddresses() throws Exception {
-		String accessToken = login("13800000012");
+		String accessToken = login("229202400012");
 
 		mockMvc.perform(get("/api/v1/users/me/addresses").header("Authorization", "Bearer " + accessToken))
 			.andExpect(status().isForbidden())
@@ -114,14 +114,9 @@ class UserControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

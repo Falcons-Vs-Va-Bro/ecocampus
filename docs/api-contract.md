@@ -64,9 +64,9 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 
 - 登录账号必须以 `2292024` 作为前 7 位。
 - 密码按用户输入提交，接口不得在响应中返回密码，后端不得明文保存密码。
-- 如果账号已存在，则直接登录。
+- 如果账号已存在，则校验本次密码是否与首次创建时的密码一致，通过后登录。
 - 如果账号不存在，则在登录时自动创建默认用户档案，再返回登录态。
-- 自动创建的用户默认为 `USER`，校园核验状态为 `VERIFIED`。
+- 自动创建的用户默认为 `USER`，校园核验状态为 `UNVERIFIED`；完成校园核验后才可进行发布、下单等受限操作。
 - 前端和后端均不提供显式“注册”页面、注册按钮或注册接口。
 
 ### 3.2 账号登录
@@ -89,7 +89,7 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
   "user": {
     "id": 1,
     "role": "USER",
-    "verificationStatus": "VERIFIED"
+    "verificationStatus": "UNVERIFIED"
   }
 }
 ```
@@ -119,7 +119,7 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 {
   "id": 1,
   "nickname": "Eco 用户",
-  "phone": "138****0000",
+  "phone": "229****0001",
   "role": "USER",
   "verificationStatus": "VERIFIED",
   "studentNoMasked": "2026****001"
@@ -651,6 +651,8 @@ Content-Type: `multipart/form-data`
 ```
 
 `POST /admin/users/{userId}/blacklist`
+
+前端必须提交处理原因；`reason` 不能为空且最长 255 字符，`expireAt` 可选。
 
 ```json
 {

@@ -32,9 +32,9 @@ class FavoriteControllerTests {
 
 	@Test
 	void verifiedUserCanFavoriteAndUnfavoriteOnSaleItem() throws Exception {
-		String sellerToken = loginAndVerify("13800000051", "2026000051");
+		String sellerToken = loginAndVerify("229202400051", "2026000051");
 		long itemId = createAndApproveItem(sellerToken, "Favorite Campus Bike");
-		String buyerToken = loginAndVerify("13800000052", "2026000052");
+		String buyerToken = loginAndVerify("229202400052", "2026000052");
 
 		mockMvc.perform(post("/api/v1/items/{itemId}/favorite", itemId)
 			.header("Authorization", "Bearer " + buyerToken))
@@ -84,7 +84,7 @@ class FavoriteControllerTests {
 			.andExpect(status().isOk())
 			.andReturn();
 		long itemId = read(created, "/data/id").asLong();
-		String adminToken = loginAsAdmin("13800000053");
+		String adminToken = loginAsAdmin("229202400053");
 		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
 			.header("Authorization", "Bearer " + adminToken)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -119,14 +119,9 @@ class FavoriteControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

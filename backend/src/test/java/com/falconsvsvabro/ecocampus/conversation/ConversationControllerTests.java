@@ -31,9 +31,9 @@ class ConversationControllerTests {
 
 	@Test
 	void participantsCanChatInItemConversation() throws Exception {
-		AuthSession seller = loginAndVerify("13800000081", "2026000081");
+		AuthSession seller = loginAndVerify("229202400081", "2026000081");
 		long itemId = createAndApproveItem(seller.token(), "Chat Campus Calculator");
-		AuthSession buyer = loginAndVerify("13800000082", "2026000082");
+		AuthSession buyer = loginAndVerify("229202400082", "2026000082");
 
 		MvcResult created = mockMvc.perform(post("/api/v1/conversations")
 			.header("Authorization", "Bearer " + buyer.token())
@@ -88,10 +88,10 @@ class ConversationControllerTests {
 
 	@Test
 	void nonParticipantCannotReadConversationMessages() throws Exception {
-		AuthSession seller = loginAndVerify("13800000083", "2026000083");
+		AuthSession seller = loginAndVerify("229202400083", "2026000083");
 		long itemId = createAndApproveItem(seller.token(), "Private Conversation Item");
-		AuthSession buyer = loginAndVerify("13800000084", "2026000084");
-		AuthSession stranger = loginAndVerify("13800000085", "2026000085");
+		AuthSession buyer = loginAndVerify("229202400084", "2026000084");
+		AuthSession stranger = loginAndVerify("229202400085", "2026000085");
 
 		MvcResult created = mockMvc.perform(post("/api/v1/conversations")
 			.header("Authorization", "Bearer " + buyer.token())
@@ -126,7 +126,7 @@ class ConversationControllerTests {
 			.andExpect(status().isOk())
 			.andReturn();
 		long itemId = read(created, "/data/id").asLong();
-		String adminToken = loginAsAdmin("13800000086");
+		String adminToken = loginAsAdmin("229202400086");
 		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
 			.header("Authorization", "Bearer " + adminToken)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -161,14 +161,9 @@ class ConversationControllerTests {
 	}
 
 	private AuthSession login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

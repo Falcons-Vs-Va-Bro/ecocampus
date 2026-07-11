@@ -32,7 +32,7 @@ class ItemSellerControllerTests {
 
 	@Test
 	void verifiedSellerCanManageOwnItems() throws Exception {
-		String accessToken = loginAndVerify("13800000031", "2026000031");
+		String accessToken = loginAndVerify("229202400031", "2026000031");
 
 		MvcResult created = mockMvc.perform(post("/api/v1/items")
 			.header("Authorization", "Bearer " + accessToken)
@@ -75,7 +75,7 @@ class ItemSellerControllerTests {
 
 	@Test
 	void unverifiedUserCannotPublishItem() throws Exception {
-		String accessToken = login("13800000032");
+		String accessToken = login("229202400032");
 
 		mockMvc.perform(post("/api/v1/items")
 			.header("Authorization", "Bearer " + accessToken)
@@ -116,14 +116,9 @@ class ItemSellerControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

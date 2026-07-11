@@ -46,6 +46,7 @@ public final class ProdDatabaseSafetyEnvironmentPostProcessor implements Environ
 		String driver = required(environment, "spring.datasource.driver-class-name");
 		String username = required(environment, "spring.datasource.username");
 		String password = required(environment, "spring.datasource.password");
+		String jwtSecret = required(environment, "ecocampus.security.jwt-secret");
 
 		if (!url.toLowerCase(Locale.ROOT).startsWith("jdbc:mysql:")) {
 			fail("spring.datasource.url must start with jdbc:mysql: when prod profile is active");
@@ -58,6 +59,9 @@ public final class ProdDatabaseSafetyEnvironmentPostProcessor implements Environ
 		}
 		if (DISALLOWED_PASSWORDS.contains(normalize(password))) {
 			fail("spring.datasource.password must be a real secret, not an example or local-development value");
+		}
+		if (jwtSecret.length() < 32 || jwtSecret.contains("dev-only") || jwtSecret.contains("change-me")) {
+			fail("ecocampus.security.jwt-secret must be an independent secret of at least 32 characters");
 		}
 
 		// 生产库结构只能由 Flyway 管理；Hibernate 只负责启动时校验实体与表结构是否匹配。

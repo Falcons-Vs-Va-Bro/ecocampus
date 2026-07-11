@@ -32,7 +32,7 @@ class FileControllerTests {
 
 	@Test
 	void verifiedUserCanUploadImage() throws Exception {
-		String accessToken = loginAndVerify("13800000071", "2026000071");
+		String accessToken = loginAndVerify("229202400071", "2026000071");
 		MockMultipartFile file = new MockMultipartFile("file", "item.png", "image/png", pngBytes(2, 3));
 
 		mockMvc.perform(multipart("/api/v1/files/images")
@@ -47,7 +47,7 @@ class FileControllerTests {
 
 	@Test
 	void rejectsNonImageUpload() throws Exception {
-		String accessToken = loginAndVerify("13800000072", "2026000072");
+		String accessToken = loginAndVerify("229202400072", "2026000072");
 		MockMultipartFile file = new MockMultipartFile("file", "note.txt", MediaType.TEXT_PLAIN_VALUE,
 				"not image".getBytes());
 
@@ -84,14 +84,9 @@ class FileControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();
