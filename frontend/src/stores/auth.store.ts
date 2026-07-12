@@ -14,6 +14,8 @@ interface AuthState {
   clearSession: () => void
 }
 
+const authStorageName = import.meta.env.VITE_USE_MOCKS === 'true' ? 'ecocampus.auth.mock' : 'ecocampus.auth.real'
+
 export const useAuthStore = create<AuthState>()(persist((set) => ({
   accessToken: undefined,
   role: 'GUEST',
@@ -25,6 +27,6 @@ export const useAuthStore = create<AuthState>()(persist((set) => ({
       role: 'GUEST',
       verificationStatus: 'UNVERIFIED',
     }),
-}), { name: 'ecocampus.auth', partialize: (state) => ({ accessToken: state.accessToken, role: state.role, verificationStatus: state.verificationStatus }) }))
+}), { name: authStorageName, partialize: (state) => ({ accessToken: state.accessToken, role: state.role, verificationStatus: state.verificationStatus }) }))
 
 export const getAccessToken = () => useAuthStore.getState().accessToken

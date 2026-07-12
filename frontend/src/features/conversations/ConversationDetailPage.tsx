@@ -94,7 +94,7 @@ export function ConversationDetailPage() {
       {conversationsQuery.isError || messagesQuery.isError ? (
         <div className="messages-empty-state">
           <h2>私信加载失败</h2>
-          <p>请确认已启用 mock 模式或后端接口可用。</p>
+          <p>登录状态可能已失效，请重新登录或稍后重试。</p>
           <button
             type="button"
             onClick={() => {

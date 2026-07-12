@@ -75,6 +75,10 @@ class ConversationControllerTests {
 			.andExpect(jsonPath("$.data.size").value(1))
 			.andExpect(jsonPath("$.data.total").value(1));
 
+		mockMvc.perform(get("/api/v1/conversations").header("Authorization", "Bearer " + buyer.token()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.items[0].unreadCount").value(1));
+
 		mockMvc.perform(get("/api/v1/conversations/{conversationId}/messages", conversationId)
 			.header("Authorization", "Bearer " + seller.token())
 			.param("page", "1")
@@ -84,6 +88,14 @@ class ConversationControllerTests {
 			.andExpect(jsonPath("$.data.page").value(1))
 			.andExpect(jsonPath("$.data.size").value(1))
 			.andExpect(jsonPath("$.data.total").value(2));
+
+		mockMvc.perform(get("/api/v1/conversations/{conversationId}/messages", conversationId)
+			.header("Authorization", "Bearer " + buyer.token()))
+			.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/v1/conversations").header("Authorization", "Bearer " + buyer.token()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.items[0].unreadCount").value(0));
 	}
 
 	@Test

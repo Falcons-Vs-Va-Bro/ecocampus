@@ -66,7 +66,7 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 - 密码按用户输入提交，接口不得在响应中返回密码，后端不得明文保存密码。
 - 如果账号已存在，则校验本次密码是否与首次创建时的密码一致，通过后登录。
 - 如果账号不存在，则在登录时自动创建默认用户档案，再返回登录态。
-- 自动创建的用户默认为 `USER`，校园核验状态为 `UNVERIFIED`；完成校园核验后才可进行发布、下单等受限操作。
+- 自动创建的用户默认为 `USER`，校园核验状态为 `VERIFIED`；账号前缀校验视为当前演示环境的统一身份认证结果。
 - 前端和后端均不提供显式“注册”页面、注册按钮或注册接口。
 
 ### 3.2 账号登录
@@ -89,7 +89,7 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
   "user": {
     "id": 1,
     "role": "USER",
-    "verificationStatus": "UNVERIFIED"
+    "verificationStatus": "VERIFIED"
   }
 }
 ```
@@ -388,6 +388,8 @@ Content-Type: `multipart/form-data`
 ### 9.2 会话列表
 
 `GET /conversations?page=1&size=20`
+
+每个会话摘要包含 `unreadCount`。调用该会话的消息列表接口后，当前用户的已读时间会更新，随后会话列表中的 `unreadCount` 归零。
 
 响应 `data` 为分页对象，`size` 默认 20，最大 100：
 

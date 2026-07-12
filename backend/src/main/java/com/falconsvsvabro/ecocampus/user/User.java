@@ -87,6 +87,7 @@ public class User {
 	public static User registerByAccount(String account, String passwordHash) {
 		User user = new User(account);
 		user.passwordHash = passwordHash;
+		user.verificationStatus = VerificationStatus.VERIFIED;
 		return user;
 	}
 

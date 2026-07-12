@@ -76,6 +76,7 @@ class ItemSellerControllerTests {
 	@Test
 	void unverifiedUserCannotPublishItem() throws Exception {
 		String accessToken = login("229202400032");
+		jdbcTemplate.update("update users set verification_status = 'UNVERIFIED' where phone = ?", "229202400032");
 
 		mockMvc.perform(post("/api/v1/items")
 			.header("Authorization", "Bearer " + accessToken)

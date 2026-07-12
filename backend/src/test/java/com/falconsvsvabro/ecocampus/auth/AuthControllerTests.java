@@ -37,7 +37,7 @@ class AuthControllerTests {
 					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.user.verificationStatus").value("UNVERIFIED"))
+			.andExpect(jsonPath("$.data.user.verificationStatus").value("VERIFIED"))
 			.andExpect(jsonPath("$.data.accessToken", not(emptyOrNullString())))
 			.andReturn();
 

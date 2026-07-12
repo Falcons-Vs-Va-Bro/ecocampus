@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -26,6 +27,9 @@ class UserControllerTests {
 
 	@Autowired
 	private ObjectMapper objectMapper;
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	@Test
 	void updateProfileAndManageAddresses() throws Exception {
@@ -90,6 +94,7 @@ class UserControllerTests {
 	@Test
 	void unverifiedUsersCannotManageAddresses() throws Exception {
 		String accessToken = login("229202400012");
+		jdbcTemplate.update("update users set verification_status = 'UNVERIFIED' where phone = ?", "229202400012");
 
 		mockMvc.perform(get("/api/v1/users/me/addresses").header("Authorization", "Bearer " + accessToken))
 			.andExpect(status().isForbidden())

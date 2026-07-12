@@ -1,7 +1,7 @@
 import { RotateCw } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { login } from '../../api/auth.api'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAuthStore } from '../../stores/auth.store'
@@ -64,6 +64,7 @@ const copy = {
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const setSession = useAuthStore((state) => state.setSession)
   const [mode, setMode] = useState<LoginMode>('qr')
   const [locale, setLocale] = useState<Locale>('en')
@@ -123,7 +124,8 @@ export function LoginPage() {
 
     setNotice(t.mockNotice)
     setLoginError('')
-    navigate('/')
+    const returnTo = searchParams.get('returnTo')
+    navigate(returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/')
   }
 
   return (

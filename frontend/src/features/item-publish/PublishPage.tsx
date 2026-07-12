@@ -32,6 +32,7 @@ import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './PublishPage.css'
 import type { MineItem } from './myItems.mock'
 
@@ -54,7 +55,7 @@ const userNav = [
   { label: '我的发布', icon: Store, to: '/items/mine' },
   { label: '购买订单', icon: ClipboardList, to: '/orders' },
   { label: '出售订单', icon: Store, to: '/orders/sales' },
-  { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
+  { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
 
@@ -93,6 +94,7 @@ interface PublishDraft {
 }
 
 export function PublishPage() {
+  const unreadMessageCount = useUnreadMessageCount()
   useDocumentTitle('厦大闲置 - 发布闲置商品')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const draft = readPublishDraft()
@@ -172,11 +174,10 @@ export function PublishPage() {
         <div className="publish-userbar" aria-label="用户快捷入口">
           <button type="button" className="publish-notice-button" aria-label="通知">
             <Bell size={25} />
-            <span>3</span>
           </button>
           <button type="button" className="publish-notice-button" aria-label="私信">
             <Mail size={26} />
-            <span>2</span>
+            {unreadMessageCount > 0 ? <span>{unreadMessageCount}</span> : null}
           </button>
           <button type="button" className="publish-profile-button">
             <span className="publish-avatar">海</span>
@@ -203,7 +204,7 @@ export function PublishPage() {
               <a className={'active' in item && item.active ? 'active' : undefined} href={item.to} key={item.label}>
                 <item.icon size={20} />
                 <span>{item.label}</span>
-                {item.badge ? <b>{item.badge}</b> : null}
+                {item.to === '/messages' && unreadMessageCount > 0 ? <b>{unreadMessageCount}</b> : null}
               </a>
             ))}
           </nav>
