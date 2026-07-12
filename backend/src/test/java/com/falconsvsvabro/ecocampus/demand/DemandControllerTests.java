@@ -31,9 +31,9 @@ class DemandControllerTests {
 
 	@Test
 	void verifiedUserCanPublishCloseAndMatchDemand() throws Exception {
-		String sellerToken = loginAndVerify("13800000091", "2026000091");
+		String sellerToken = loginAndVerify("229202400091", "2026000091");
 		long itemId = createAndApproveItem(sellerToken, "24 inch campus monitor");
-		String buyerToken = loginAndVerify("13800000092", "2026000092");
+		String buyerToken = loginAndVerify("229202400092", "2026000092");
 
 		MvcResult created = mockMvc.perform(post("/api/v1/demands")
 			.header("Authorization", "Bearer " + buyerToken)
@@ -92,7 +92,7 @@ class DemandControllerTests {
 			.andExpect(status().isOk())
 			.andReturn();
 		long itemId = read(created, "/data/id").asLong();
-		String adminToken = loginAsAdmin("13800000093");
+		String adminToken = loginAsAdmin("229202400093");
 		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
 			.header("Authorization", "Bearer " + adminToken)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -127,14 +127,9 @@ class DemandControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

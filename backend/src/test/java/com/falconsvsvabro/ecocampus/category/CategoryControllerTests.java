@@ -44,7 +44,7 @@ class CategoryControllerTests {
 
 	@Test
 	void adminCanManageCategories() throws Exception {
-		String accessToken = loginAsAdmin("13800000021");
+		String accessToken = loginAsAdmin("229202400021");
 
 		MvcResult created = mockMvc.perform(post("/api/v1/admin/categories")
 			.header("Authorization", "Bearer " + accessToken)
@@ -78,7 +78,7 @@ class CategoryControllerTests {
 
 	@Test
 	void regularUserCannotManageAdminCategories() throws Exception {
-		String accessToken = login("13800000022");
+		String accessToken = login("229202400022");
 
 		mockMvc.perform(post("/api/v1/admin/categories")
 			.header("Authorization", "Bearer " + accessToken)
@@ -97,14 +97,9 @@ class CategoryControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

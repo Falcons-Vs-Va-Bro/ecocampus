@@ -33,8 +33,8 @@ class AdminUserControllerTests {
 
 	@Test
 	void adminCanBlacklistAndRestoreUser() throws Exception {
-		AuthSession user = loginAndVerify("13800000101", "2026000101");
-		AuthSession admin = loginAsAdmin("13800000102");
+		AuthSession user = loginAndVerify("229202400101", "2026000101");
+		AuthSession admin = loginAsAdmin("229202400102");
 
 		mockMvc.perform(get("/api/v1/admin/users")
 			.header("Authorization", "Bearer " + admin.token())
@@ -114,14 +114,9 @@ class AdminUserControllerTests {
 	}
 
 	private AuthSession login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

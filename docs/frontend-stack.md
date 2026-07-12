@@ -126,7 +126,7 @@ frontend/
 | `/admin/items/review` | `GET /admin/items/review`, `POST /admin/items/{itemId}/review` | 已覆盖 |
 | `/admin/items` | `GET /admin/items`, `POST /admin/items/{itemId}/violation-remove` | 已覆盖 |
 | `/admin/users` | `GET /admin/users`, `POST /admin/users/{userId}/blacklist`, `DELETE /admin/users/{userId}/blacklist` | 已覆盖 |
-| `/admin/categories` | `GET /admin/categories`, `POST /admin/categories`, `PUT /admin/categories/{categoryId}`, `DELETE /admin/categories/{categoryId}` | 已覆盖 |
+| `/admin/categories` | `GET /admin/categories`, `POST /admin/categories`, `PUT /admin/categories/{categoryId}`, `DELETE /admin/categories/{categoryId}` | 一级类目 CRUD 已接入；二级类目/启停待扩展契约 |
 
 ## 6. 动画使用边界
 

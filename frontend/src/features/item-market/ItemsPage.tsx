@@ -32,6 +32,7 @@ import { useLocation } from 'react-router-dom'
 import { listItems } from '../../api/item.api'
 import type { ItemSummary } from '../../api/item.api'
 import { queryKeys } from '../../api/queryKeys'
+import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import emptyFavoritesImage from '../../assets/favorites/empty-favorites.png'
@@ -168,7 +169,7 @@ const userNav = [
   { label: '我的发布', icon: Store, to: '/items/mine' },
   { label: '购买订单', icon: ClipboardList, to: '/orders' },
   { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sales' },
-  { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
+  { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
 
@@ -281,6 +282,7 @@ type PriceRange = { label: string; min: number; max: number }
 type PickupMode = (typeof pickupModes)[number]
 
 export function ItemsPage() {
+  const unreadMessageCount = useUnreadMessageCount()
   const location = useLocation()
   const routeCategory = categoryRoutes.find((item) => item.to === location.pathname)?.label ?? '全部'
   const isTextbookPage = location.pathname === '/items/textbook'
@@ -524,10 +526,10 @@ export function ItemsPage() {
         </form>
 
         <div className="market-userbar" aria-label="用户快捷入口">
-          <IconNotice label="通知" count={3}>
+          <IconNotice label="通知" count={0}>
             <Bell size={25} />
           </IconNotice>
-          <IconNotice label="私信" count={2}>
+          <IconNotice label="私信" count={unreadMessageCount}>
             <Mail size={26} />
           </IconNotice>
           <button type="button" className="profile-button">
@@ -559,7 +561,7 @@ export function ItemsPage() {
               <a href={item.to} key={item.label}>
                 <item.icon size={20} />
                 <span>{item.label}</span>
-                {item.badge ? <b>{item.badge}</b> : null}
+                {item.to === '/messages' && unreadMessageCount > 0 ? <b>{unreadMessageCount}</b> : null}
               </a>
             ))}
           </nav>
@@ -749,7 +751,7 @@ function IconNotice({ label, count, children }: { label: string; count: number; 
   return (
     <button type="button" className="notice-button" aria-label={label}>
       {children}
-      <span>{count}</span>
+      {count > 0 ? <span>{count}</span> : null}
     </button>
   )
 }
