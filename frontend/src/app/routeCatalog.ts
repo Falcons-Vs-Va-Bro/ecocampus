@@ -197,6 +197,15 @@ export const routeCatalog = [
     endpoints: ['GET /orders', 'GET /orders/{orderId}', 'POST /orders/{orderId}/status'],
   },
   {
+    path: '/orders/sale',
+    title: '出售订单',
+    permission: 'USER',
+    description: '查看卖家侧订单进度，联系买家并确认交易完成。',
+    guard: 'verified',
+    module: 'user',
+    endpoints: ['GET /orders', 'GET /orders/{orderId}', 'POST /orders/{orderId}/status'],
+  },
+  {
     path: '/orders/purchase/demand',
     title: '求购广场',
     permission: 'USER',
@@ -204,6 +213,15 @@ export const routeCatalog = [
     guard: 'verified',
     module: 'user',
     endpoints: ['GET /demands', 'GET /conversations'],
+  },
+  {
+    path: '/orders/purchase/demand/:id/detail',
+    title: '求购详情',
+    permission: 'USER',
+    description: '查看单条求购的预算、成色、交易地点、发布者与匹配建议。',
+    guard: 'verified',
+    module: 'user',
+    endpoints: ['GET /demands/{demandId}', 'GET /demands/{demandId}/matches', 'GET /conversations'],
   },
   {
     path: '/orders/purchase/demand/new',

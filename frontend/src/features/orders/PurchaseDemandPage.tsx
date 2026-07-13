@@ -2,36 +2,19 @@ import {
   AlarmClock,
   CalendarDays,
   ChevronDown,
+  Heart,
   Handshake,
   MessageCircle,
   Search,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import { useMemo, useState } from 'react'
-import basketballImage from '../../assets/favorites/items/basketball.jpg'
-import calculatorImage from '../../assets/favorites/items/calculator.jpg'
-import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
-import guitarImage from '../../assets/favorites/items/instruments-guitar.png'
-import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
-import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
+import { useEffect, useMemo, useState } from 'react'
 import messageHelperImage from '../../assets/messages/message-helper.webp'
 import { MarketplaceShell } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { isDemandFavorited, subscribeDemandFavorites, toggleDemandFavorite } from './demandFavorites'
+import { demandItems, demandStatusCopy, type DemandItem, type DemandStatus } from './demandData'
 import './OrdersPage.css'
-
-type DemandStatus = 'matching' | 'talking' | 'matched' | 'expiring'
-
-interface DemandItem {
-  author: string
-  budget: string
-  category: string
-  description: string
-  id: number
-  image: string
-  publishedAt: string
-  status: DemandStatus
-  title: string
-}
 
 const purchaseNav = [
   { label: '我的订单', to: '/orders/purchase' },
@@ -50,81 +33,6 @@ const statuses: Array<{ label: string; value: DemandStatus | '全部' }> = [
   { label: '即将过期', value: 'expiring' },
 ]
 
-const demandItems: DemandItem[] = [
-  {
-    id: 1,
-    title: '求高等数学教材',
-    budget: '¥20-40',
-    category: '教材教辅',
-    description: '需要可用的高等数学教材或笔记，有的同学联系我，谢谢！',
-    author: '林同学',
-    publishedAt: '10 分钟前',
-    status: 'matching',
-    image: mathBooksImage,
-  },
-  {
-    id: 2,
-    title: '求小台灯或护眼灯',
-    budget: '¥30-60',
-    category: '宿舍用品',
-    description: '宿舍学习用，需要一盏亮度可调的台灯或护眼灯，最好九成新及以上。',
-    author: '陈同学',
-    publishedAt: '25 分钟前',
-    status: 'talking',
-    image: deskLampImage,
-  },
-  {
-    id: 3,
-    title: '求二手计算器',
-    budget: '¥20-80',
-    category: '数码电子',
-    description: '考试用计算器，希望功能正常，屏幕清晰，有的同学联系。',
-    author: '王同学',
-    publishedAt: '1 小时前',
-    status: 'matching',
-    image: calculatorImage,
-  },
-  {
-    id: 4,
-    title: '求吉他变调夹',
-    budget: '¥10-25',
-    category: '乐器文具',
-    description: '吉他变调夹一个，最好金属材质，夹得稳，有的联系我！',
-    author: '周同学',
-    publishedAt: '2 小时前',
-    status: 'matching',
-    image: guitarImage,
-  },
-  {
-    id: 5,
-    title: '求20寸行李箱',
-    budget: '¥60-120',
-    category: '生活日用',
-    description: '周末短途旅行用，20寸左右行李箱，轮子灵活，外观无明显破损。',
-    author: '黄同学',
-    publishedAt: '今天 09:30',
-    status: 'expiring',
-    image: suitcaseImage,
-  },
-  {
-    id: 6,
-    title: '求篮球或羽毛球拍',
-    budget: '¥30-100',
-    category: '运动户外',
-    description: '想买篮球或羽毛球拍一副，参加校园活动用，可正常使用即可。',
-    author: '许同学',
-    publishedAt: '昨天',
-    status: 'matched',
-    image: basketballImage,
-  },
-]
-
-const statusCopy: Record<DemandStatus, { label: string; tone: 'blue' | 'orange' | 'green' | 'red' }> = {
-  matching: { label: '待匹配', tone: 'orange' },
-  talking: { label: '沟通中', tone: 'blue' },
-  matched: { label: '已匹配', tone: 'green' },
-  expiring: { label: '即将过期', tone: 'red' },
-}
 
 export function PurchaseDemandPage() {
   useDocumentTitle('厦大闲置 - 求购广场')
@@ -133,6 +41,9 @@ export function PurchaseDemandPage() {
   const [category, setCategory] = useState('全部')
   const [budget, setBudget] = useState('全部')
   const [status, setStatus] = useState<DemandStatus | '全部'>('全部')
+  const [, setFavoriteVersion] = useState(0)
+
+  useEffect(() => subscribeDemandFavorites(() => setFavoriteVersion((value) => value + 1)), [])
 
   const visibleDemands = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -305,9 +216,18 @@ function DemandStat({
   )
 }
 
-function DemandCard({ demand, index, reduceMotion }: { demand: DemandItem; index: number; reduceMotion: boolean }) {
-  const status = statusCopy[demand.status]
+function DemandCard({
+  demand,
+  index,
+  reduceMotion,
+}: {
+  demand: DemandItem
+  index: number
+  reduceMotion: boolean
+}) {
+  const status = demandStatusCopy[demand.status]
   const secondaryAction = demand.status === 'talking' || demand.status === 'matched' ? '继续沟通' : '我有此物'
+  const favorited = isDemandFavorited(demand.id)
 
   return (
     <motion.article
@@ -331,8 +251,17 @@ function DemandCard({ demand, index, reduceMotion }: { demand: DemandItem; index
         <p>发布者：{demand.author}</p>
         <small>{demand.publishedAt}</small>
         <footer>
-          <a href={`/demands/${demand.id}`}>查看详情</a>
+          <a href={`/orders/purchase/demand/${demand.id}/detail`}>查看详情</a>
           <a href="/messages">{secondaryAction}</a>
+          <button
+            type="button"
+            className={favorited ? 'favorited' : undefined}
+            aria-pressed={favorited}
+            onClick={() => toggleDemandFavorite(demand)}
+          >
+            <Heart size={17} fill={favorited ? 'currentColor' : 'none'} />
+            {favorited ? '已关注' : '关注求购'}
+          </button>
         </footer>
       </div>
     </motion.article>

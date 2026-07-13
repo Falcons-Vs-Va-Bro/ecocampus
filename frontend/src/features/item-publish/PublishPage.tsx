@@ -31,8 +31,10 @@ import { useRef, useState } from 'react'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
+import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './PublishPage.css'
+import '../../styles/marketplace-consistency.css'
 import type { MineItem } from './myItems.mock'
 
 const categoryNav = [
@@ -53,7 +55,7 @@ const userNav = [
   { label: '我的收藏', icon: Star, to: '/favorites' },
   { label: '我的发布', icon: Store, to: '/items/mine' },
   { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
-  { label: '出售订单', icon: Store, to: '/orders' },
+  { label: '出售订单', icon: Store, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
@@ -153,7 +155,8 @@ export function PublishPage() {
   }
 
   return (
-    <div className="publish-page">
+    <UnifiedMarketplacePage activeUserLabel="我的发布">
+      <div className="publish-page">
       <header className="publish-topbar">
         <a className="publish-brand" href="/">
           <img src={campusGateImage} alt="" aria-hidden="true" />
@@ -433,7 +436,8 @@ export function PublishPage() {
           </aside>
         </main>
       </div>
-    </div>
+      </div>
+    </UnifiedMarketplacePage>
   )
 }
 

@@ -31,8 +31,10 @@ import { useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
+import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './EditItemPage.css'
+import '../../styles/marketplace-consistency.css'
 import { mineItems, statusLabels } from './myItems.mock'
 
 const categoryNav = [
@@ -53,7 +55,7 @@ const userNav = [
   { label: '我的收藏', icon: Star, to: '/favorites' },
   { label: '我的发布', icon: Store, to: '/items/mine', active: true },
   { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
-  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders' },
+  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
@@ -84,7 +86,8 @@ export function EditItemPage() {
   const originalPriceValue = item.originalPrice.replace('¥', '')
 
   return (
-    <div className="edit-page">
+    <UnifiedMarketplacePage activeUserLabel="我的发布">
+      <div className="edit-page">
       <header className="edit-topbar">
         <a className="edit-brand" href="/">
           <img src={campusGateImage} alt="" aria-hidden="true" />
@@ -342,7 +345,8 @@ export function EditItemPage() {
           </aside>
         </main>
       </div>
-    </div>
+      </div>
+    </UnifiedMarketplacePage>
   )
 }
 

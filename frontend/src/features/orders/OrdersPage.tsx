@@ -13,7 +13,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { getMockOrderMeta } from '../../api/mock/orders.mock'
-import type { OrderListParams, OrderSummary } from '../../api/order.api'
+import type { OrderListParams, OrderRole, OrderSummary } from '../../api/order.api'
 import { listOrders, updateOrderStatus } from '../../api/order.api'
 import { queryKeys } from '../../api/queryKeys'
 import messageHelperImage from '../../assets/messages/message-helper.webp'
@@ -26,6 +26,7 @@ const emptyOrders: OrderSummary[] = []
 
 const purchaseNav = [
   { label: '我的订单', to: '/orders/purchase' },
+  { label: '出售订单', to: '/orders/sale' },
   { label: '求购广场', to: '/orders/purchase/demand' },
   { label: '发布求购', to: '/orders/purchase/demand/new' },
   { label: '我的求购 / 匹配结果', to: '/orders/purchase/demand/mine' },
@@ -46,22 +47,17 @@ const statusCopy: Record<OrderStatus, { label: string; tone: 'blue' | 'orange' |
   CANCELLED: { label: '已取消', tone: 'gray' },
 }
 
-const displayStats = {
-  PENDING_COMMUNICATION: 3,
-  WAITING_PICKUP: 2,
-  COMPLETED: 8,
-  CANCELLED: 1,
-} satisfies Record<OrderStatus, number>
-
-export function OrdersPage() {
-  useDocumentTitle('厦大闲置 - 购买订单')
+export function OrdersPage({ role = 'BUYER' }: { role?: OrderRole }) {
+  const isSale = role === 'SELLER'
+  const pageLabel = isSale ? '出售订单' : '购买订单'
+  useDocumentTitle(`厦大闲置 - ${pageLabel}`)
 
   const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion() ?? false
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState<OrderStatus | 'ALL'>('ALL')
 
-  const orderParams = useMemo<OrderListParams>(() => ({ role: 'BUYER', page: 1, size: 50 }), [])
+  const orderParams = useMemo<OrderListParams>(() => ({ role, page: 1, size: 50 }), [role])
   const ordersQuery = useQuery({
     queryKey: queryKeys.orders.list(orderParams),
     queryFn: () => listOrders(orderParams),
@@ -76,6 +72,20 @@ export function OrdersPage() {
   })
 
   const orders = ordersQuery.data?.data.items ?? emptyOrders
+  const displayStats = useMemo(
+    () => isSale ? {
+      PENDING_COMMUNICATION: 4,
+      WAITING_PICKUP: 2,
+      COMPLETED: 16,
+      CANCELLED: 3,
+    } : {
+      PENDING_COMMUNICATION: orders.filter((order) => order.status === 'PENDING_COMMUNICATION').length,
+      WAITING_PICKUP: orders.filter((order) => order.status === 'WAITING_PICKUP').length,
+      COMPLETED: orders.filter((order) => order.status === 'COMPLETED').length,
+      CANCELLED: orders.filter((order) => order.status === 'CANCELLED').length,
+    },
+    [isSale, orders],
+  )
   const visibleOrders = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
 
@@ -87,12 +97,12 @@ export function OrdersPage() {
         }
 
         const meta = getMockOrderMeta(order.id)
-        return `${order.itemTitle} ${meta?.sellerName ?? ''} ${meta?.pickupSpot ?? ''}`
+        return `${order.itemTitle} ${isSale ? meta?.buyerName ?? '' : meta?.sellerName ?? ''} ${meta?.pickupSpot ?? ''}`
           .toLowerCase()
           .includes(normalizedKeyword)
       })
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
-  }, [keyword, orders, status])
+  }, [isSale, keyword, orders, status])
 
   function mutateStatus(orderId: number, targetStatus: OrderStatus, remark: string) {
     updateStatusMutation.mutate({ orderId, targetStatus, remark })
@@ -100,12 +110,12 @@ export function OrdersPage() {
 
   return (
     <MarketplaceShell
-      activeUserLabel="购买订单"
+      activeUserLabel={pageLabel}
       keyword={keyword}
-      mainClassName="orders-main"
+      mainClassName={classNames('orders-main', isSale && 'sale-orders-main')}
       onKeywordChange={setKeyword}
       onSearch={() => undefined}
-      searchLabel="搜索我的订单"
+      searchLabel={`搜索${pageLabel}`}
       searchPlaceholder="搜索商品名称、类别、关键词..."
     >
       <motion.section
@@ -114,23 +124,23 @@ export function OrdersPage() {
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.36, delay: 0.18 }}
       >
-        <h1>我的订单</h1>
-        <p>查看交易进度，确认沟通、自提与完成状态</p>
+        <h1>{pageLabel}</h1>
+        <p>{isSale ? '处理买家沟通、自提确认与成交记录' : '查看交易进度，确认沟通、自提与完成状态'}</p>
       </motion.section>
 
-      <section className="orders-layout">
+      <section className={classNames('orders-layout', isSale && 'sale-orders-layout')}>
         <div className="orders-list-panel">
-          <nav className="order-section-tabs" aria-label="购买订单导航">
+          {!isSale ? <nav className="order-section-tabs" aria-label={`${pageLabel}导航`}>
             {purchaseNav.map((item) => (
-              <a className={item.label === '我的订单' ? 'active' : undefined} href={item.to} key={item.label}>
+              <a className={item.label === (isSale ? '出售订单' : '我的订单') ? 'active' : undefined} href={item.to} key={item.label}>
                 {item.label}
               </a>
             ))}
-          </nav>
+          </nav> : null}
 
           <section className="order-stat-strip" aria-label="订单统计">
             <OrderStat icon={<MessageCircle size={42} />} label="待沟通" value={displayStats.PENDING_COMMUNICATION} />
-            <OrderStat icon={<MapPin size={44} />} label="待自提" tone="orange" value={displayStats.WAITING_PICKUP} />
+            <OrderStat icon={<MapPin size={44} />} label={isSale ? '待买家自提' : '待自提'} tone="orange" value={displayStats.WAITING_PICKUP} />
             <OrderStat icon={<CheckCircle2 size={46} />} label="已完成" tone="green" value={displayStats.COMPLETED} />
             <OrderStat icon={<CircleX size={42} />} label="已取消" tone="gray" value={displayStats.CANCELLED} />
           </section>
@@ -162,7 +172,7 @@ export function OrdersPage() {
                 aria-label="搜索订单"
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="搜索我的订单"
+                placeholder={isSale ? '搜索出售订单' : '搜索我的订单'}
               />
             </form>
 
@@ -201,12 +211,13 @@ export function OrdersPage() {
           ) : null}
 
           {!ordersQuery.isLoading && !ordersQuery.isError && visibleOrders.length > 0 ? (
-            <div className="order-card-grid">
+            <div className={classNames('order-card-grid', isSale && 'sale-order-card-grid')}>
               {visibleOrders.map((order, index) => (
                 <OrderCard
                   isMutating={updateStatusMutation.isPending}
                   onStatusChange={mutateStatus}
                   order={order}
+                  role={role}
                   reduceMotion={shouldReduceMotion}
                   index={index}
                   key={order.id}
@@ -216,22 +227,33 @@ export function OrdersPage() {
           ) : null}
         </div>
 
-        <aside className="orders-side-panels">
-          <section className="order-tips-panel">
-            <h2>订单提示</h2>
-            <TipPoint icon={<ShieldCheck size={20} />} text="待沟通时请确认价格、取货时间和地点" />
-            <TipPoint icon={<CheckCircle2 size={20} />} text="待自提订单由买家确认自提后完成" />
-            <TipPoint icon={<MessageCircle size={20} />} text="卖家也可在沟通后标记交易完成" />
+        <aside className={classNames('orders-side-panels', isSale && 'sale-orders-side-panels')}>
+          <section className={classNames('order-tips-panel', isSale && 'sale-tips-panel')}>
+            <h2>{isSale ? '卖家提示' : '订单提示'}</h2>
             <span className="painted-asset order-panel-art" aria-hidden="true">
               <img src={messageHelperImage} alt="" />
             </span>
+            {isSale ? (
+              <>
+                <TipPoint icon={<CheckCircle2 size={20} />} text="及时回复买家" />
+                <TipPoint icon={<CheckCircle2 size={20} />} text="交付前确认价格和地点" />
+                <TipPoint icon={<CheckCircle2 size={20} />} text="线下交付后再确认已交付" />
+                <TipPoint icon={<CheckCircle2 size={20} />} text="取消后商品可重新上架" />
+              </>
+            ) : (
+              <>
+                <TipPoint icon={<ShieldCheck size={20} />} text="待沟通时请确认价格、取货时间和地点" />
+                <TipPoint icon={<CheckCircle2 size={20} />} text="待自提订单由买家确认自提后完成" />
+                <TipPoint icon={<MessageCircle size={20} />} text="卖家也可在沟通后标记交易完成" />
+              </>
+            )}
           </section>
 
           <section className="order-flow-panel">
             <h2>状态流转</h2>
             <div className="order-flow-line" aria-label="订单状态流转">
               <FlowStep label="待沟通" tone="blue" />
-              <FlowStep label="待自提" tone="orange" />
+              <FlowStep label={isSale ? '待买家自提' : '待自提'} tone="orange" />
               <FlowStep label="已完成" tone="green" />
               <FlowStep label="已取消" tone="gray" side />
             </div>
@@ -252,9 +274,10 @@ interface OrderCardProps {
   onStatusChange: (orderId: number, targetStatus: OrderStatus, remark: string) => void
   order: OrderSummary
   reduceMotion: boolean
+  role: OrderRole
 }
 
-function OrderCard({ index, isMutating, onStatusChange, order, reduceMotion }: OrderCardProps) {
+function OrderCard({ index, isMutating, onStatusChange, order, reduceMotion, role }: OrderCardProps) {
   const meta = getMockOrderMeta(order.id)
   const status = statusCopy[order.status]
   const pickupText =
@@ -264,7 +287,7 @@ function OrderCard({ index, isMutating, onStatusChange, order, reduceMotion }: O
 
   return (
     <motion.article
-      className="order-card"
+      className={classNames('order-card', role === 'SELLER' && 'sale-order-card')}
       initial={reduceMotion ? false : { opacity: 0, y: 16, rotate: index % 2 === 0 ? -0.2 : 0.2 }}
       animate={reduceMotion ? undefined : { opacity: 1, y: 0, rotate: 0 }}
       transition={{ duration: 0.3, delay: 0.12 + index * 0.04, ease: [0.22, 1, 0.36, 1] }}
@@ -280,13 +303,17 @@ function OrderCard({ index, isMutating, onStatusChange, order, reduceMotion }: O
             <h2>{order.itemTitle}</h2>
             <strong>{meta ? formatPrice(meta.priceCent) : '价格待同步'}</strong>
           </div>
-          <span className={`order-status-badge order-status-badge--${status.tone}`}>{status.label}</span>
+          <span className={`order-status-badge order-status-badge--${status.tone}`}>
+            {role === 'SELLER' && order.status === 'WAITING_PICKUP' ? '待买家自提' : status.label}
+          </span>
         </header>
 
-        <p>卖家：{meta?.sellerName ?? `用户 #${order.sellerId}`}</p>
-        <p>{pickupText}</p>
+        <p>{role === 'SELLER' ? `买家：${meta?.buyerName ?? `用户 #${order.buyerId}`}` : `卖家：${meta?.sellerName ?? `用户 #${order.sellerId}`}`}</p>
+        {role === 'SELLER' ? <p>约定时间：{meta?.appointmentText ?? '待约定'}</p> : null}
+        <p>{role === 'SELLER' ? `取货地点：${meta?.pickupSpot ?? '待确认'}` : pickupText}</p>
+        {role === 'SELLER' ? <p>最新消息：{meta?.latestMessage ?? meta?.timelineText ?? order.remark ?? '暂无新消息'}</p> : null}
 
-        <footer>{renderOrderActions(order, isMutating, onStatusChange)}</footer>
+        <footer>{renderOrderActions(order, isMutating, onStatusChange, role)}</footer>
       </div>
     </motion.article>
   )
@@ -296,7 +323,12 @@ function renderOrderActions(
   order: OrderSummary,
   isMutating: boolean,
   onStatusChange: (orderId: number, targetStatus: OrderStatus, remark: string) => void,
+  role: OrderRole,
 ) {
+  if (role === 'SELLER') {
+    return renderSaleOrderActions(order, isMutating, onStatusChange)
+  }
+
   if (order.status === 'PENDING_COMMUNICATION') {
     return (
       <>
@@ -335,6 +367,54 @@ function renderOrderActions(
   return (
     <>
       <ActionLink href={`/items/${order.itemId}`}>查看详情</ActionLink>
+    </>
+  )
+}
+
+function renderSaleOrderActions(
+  order: OrderSummary,
+  isMutating: boolean,
+  onStatusChange: (orderId: number, targetStatus: OrderStatus, remark: string) => void,
+) {
+  if (order.status === 'PENDING_COMMUNICATION') {
+    return (
+      <>
+        <ActionLink href="/messages">联系买家</ActionLink>
+        <ActionButton disabled={isMutating} onClick={() => onStatusChange(order.id, 'WAITING_PICKUP', '卖家已确认可交易')} primary>
+          确认可交易
+        </ActionButton>
+        <ActionButton disabled={isMutating} onClick={() => onStatusChange(order.id, 'CANCELLED', '卖家取消订单')} danger>
+          取消订单
+        </ActionButton>
+      </>
+    )
+  }
+
+  if (order.status === 'WAITING_PICKUP') {
+    return (
+      <>
+        <ActionLink href="/messages">联系买家</ActionLink>
+        <ActionButton disabled={isMutating} onClick={() => onStatusChange(order.id, 'COMPLETED', '卖家已确认交付')} primary>
+          确认已交付
+        </ActionButton>
+        <ActionLink href="/messages">修改地点</ActionLink>
+      </>
+    )
+  }
+
+  if (order.status === 'COMPLETED') {
+    return (
+      <>
+        <ActionLink href={`/items/${order.itemId}`}>查看详情</ActionLink>
+        <ActionLink href="/publish">再次发布</ActionLink>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <ActionLink href={`/items/${order.itemId}`}>查看原因</ActionLink>
+      <ActionLink href="/items/mine">重新上架</ActionLink>
     </>
   )
 }

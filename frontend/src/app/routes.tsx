@@ -15,7 +15,7 @@ import { ItemsPage } from '../features/item-market/ItemsPage'
 import { EditItemPage } from '../features/item-publish/EditItemPage'
 import { MyItemsPage } from '../features/item-publish/MyItemsPage'
 import { PublishPage } from '../features/item-publish/PublishPage'
-import { OrdersPage, PurchaseDemandMinePage, PurchaseDemandNewPage, PurchaseDemandPage } from '../features/orders'
+import { OrdersPage, PurchaseDemandDetailPage, PurchaseDemandMinePage, PurchaseDemandNewPage, PurchaseDemandPage } from '../features/orders'
 import { ProfilePage } from '../features/profile/ProfilePage'
 import { VerifyPage } from '../features/profile/VerifyPage'
 import type { RouteMeta } from '../types/routes'
@@ -126,10 +126,24 @@ function createRoute(meta: RouteMeta): RouteObject {
     }
   }
 
+  if (meta.path === '/orders/sale') {
+    return {
+      path: 'orders/sale',
+      element: <OrdersPage role="SELLER" />,
+    }
+  }
+
   if (meta.path === '/orders/purchase/demand') {
     return {
       path: 'orders/purchase/demand',
       element: <PurchaseDemandPage />,
+    }
+  }
+
+  if (meta.path === '/orders/purchase/demand/:id/detail') {
+    return {
+      path: 'orders/purchase/demand/:id/detail',
+      element: <PurchaseDemandDetailPage />,
     }
   }
 

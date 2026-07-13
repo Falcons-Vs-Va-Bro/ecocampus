@@ -7,7 +7,9 @@ import type {
 } from '../order.api'
 import airpodsImage from '../../assets/favorites/items/airpods.jpg'
 import basketballImage from '../../assets/favorites/items/basketball.jpg'
+import calculatorImage from '../../assets/favorites/items/calculator.jpg'
 import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
+import macbookImage from '../../assets/favorites/items/macbook-air.jpg'
 import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
 import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.jpg'
 import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
@@ -16,6 +18,7 @@ const mockLatencyMs = 180
 const currentUserId = 101
 
 export interface MockOrderMeta {
+  appointmentText?: string
   buyerName: string
   cancelReason?: string
   categoryName: string
@@ -23,6 +26,7 @@ export interface MockOrderMeta {
   pickupSpot: string
   priceCent: number
   sellerName: string
+  latestMessage?: string
   timelineText: string
 }
 
@@ -126,6 +130,39 @@ let mockOrders: OrderSummary[] = [
     remark: '完成于 2026-07-07',
     createdAt: '2026-07-07T17:15:00+08:00',
   },
+  {
+    id: 6204,
+    itemId: 2004,
+    itemTitle: '护眼台灯 可调光',
+    buyerId: 25,
+    sellerId: currentUserId,
+    deliveryMode: 'SELF_PICKUP',
+    status: 'WAITING_PICKUP',
+    remark: '买家预约今天傍晚自提',
+    createdAt: '2026-07-10T09:40:00+08:00',
+  },
+  {
+    id: 6205,
+    itemId: 2005,
+    itemTitle: 'MacBook Air 2019',
+    buyerId: 26,
+    sellerId: currentUserId,
+    deliveryMode: 'SELF_PICKUP',
+    status: 'PENDING_COMMUNICATION',
+    remark: '买家询问电池健康度',
+    createdAt: '2026-07-10T08:55:00+08:00',
+  },
+  {
+    id: 6206,
+    itemId: 2006,
+    itemTitle: 'AirPods 二代',
+    buyerId: 27,
+    sellerId: currentUserId,
+    deliveryMode: 'DELIVER_TO_SCHOOL',
+    status: 'CANCELLED',
+    remark: '买家临时取消预约',
+    createdAt: '2026-07-05T14:20:00+08:00',
+  },
 ]
 
 const mockOrderMeta = new Map<number, MockOrderMeta>([
@@ -205,9 +242,11 @@ const mockOrderMeta = new Map<number, MockOrderMeta>([
   [
     6201,
     {
+      appointmentText: '待约定',
       buyerName: '沈同学',
       categoryName: '乐器文具',
-      coverImageUrl: mathBooksImage,
+      coverImageUrl: calculatorImage,
+      latestMessage: '买家还在确认时间',
       pickupSpot: '嘉庚三门厅',
       priceCent: 8500,
       sellerName: '海风同学',
@@ -217,9 +256,11 @@ const mockOrderMeta = new Map<number, MockOrderMeta>([
   [
     6202,
     {
+      appointmentText: '明天 12:20',
       buyerName: '许同学',
       categoryName: '宿舍用品',
       coverImageUrl: suitcaseImage,
+      latestMessage: '买家想确认收纳箱尺寸',
       pickupSpot: '海韵园 4 号楼',
       priceCent: 3500,
       sellerName: '海风同学',
@@ -229,13 +270,58 @@ const mockOrderMeta = new Map<number, MockOrderMeta>([
   [
     6203,
     {
+      appointmentText: '昨日 17:00',
       buyerName: '郑同学',
       categoryName: '运动户外',
       coverImageUrl: basketballImage,
+      latestMessage: '已线下交付',
       pickupSpot: '上弦场',
       priceCent: 6800,
       sellerName: '海风同学',
       timelineText: '买家已确认完成',
+    },
+  ],
+  [
+    6204,
+    {
+      appointmentText: '今天 18:30',
+      buyerName: '王同学',
+      categoryName: '宿舍用品',
+      coverImageUrl: deskLampImage,
+      latestMessage: '买家：晚上六点半方便吗？',
+      pickupSpot: '芙蓉园门口',
+      priceCent: 4500,
+      sellerName: '海风同学',
+      timelineText: '买家已预约今天自提',
+    },
+  ],
+  [
+    6205,
+    {
+      appointmentText: '明天 12:20',
+      buyerName: '林同学',
+      categoryName: '数码电子',
+      coverImageUrl: macbookImage,
+      latestMessage: '买家想确认电池健康度',
+      pickupSpot: '图书馆东门',
+      priceCent: 268000,
+      sellerName: '海风同学',
+      timelineText: '等待确认交易时间',
+    },
+  ],
+  [
+    6206,
+    {
+      appointmentText: '已取消',
+      buyerName: '周同学',
+      cancelReason: '买家临时取消预约',
+      categoryName: '数码电子',
+      coverImageUrl: airpodsImage,
+      latestMessage: '买家临时取消预约',
+      pickupSpot: '无',
+      priceCent: 39900,
+      sellerName: '海风同学',
+      timelineText: '订单已取消',
     },
   ],
 ])
