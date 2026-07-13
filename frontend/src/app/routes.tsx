@@ -5,7 +5,7 @@ import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
 import { MarketplacePlaceholderPage } from '../components/marketplace'
-import { AdminItemsPage, AdminReviewPage } from '../features/admin'
+import { AdminDashboardPage, AdminItemsPage, AdminReviewPage } from '../features/admin'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ConversationDetailPage, MessagesPage } from '../features/conversations'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
@@ -75,6 +75,17 @@ function createRoute(meta: RouteMeta): RouteObject {
       element: (
         <RouteGuard meta={meta} showNotice={false}>
           <AdminItemsPage />
+        </RouteGuard>
+      ),
+    }
+  }
+
+  if (meta.path === '/admin') {
+    return {
+      path: 'admin',
+      element: (
+        <RouteGuard meta={meta} showNotice={false}>
+          <AdminDashboardPage />
         </RouteGuard>
       ),
     }

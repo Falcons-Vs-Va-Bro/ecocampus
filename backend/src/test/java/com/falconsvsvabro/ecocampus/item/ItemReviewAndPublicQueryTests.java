@@ -31,6 +31,22 @@ class ItemReviewAndPublicQueryTests {
 	private JdbcTemplate jdbcTemplate;
 
 	@Test
+	void publicItemListIgnoresInvalidBearerTokenButProtectedItemActionsDoNot() throws Exception {
+		mockMvc.perform(get("/api/v1/items")
+			.header("Authorization", "Bearer expired-or-invalid-token")
+			.param("page", "1")
+			.param("size", "80"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.items").isArray());
+
+		mockMvc.perform(post("/api/v1/items")
+			.header("Authorization", "Bearer expired-or-invalid-token")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{}"))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	void adminCanReviewItemAndPublicCanQueryOnSaleItems() throws Exception {
 		String sellerToken = loginAndVerify("13800000041", "2026000041");
 		long itemId = createItem(sellerToken, "Reviewable ZX900 Monitor");

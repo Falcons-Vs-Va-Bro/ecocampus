@@ -6,10 +6,39 @@ import { listMockAdminItems, listMockReviewItems, mockViolationRemoveItem, revie
 const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
 
 export interface DashboardOverview {
-  publishedCount: number
-  completedOrderCount: number
+  itemPublishCount: number
+  orderCompletedCount: number
   pendingReviewCount: number
   activeUserCount: number
+  categoryStats: Array<{
+    categoryName: string
+    itemCount: number
+    completedOrderCount: number
+  }>
+}
+
+export interface DashboardSummary {
+  overview: DashboardOverview
+  dealTrends: Array<{
+    date: string
+    label: string
+    currentWeekCount: number
+    previousWeekCount: number
+  }>
+  recentPendingItems: Array<{
+    id: number
+    title: string
+    sellerNickname: string
+    categoryName: string
+    submittedAt: string
+    coverImageUrl?: string
+  }>
+  reminders: Array<{
+    key: string
+    label: string
+    count: number
+    severity: 'normal' | 'warning' | 'danger' | string
+  }>
 }
 
 export interface AdminUserSummary {
@@ -43,6 +72,11 @@ export interface ViolationRemoveRequest {
 
 export async function getDashboardOverview() {
   const response = await apiClient.get<ApiResponse<DashboardOverview>>('/admin/dashboard/overview')
+  return response.data
+}
+
+export async function getDashboardSummary() {
+  const response = await apiClient.get<ApiResponse<DashboardSummary>>('/admin/dashboard/summary')
   return response.data
 }
 

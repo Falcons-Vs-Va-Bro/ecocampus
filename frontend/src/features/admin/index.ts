@@ -1,3 +1,4 @@
+export { AdminDashboardPage } from './AdminDashboardPage'
 export { AdminItemsPage } from './AdminItemsPage'
 export { AdminReviewPage } from './AdminReviewPage'
 
