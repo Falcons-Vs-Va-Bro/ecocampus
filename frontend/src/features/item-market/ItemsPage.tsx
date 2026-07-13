@@ -72,6 +72,7 @@ import ticketsGraduationImage from '../../assets/favorites/items/tickets-graduat
 import ticketsLectureImage from '../../assets/favorites/items/tickets-lecture.png'
 import ticketsMovieImage from '../../assets/favorites/items/tickets-movie.png'
 import ticketsTheaterImage from '../../assets/favorites/items/tickets-theater.png'
+import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './HomePage.css'
 import './ItemsPage.css'
@@ -496,7 +497,13 @@ export function ItemsPage() {
   }
 
   return (
-    <div className="market-page items-page">
+    <UnifiedMarketplacePage
+      activeCategoryLabel={categoryRoutes.find((item) => item.to === location.pathname)?.sidebarLabel ?? '全部分类'}
+      keyword={keyword}
+      onKeywordChange={(value) => resetPage(() => setKeyword(value))}
+      onSearch={() => setPage(1)}
+    >
+      <div className="market-page items-page">
       <header className="market-topbar">
         <a className="market-brand" href="/">
           <img src={campusGateImage} alt="" aria-hidden="true" />
@@ -741,7 +748,8 @@ export function ItemsPage() {
           </section>
         </main>
       </div>
-    </div>
+      </div>
+    </UnifiedMarketplacePage>
   )
 }
 

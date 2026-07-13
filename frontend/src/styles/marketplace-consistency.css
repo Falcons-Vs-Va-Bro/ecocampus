@@ -254,7 +254,7 @@
 }
 
 /* These pages now render inside MarketplaceShell; remove their duplicated legacy shell. */
-.unified-marketplace-content > :is(.profile-page, .verify-page, .publish-page, .mine-page, .edit-page) {
+.unified-marketplace-content > :is(.profile-page, .verify-page, .publish-page, .mine-page, .edit-page, .items-page) {
   color: #25211c;
   min-height: 0;
   overflow: visible;
@@ -262,14 +262,16 @@
   font-weight: 400;
 }
 
-.unified-marketplace-content > :is(.profile-page, .verify-page, .publish-page, .mine-page, .edit-page)::before {
+.unified-marketplace-content > :is(.profile-page, .verify-page, .publish-page, .mine-page, .edit-page, .items-page)::before {
   display: none;
 }
 
 .unified-marketplace-content
   :is(.profile-topbar, .verify-topbar, .publish-topbar, .mine-topbar, .edit-topbar),
 .unified-marketplace-content
-  :is(.profile-sidebar, .verify-sidebar, .publish-sidebar, .mine-sidebar, .edit-sidebar) {
+  :is(.profile-sidebar, .verify-sidebar, .publish-sidebar, .mine-sidebar, .edit-sidebar),
+.unified-marketplace-content .items-page > .market-topbar,
+.unified-marketplace-content .items-page .market-sidebar {
   display: none;
 }
 
@@ -279,6 +281,20 @@
   width: 100%;
   min-height: 0;
   margin: 0;
+}
+
+.unified-marketplace-content .items-page > .market-layout {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+
+.unified-marketplace-content .items-page .items-main {
+  width: 100%;
+  padding: 0 0 52px;
 }
 
 .unified-marketplace-content

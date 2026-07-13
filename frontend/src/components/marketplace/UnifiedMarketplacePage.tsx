@@ -3,20 +3,34 @@ import { useState } from 'react'
 import { MarketplaceShell } from './MarketplaceShell'
 
 interface UnifiedMarketplacePageProps {
-  activeUserLabel: string
+  activeCategoryLabel?: string
+  activeUserLabel?: string
   children: ReactNode
+  keyword?: string
+  onKeywordChange?: (value: string) => void
+  onSearch?: () => void
 }
 
-export function UnifiedMarketplacePage({ activeUserLabel, children }: UnifiedMarketplacePageProps) {
-  const [keyword, setKeyword] = useState('')
+export function UnifiedMarketplacePage({
+  activeCategoryLabel,
+  activeUserLabel,
+  children,
+  keyword,
+  onKeywordChange,
+  onSearch,
+}: UnifiedMarketplacePageProps) {
+  const [internalKeyword, setInternalKeyword] = useState('')
+  const resolvedKeyword = keyword ?? internalKeyword
+  const changeKeyword = onKeywordChange ?? setInternalKeyword
 
   return (
     <MarketplaceShell
+      activeCategoryLabel={activeCategoryLabel}
       activeUserLabel={activeUserLabel}
-      keyword={keyword}
+      keyword={resolvedKeyword}
       mainClassName="unified-marketplace-content"
-      onKeywordChange={setKeyword}
-      onSearch={() => undefined}
+      onKeywordChange={changeKeyword}
+      onSearch={onSearch ?? (() => undefined)}
       searchLabel="搜索商品"
       searchPlaceholder="搜索商品名称、类别、关键词..."
     >
