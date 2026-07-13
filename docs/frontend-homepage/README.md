@@ -34,7 +34,7 @@ The provided reference is viable as the visual direction, but its current page c
 - invalid favorites;
 - batch management of selected favorites.
 
-Those features should remain under authenticated user routes such as `/favorites`, `/items/mine`, `/orders`, and `/messages`.
+Those features should remain under authenticated user routes such as `/favorites`, `/items/mine`, `/orders`, `/orders/sales`, and `/messages`.
 
 ## Homepage Content Model
 

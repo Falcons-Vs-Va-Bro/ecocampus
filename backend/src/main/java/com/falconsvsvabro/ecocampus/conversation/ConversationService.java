@@ -69,11 +69,12 @@ public class ConversationService {
 		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), conversationPage.getTotalElements());
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public PageResponse<MessageResponse> listMessages(Long userId, Long conversationId, int page, int size) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
 		Conversation conversation = getConversation(conversationId);
 		ensureParticipant(conversation, user.getId());
+		conversation.markRead(user.getId());
 		Pageable pageable = PageRequest.of(normalizePage(page) - 1, normalizeSize(size));
 		var messagePage = messageRepository.findByConversationIdOrderByCreatedAtAscIdAsc(conversation.getId(),
 				pageable);
@@ -92,6 +93,7 @@ public class ConversationService {
 		ConversationMessage message = messageRepository
 			.save(new ConversationMessage(conversation.getId(), user.getId(), request.content()));
 		conversation.updateLastMessage(request.content());
+		conversation.markRead(user.getId());
 		return MessageResponse.from(message);
 	}
 
@@ -99,7 +101,10 @@ public class ConversationService {
 		Item item = getItem(conversation.getItemId());
 		User targetUser = userRepository.findById(conversation.otherUserId(currentUserId))
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "user not found"));
-		return ConversationResponse.from(conversation, item.getTitle(), currentUserId, targetUser.getNickname());
+		long unreadCount = messageRepository.countUnread(conversation.getId(), currentUserId,
+				conversation.readAt(currentUserId));
+		return ConversationResponse.from(conversation, item.getTitle(), currentUserId, targetUser.getNickname())
+			.withUnreadCount(unreadCount);
 	}
 
 	private Conversation getConversation(Long conversationId) {

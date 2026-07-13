@@ -165,7 +165,10 @@ export async function listMockConversations(params?: {
   const start = (page - 1) * size
 
   return mockResponse({
-    items: conversations.slice(start, start + size),
+    items: conversations.slice(start, start + size).map((conversation) => ({
+      ...conversation,
+      unreadCount: conversationMeta[conversation.id]?.unreadCount ?? 0,
+    })),
     page,
     size,
     total: conversations.length,

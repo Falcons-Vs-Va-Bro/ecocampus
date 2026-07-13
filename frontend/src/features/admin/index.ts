@@ -1,5 +1,7 @@
 export { AdminDashboardPage } from './AdminDashboardPage'
 export { AdminItemsPage } from './AdminItemsPage'
+export { AdminUsersPage } from './AdminUsersPage'
+export { AdminCategoriesPage } from './AdminCategoriesPage'
 export { AdminReviewPage } from './AdminReviewPage'
 
 export const adminFeature = {

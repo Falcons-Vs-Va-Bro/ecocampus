@@ -31,11 +31,11 @@ class AdminDashboardControllerTests {
 
 	@Test
 	void adminCanReadDashboardOverview() throws Exception {
-		String sellerToken = loginAndVerify("13800000111", "2026000111");
+		String sellerToken = loginAndVerify("229202400111", "2026000111");
 		long itemId = createAndApproveItem(sellerToken, "Dashboard Completed Item");
-		String buyerToken = loginAndVerify("13800000112", "2026000112");
+		String buyerToken = loginAndVerify("229202400112", "2026000112");
 		completeOrder(buyerToken, sellerToken, itemId);
-		AuthSession admin = loginAsAdmin("13800000113");
+		AuthSession admin = loginAsAdmin("229202400113");
 
 		MvcResult result = mockMvc.perform(get("/api/v1/admin/dashboard/overview")
 			.header("Authorization", "Bearer " + admin.token()))
@@ -54,9 +54,9 @@ class AdminDashboardControllerTests {
 
 	@Test
 	void adminCanReadDashboardSummary() throws Exception {
-		String sellerToken = loginAndVerify("13800000121", "2026000121");
+		String sellerToken = loginAndVerify("229202400121", "2026000121");
 		createPendingItem(sellerToken, "Dashboard Pending Item");
-		AuthSession admin = loginAsAdmin("13800000122");
+		AuthSession admin = loginAsAdmin("229202400122");
 
 		MvcResult result = mockMvc.perform(get("/api/v1/admin/dashboard/summary")
 			.header("Authorization", "Bearer " + admin.token()))
@@ -108,7 +108,7 @@ class AdminDashboardControllerTests {
 
 	private long createAndApproveItem(String sellerToken, String title) throws Exception {
 		long itemId = createPendingItem(sellerToken, title);
-		String adminToken = loginAsAdmin("13800000114").token();
+		String adminToken = loginAsAdmin("229202400114").token();
 		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
 			.header("Authorization", "Bearer " + adminToken)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -162,14 +162,9 @@ class AdminDashboardControllerTests {
 	}
 
 	private AuthSession login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

@@ -35,7 +35,7 @@ const priceRanges = [
   { label: '100-300', min: 10000, max: 30000 },
   { label: '300以上', min: 30000, max: Number.POSITIVE_INFINITY },
 ]
-const deliveryModes = ['全部', '可自提', '可配送'] as const
+const deliveryModes = ['全部', '可自提', '校内配送'] as const
 
 const demandHighlights = [
   { title: '求购 高等数学（第七版）下册', meta: '学号 103****5123 · 5 分钟前' },
@@ -44,12 +44,12 @@ const demandHighlights = [
 ]
 
 const hotCategories = [
-  { label: '教材教辅', icon: BookOpen },
-  { label: '数码电子', icon: Camera },
-  { label: '宿舍用品', icon: Package },
-  { label: '生活日用', icon: ShoppingBasket },
-  { label: '运动户外', icon: Dumbbell },
-  { label: '美妆个护', icon: Star },
+  { label: '教材教辅', icon: BookOpen, to: '/items/textbook' },
+  { label: '数码电子', icon: Camera, to: '/items/digital' },
+  { label: '宿舍用品', icon: Package, to: '/items/dorm' },
+  { label: '生活日用', icon: ShoppingBasket, to: '/items/daily-goods' },
+  { label: '运动户外', icon: Dumbbell, to: '/items/outdoors' },
+  { label: '美妆个护', icon: Star, to: '/items/make-up' },
 ]
 
 type SectionTab = (typeof sectionTabs)[number]
@@ -65,7 +65,7 @@ export function HomePage() {
   const [priceRange, setPriceRange] = useState(priceRanges[0])
   const [deliveryMode, setDeliveryMode] = useState<DeliveryModeFilter>('全部')
   const [page, setPage] = useState(1)
-  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(() => new Set())
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(() => new Set([1002]))
 
   const itemsQuery = useQuery({
     queryKey: queryKeys.items.list('home'),
@@ -79,8 +79,8 @@ export function HomePage() {
 
   const categoryFilters = useMemo(() => {
     const categories = categoriesQuery.data?.data
-    const apiCategories = Array.isArray(categories) ? categories.map((item) => item.name) : []
-    return ['全部', ...apiCategories]
+    const names = Array.isArray(categories) ? categories.map((item) => displayCategoryName(item.name)) : []
+    return Array.from(new Set(['全部', ...names]))
   }, [categoriesQuery.data?.data])
 
   const itemPage = itemsQuery.data?.data
@@ -93,14 +93,14 @@ export function HomePage() {
 
     return allItems
       .filter((item) => filterBySection(item, section))
-      .filter((item) => (category === '全部' ? true : item.categoryName === category))
+      .filter((item) => (category === '全部' ? true : displayCategoryName(item.categoryName) === category))
       .filter((item) => item.priceCent >= priceRange.min && item.priceCent < priceRange.max)
       .filter((item) => {
         if (deliveryMode === '可自提') {
           return item.deliveryModes.includes('SELF_PICKUP')
         }
 
-        if (deliveryMode === '可配送') {
+        if (deliveryMode === '校内配送') {
           return item.deliveryModes.includes('DELIVER_TO_SCHOOL')
         }
 
@@ -111,14 +111,14 @@ export function HomePage() {
           return true
         }
 
-        return `${item.title} ${item.categoryName} ${item.seller.nickname}`.toLowerCase().includes(normalizedKeyword)
+        return `${item.title} ${displayCategoryName(item.categoryName)} ${item.seller.nickname}`.toLowerCase().includes(normalizedKeyword)
       })
       .sort((a, b) => {
         if (section === '最新上架') {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         }
 
-        return b.favoriteCount - a.favoriteCount
+        return a.id - b.id
       })
   }, [allItems, category, deliveryMode, keyword, priceRange, section])
 
@@ -207,7 +207,7 @@ export function HomePage() {
               ))}
             </FilterRow>
 
-            <FilterRow label="取送">
+            <FilterRow label="取货">
               {deliveryModes.map((item) => (
                 <button
                   type="button"
@@ -286,7 +286,7 @@ export function HomePage() {
                     favoriteLabel={favorited ? '取消收藏' : '收藏商品'}
                     meta={
                       <div className="home-item-meta">
-                        <span>{item.categoryName}</span>
+                        <span>{displayCategoryName(item.categoryName)}</span>
                         <span>{item.favoriteCount} 人关注</span>
                       </div>
                     }
@@ -369,7 +369,7 @@ export function HomePage() {
           <HomePanel title="热门类目" action="更多">
             <div className="hot-category-grid">
               {hotCategories.map((item) => (
-                <a href="/items" key={item.label}>
+                <a href={item.to} key={item.label}>
                   <item.icon size={30} />
                   <span>{item.label}</span>
                 </a>
@@ -434,19 +434,30 @@ function HomePanel({ title, action, children }: HomePanelProps) {
 }
 
 function filterBySection(item: ItemSummary, section: SectionTab) {
+  const categoryName = displayCategoryName(item.categoryName)
+
   if (section === '教材专区') {
-    return item.categoryName === '教材'
+    return categoryName === '教材教辅'
   }
 
   if (section === '数码好物') {
-    return item.categoryName === '数码'
+    return categoryName === '数码电子'
   }
 
   if (section === '宿舍补给') {
-    return item.categoryName === '宿舍用品'
+    return categoryName === '宿舍用品'
   }
 
   return true
+}
+
+function displayCategoryName(categoryName: string) {
+  const map: Record<string, string> = {
+    教材: '教材教辅',
+    数码: '数码电子',
+  }
+
+  return map[categoryName] ?? categoryName
 }
 
 function formatPrice(priceCent: number) {
@@ -454,9 +465,16 @@ function formatPrice(priceCent: number) {
 }
 
 function formatDelivery(deliveryModes: ItemSummary['deliveryModes']) {
-  if (deliveryModes.includes('SELF_PICKUP')) {
+  const canPickup = deliveryModes.includes('SELF_PICKUP')
+  const canDeliver = deliveryModes.includes('DELIVER_TO_SCHOOL')
+
+  if (canPickup && canDeliver) {
+    return '可自提/校内配送'
+  }
+
+  if (canPickup) {
     return '可自提'
   }
 
-  return '可配送'
+  return '校内配送'
 }

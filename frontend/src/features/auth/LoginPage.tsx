@@ -1,7 +1,8 @@
 import { RotateCw } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { login } from '../../api/auth.api'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAuthStore } from '../../stores/auth.store'
 import './LoginPage.css'
@@ -36,7 +37,7 @@ const copy = {
     firstLogin: 'For first login, please click forget password to reset; for more, please click online help.',
     accountPrefixError: 'The account must start with 2292024.',
     passwordRequired: 'Please enter Password.',
-    mockNotice: 'Local account will be created automatically if it does not exist. Password is not stored locally.',
+    mockNotice: 'The account will be created automatically if it does not exist.',
     copyright: 'Copyright © Xiamen University',
   },
   zh: {
@@ -56,13 +57,14 @@ const copy = {
     firstLogin: '首次登录请点击忘记密码进行重置;更多请点在线帮助',
     accountPrefixError: '账号前 7 位必须为 2292024。',
     passwordRequired: '请输入密码。',
-    mockNotice: '账号不存在时会自动建档；密码不会保存在本地。',
+    mockNotice: '账号不存在时会自动创建，已有账号将直接登录。',
     copyright: 'Copyright © 厦门大学',
   },
 } as const
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const setSession = useAuthStore((state) => state.setSession)
   const [mode, setMode] = useState<LoginMode>('qr')
   const [locale, setLocale] = useState<Locale>('en')
@@ -89,7 +91,7 @@ export function LoginPage() {
     setLoginError('')
   }
 
-  function handleAccountLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleAccountLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const normalizedAccount = account.trim()
@@ -107,16 +109,23 @@ export function LoginPage() {
       return
     }
 
-    provisionMockAccount(normalizedAccount)
-    setSession({
-      accessToken: `mock-${normalizedAccount}-${Date.now()}`,
-      role: 'USER',
-      verificationStatus: 'VERIFIED',
-    })
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      provisionMockAccount(normalizedAccount)
+      setSession({ accessToken: `mock-${normalizedAccount}-${Date.now()}`, role: 'USER', verificationStatus: 'VERIFIED' })
+    } else {
+      try {
+        const response = await login({ account: normalizedAccount, password: normalizedPassword })
+        setSession({ accessToken: response.data.accessToken, role: response.data.user.role, verificationStatus: response.data.user.verificationStatus })
+      } catch (error) {
+        setLoginError(error instanceof Error ? error.message : '登录失败')
+        return
+      }
+    }
 
     setNotice(t.mockNotice)
     setLoginError('')
-    navigate('/')
+    const returnTo = searchParams.get('returnTo')
+    navigate(returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/')
   }
 
   return (

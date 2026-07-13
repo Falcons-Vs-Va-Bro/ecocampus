@@ -8,30 +8,28 @@ import com.falconsvsvabro.ecocampus.common.api.ErrorCode;
 import com.falconsvsvabro.ecocampus.user.User;
 import com.falconsvsvabro.ecocampus.user.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
 
-	private final SmsCodeService smsCodeService;
 	private final JwtService jwtService;
 	private final UserRepository userRepository;
+	private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-	public AuthService(SmsCodeService smsCodeService, JwtService jwtService, UserRepository userRepository) {
-		this.smsCodeService = smsCodeService;
+	public AuthService(JwtService jwtService, UserRepository userRepository) {
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
 	}
 
-	public void sendSmsCode(String phone) {
-		smsCodeService.send(phone);
-	}
-
 	@Transactional
-	public LoginResponse login(String phone, String code) {
-		smsCodeService.verify(phone, code);
-		User user = userRepository.findByPhone(phone).orElseGet(() -> createUserByPhone(phone));
+	public LoginResponse login(String account, String password) {
+		User user = userRepository.findByPhone(account).orElseGet(() -> createUser(account, password));
+		if (!user.matchesPassword(passwordEncoder, password)) {
+			throw new BusinessException(ErrorCode.UNAUTHORIZED, "invalid account or password");
+		}
 		return toLoginResponse(user);
 	}
 
@@ -62,14 +60,17 @@ public class AuthService {
 		return MeResponse.from(user);
 	}
 
-	private User createUserByPhone(String phone) {
+	private User createUser(String account, String password) {
 		try {
-			return userRepository.saveAndFlush(User.registerByPhone(phone));
+			return userRepository.saveAndFlush(User.registerByAccount(account, passwordEncoder.encode(password)));
 		}
 		catch (DataIntegrityViolationException exception) {
-			// 手机号唯一约束兜底：并发登录同一手机号时，后提交的请求改为读取已创建账号。
-			return userRepository.findByPhone(phone)
-				.orElseThrow(() -> new BusinessException(ErrorCode.CONFLICT, "phone already exists"));
+			User existing = userRepository.findByPhone(account)
+				.orElseThrow(() -> new BusinessException(ErrorCode.CONFLICT, "account already exists"));
+			if (!existing.matchesPassword(passwordEncoder, password)) {
+				throw new BusinessException(ErrorCode.UNAUTHORIZED, "invalid account or password");
+			}
+			return existing;
 		}
 	}
 

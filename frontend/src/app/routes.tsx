@@ -5,15 +5,34 @@ import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
 import { MarketplacePlaceholderPage } from '../components/marketplace'
-import { AdminDashboardPage, AdminItemsPage, AdminReviewPage } from '../features/admin'
+import { AdminCategoriesPage, AdminDashboardPage, AdminItemsPage, AdminReviewPage, AdminUsersPage } from '../features/admin'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ConversationDetailPage, MessagesPage } from '../features/conversations'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
 import { ItemDetailPage } from '../features/item-detail'
 import { HomePage } from '../features/item-market/HomePage'
+import { ItemsPage } from '../features/item-market/ItemsPage'
+import { EditItemPage } from '../features/item-publish/EditItemPage'
+import { MyItemsPage } from '../features/item-publish/MyItemsPage'
+import { PublishPage } from '../features/item-publish/PublishPage'
 import { OrdersPage } from '../features/orders'
+import { ProfilePage } from '../features/profile/ProfilePage'
+import { VerifyPage } from '../features/profile/VerifyPage'
 import type { RouteMeta } from '../types/routes'
 import { routeCatalog } from './routeCatalog'
+
+const itemCategoryPaths = [
+  '/items',
+  '/items/textbook',
+  '/items/digital',
+  '/items/dorm',
+  '/items/outdoors',
+  '/items/daily-goods',
+  '/items/make-up',
+  '/items/instruments',
+  '/items/tickets',
+  '/items/others',
+]
 
 function createRoute(meta: RouteMeta): RouteObject {
   if (meta.path === '/login') {
@@ -44,6 +63,48 @@ function createRoute(meta: RouteMeta): RouteObject {
     }
   }
 
+  if (itemCategoryPaths.includes(meta.path)) {
+    return {
+      path: meta.path.replace(/^\//, ''),
+      element: <ItemsPage />,
+    }
+  }
+
+  if (meta.path === '/publish') {
+    return {
+      path: 'publish',
+      element: <PublishPage />,
+    }
+  }
+
+  if (meta.path === '/items/mine') {
+    return {
+      path: 'items/mine',
+      element: <MyItemsPage />,
+    }
+  }
+
+  if (meta.path === '/items/:id/edit') {
+    return {
+      path: 'items/:id/edit',
+      element: <EditItemPage />,
+    }
+  }
+
+  if (meta.path === '/profile') {
+    return {
+      path: 'profile',
+      element: <ProfilePage />,
+    }
+  }
+
+  if (meta.path === '/verify') {
+    return {
+      path: 'verify',
+      element: <VerifyPage />,
+    }
+  }
+
   if (meta.path === '/items/:id') {
     return {
       path: 'items/:id',
@@ -54,7 +115,14 @@ function createRoute(meta: RouteMeta): RouteObject {
   if (meta.path === '/orders') {
     return {
       path: 'orders',
-      element: <OrdersPage />,
+      element: <OrdersPage role="BUYER" />,
+    }
+  }
+
+  if (meta.path === '/orders/sales') {
+    return {
+      path: 'orders/sales',
+      element: <OrdersPage role="SELLER" />,
     }
   }
 
@@ -89,6 +157,14 @@ function createRoute(meta: RouteMeta): RouteObject {
         </RouteGuard>
       ),
     }
+  }
+
+  if (meta.path === '/admin/users') {
+    return { path: 'admin/users', element: <RouteGuard meta={meta} showNotice={false}><AdminUsersPage /></RouteGuard> }
+  }
+
+  if (meta.path === '/admin/categories') {
+    return { path: 'admin/categories', element: <RouteGuard meta={meta} showNotice={false}><AdminCategoriesPage /></RouteGuard> }
   }
 
   if (meta.path === '/') {

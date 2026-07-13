@@ -12,6 +12,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "users")
@@ -23,6 +24,9 @@ public class User {
 
 	@Column(nullable = false, unique = true, length = 20)
 	private String phone;
+
+	@Column(name = "password_hash", length = 100)
+	private String passwordHash;
 
 	@Column(nullable = false, length = 40)
 	private String nickname;
@@ -78,6 +82,17 @@ public class User {
 
 	public static User registerByPhone(String phone) {
 		return new User(phone);
+	}
+
+	public static User registerByAccount(String account, String passwordHash) {
+		User user = new User(account);
+		user.passwordHash = passwordHash;
+		user.verificationStatus = VerificationStatus.VERIFIED;
+		return user;
+	}
+
+	public boolean matchesPassword(PasswordEncoder encoder, String rawPassword) {
+		return passwordHash != null && encoder.matches(rawPassword, passwordHash);
 	}
 
 	public void verifyCampusIdentity(String realName, String studentNo, String college, String grade) {

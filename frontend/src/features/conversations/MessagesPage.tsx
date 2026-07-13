@@ -43,8 +43,7 @@ export function MessagesPage() {
 
     return conversations
       .filter((conversation) => {
-        const meta = getMockConversationMeta(conversation.id)
-        return showUnreadOnly ? (meta?.unreadCount ?? 0) > 0 : true
+        return showUnreadOnly ? (conversation.unreadCount ?? 0) > 0 : true
       })
       .filter((conversation) => {
         if (!normalizedKeyword) {
@@ -128,7 +127,7 @@ export function MessagesPage() {
           {conversationsQuery.isError ? (
             <div className="messages-empty-state">
               <h2>消息加载失败</h2>
-              <p>请确认已启用 mock 模式或后端接口可用。</p>
+              <p>登录状态可能已失效，请重新登录或稍后重试。</p>
               <button type="button" onClick={() => conversationsQuery.refetch()}>
                 重新加载
               </button>
@@ -208,7 +207,7 @@ interface ConversationRowProps {
 
 function ConversationRow({ conversation, index, reduceMotion }: ConversationRowProps) {
   const meta = getMockConversationMeta(conversation.id)
-  const unreadCount = meta?.unreadCount ?? 0
+  const unreadCount = conversation.unreadCount ?? 0
 
   return (
     <motion.a
@@ -259,7 +258,8 @@ function getConversationStats(conversations: ConversationSummary[]) {
       const meta = getMockConversationMeta(conversation.id)
       return {
         total: stats.total + 1,
-        unread: stats.unread + (meta?.unreadCount ?? 0),
+        unread: stats.unread + (conversation.unreadCount ?? 0),
+        // 商品状态目前只在 mock 展示元数据中存在，真实接口后续扩展后可直接替换。
         activeDeals: stats.activeDeals + (meta?.itemStatus === 'ON_SALE' ? 1 : 0),
       }
     },

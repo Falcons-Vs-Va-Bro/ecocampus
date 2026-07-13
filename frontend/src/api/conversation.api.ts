@@ -18,6 +18,7 @@ export interface ConversationSummary {
   lastMessage: string
   lastMessageAt: string
   createdAt: string
+  unreadCount?: number
 }
 
 export interface MessageSummary {

@@ -126,7 +126,7 @@ export function AdminShell({ children }: AdminShellProps) {
               >
                 <NavLink
                   to={item.to}
-                  className={({ isActive }) => classNames(isActive && isAdminNavActive(location, item.to) && 'active')}
+                  className={() => classNames(isAdminNavActive(location, item.to) && 'active')}
                 >
                   <item.icon size={22} aria-hidden="true" />
                   <span>{item.label}</span>
@@ -172,7 +172,7 @@ function isAdminNavActive(location: ReturnType<typeof useLocation>, to: string) 
   }
 
   if (!rawSearch) {
-    return true
+    return pathname === '/admin/users' ? !new URLSearchParams(location.search).has('scope') : true
   }
 
   return rawSearch.split('&').every((entry) => {
