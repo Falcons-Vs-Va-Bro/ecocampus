@@ -31,9 +31,9 @@ class OrderControllerTests {
 
 	@Test
 	void buyerAndSellerCanMoveOrderThroughPickupFlow() throws Exception {
-		String sellerToken = loginAndVerify("13800000061", "2026000061");
+		String sellerToken = loginAndVerify("229202400061", "2026000061");
 		long itemId = createAndApproveItem(sellerToken, "Orderable Campus Racket");
-		String buyerToken = loginAndVerify("13800000062", "2026000062");
+		String buyerToken = loginAndVerify("229202400062", "2026000062");
 
 		MvcResult created = mockMvc.perform(post("/api/v1/orders")
 			.header("Authorization", "Bearer " + buyerToken)
@@ -93,9 +93,9 @@ class OrderControllerTests {
 
 	@Test
 	void invalidOrderStatusTransitionReturnsConflict() throws Exception {
-		String sellerToken = loginAndVerify("13800000063", "2026000063");
+		String sellerToken = loginAndVerify("229202400063", "2026000063");
 		long itemId = createAndApproveItem(sellerToken, "Order Conflict Item");
-		String buyerToken = loginAndVerify("13800000064", "2026000064");
+		String buyerToken = loginAndVerify("229202400064", "2026000064");
 
 		MvcResult created = mockMvc.perform(post("/api/v1/orders")
 			.header("Authorization", "Bearer " + buyerToken)
@@ -134,7 +134,7 @@ class OrderControllerTests {
 			.andExpect(status().isOk())
 			.andReturn();
 		long itemId = read(created, "/data/id").asLong();
-		String adminToken = loginAsAdmin("13800000065");
+		String adminToken = loginAsAdmin("229202400065");
 		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
 			.header("Authorization", "Bearer " + adminToken)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -169,14 +169,9 @@ class OrderControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

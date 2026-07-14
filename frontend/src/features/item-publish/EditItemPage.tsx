@@ -33,6 +33,7 @@ import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './EditItemPage.css'
 import '../../styles/marketplace-consistency.css'
 import { mineItems, statusLabels } from './myItems.mock'
@@ -56,7 +57,7 @@ const userNav = [
   { label: '我的发布', icon: Store, to: '/items/mine', active: true },
   { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
   { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sale' },
-  { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
+  { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
 
@@ -67,6 +68,7 @@ const pickupPlaces = ['芙蓉园门口', '翔安一期食堂', '思明校门口'
 const publishedItemsStorageKey = 'ecocampus:published-items'
 
 export function EditItemPage() {
+  const unreadMessageCount = useUnreadMessageCount()
   const { id } = useParams()
   const item = [...readPublishedItems(), ...mineItems].find((current) => String(current.id) === id) ?? mineItems[0]
   useDocumentTitle(`厦大闲置 - 编辑${item.title}`)
@@ -104,10 +106,10 @@ export function EditItemPage() {
         </form>
 
         <div className="edit-userbar" aria-label="用户快捷入口">
-          <NoticeButton label="通知" count={3}>
+          <NoticeButton label="通知" count={0}>
             <Bell size={25} />
           </NoticeButton>
-          <NoticeButton label="私信" count={2}>
+          <NoticeButton label="私信" count={unreadMessageCount}>
             <Mail size={26} />
           </NoticeButton>
           <button type="button" className="edit-profile-button">
@@ -134,7 +136,7 @@ export function EditItemPage() {
               <a className={item.active ? 'active' : undefined} href={item.to} key={item.label}>
                 <item.icon size={20} />
                 <span>{item.label}</span>
-                {item.badge ? <b>{item.badge}</b> : null}
+                {item.to === '/messages' && unreadMessageCount > 0 ? <b>{unreadMessageCount}</b> : null}
               </a>
             ))}
           </nav>
@@ -363,7 +365,7 @@ function NoticeButton({ children, label, count }: { children: React.ReactNode; l
   return (
     <button type="button" className="edit-notice-button" aria-label={label}>
       {children}
-      <span>{count}</span>
+      {count > 0 ? <span>{count}</span> : null}
     </button>
   )
 }

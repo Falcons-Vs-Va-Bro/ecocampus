@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
+import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import './MarketplaceShell.css'
@@ -42,7 +43,7 @@ const userNav = [
   { label: '我的发布', icon: Store, to: '/items/mine' },
   { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
   { label: '出售订单', icon: Store, to: '/orders/sale' },
-  { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
+  { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
 
@@ -72,6 +73,8 @@ export function MarketplaceShell({
   shellClassName,
 }: MarketplaceShellProps) {
   const shouldReduceMotion = useReducedMotion()
+  const unreadMessageCount = useUnreadMessageCount()
+  const notificationCount = 0
 
   return (
     <div className={classNames('favorites-shell', shellClassName)}>
@@ -111,11 +114,11 @@ export function MarketplaceShell({
         <div className="favorites-userbar" aria-label="用户快捷入口">
           <button type="button" className="icon-button" aria-label="通知">
             <Bell size={25} />
-            <span>3</span>
+            {notificationCount > 0 ? <span>{notificationCount}</span> : null}
           </button>
           <button type="button" className="icon-button" aria-label="站内信">
             <Mail size={26} />
-            <span>2</span>
+            {unreadMessageCount > 0 ? <span>{unreadMessageCount}</span> : null}
           </button>
           <div className="student-profile">
             <span className="student-avatar">海</span>
@@ -161,7 +164,7 @@ export function MarketplaceShell({
               >
                 <item.icon size={20} />
                 <span>{item.label}</span>
-                {item.badge ? <b>{item.badge}</b> : null}
+                {item.to === '/messages' && unreadMessageCount > 0 ? <b>{unreadMessageCount}</b> : null}
               </motion.a>
             ))}
           </nav>

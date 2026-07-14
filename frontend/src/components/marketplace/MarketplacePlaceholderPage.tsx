@@ -38,6 +38,7 @@ const activeUserByPath: Record<string, string> = {
   '/messages': '消息中心',
   '/messages/:conversationId': '消息中心',
   '/orders': '购买订单',
+  '/orders/sales': '出售订单',
   '/profile': '个人中心',
   '/verify': '个人中心',
 }

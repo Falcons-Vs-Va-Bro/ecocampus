@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,7 +56,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		}
 		catch (BusinessException exception) {
 			SecurityContextHolder.clearContext();
+			if (isPublicItemRead(request)) {
+				filterChain.doFilter(request, response);
+				return;
+			}
 			securityErrorWriter.write(request, response, exception.getErrorCode(), exception.getMessage());
 		}
+	}
+
+	private boolean isPublicItemRead(HttpServletRequest request) {
+		if (!HttpMethod.GET.matches(request.getMethod())) {
+			return false;
+		}
+
+		String requestUri = request.getRequestURI();
+		return requestUri.equals("/api/v1/items") || requestUri.matches("/api/v1/items/[^/]+");
 	}
 }

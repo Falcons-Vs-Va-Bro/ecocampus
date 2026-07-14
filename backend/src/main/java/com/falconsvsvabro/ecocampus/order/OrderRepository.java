@@ -2,6 +2,7 @@ package com.falconsvsvabro.ecocampus.order;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.time.OffsetDateTime;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,8 @@ public interface OrderRepository extends JpaRepository<TradeOrder, Long> {
 			Pageable pageable);
 
 	long countByStatus(OrderStatus status);
+
+	long countByStatusAndCreatedAtBetween(OrderStatus status, OffsetDateTime start, OffsetDateTime end);
 
 	@Query("""
 			select count(tradeOrder) from TradeOrder tradeOrder

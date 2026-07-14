@@ -32,6 +32,7 @@ export const queryKeys = {
   },
   admin: {
     dashboard: ['admin', 'dashboard'] as const,
+    dashboardSummary: ['admin', 'dashboard', 'summary'] as const,
     reviewItems: (params?: unknown) => ['admin', 'items', 'review', params] as const,
     items: (params?: unknown) => ['admin', 'items', params] as const,
     users: (params?: unknown) => ['admin', 'users', params] as const,

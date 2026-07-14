@@ -77,11 +77,16 @@ export function HomePage() {
     queryFn: listCategories,
   })
 
-  const allItems = itemsQuery.data?.data.items ?? emptyItems
   const categoryFilters = useMemo(() => {
-    const names = categoriesQuery.data?.data.map((item) => displayCategoryName(item.name)) ?? []
+    const categories = categoriesQuery.data?.data
+    const names = Array.isArray(categories) ? categories.map((item) => displayCategoryName(item.name)) : []
     return Array.from(new Set(['全部', ...names]))
   }, [categoriesQuery.data?.data])
+
+  const itemPage = itemsQuery.data?.data
+  const hasInvalidItemsResponse = itemsQuery.isSuccess && !Array.isArray(itemPage?.items)
+  const hasItemsError = itemsQuery.isError || hasInvalidItemsResponse
+  const allItems = Array.isArray(itemPage?.items) ? itemPage.items : emptyItems
 
   const filteredItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -236,20 +241,20 @@ export function HomePage() {
             </div>
           ) : null}
 
-          {itemsQuery.isError ? (
+          {hasItemsError ? (
             <div className="favorites-empty-state compact">
               <span className="painted-asset painted-asset--empty-inline">
                 <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
               </span>
               <h2>商品加载失败</h2>
-              <p>请确认已启用 mock 模式或后端接口可用。</p>
+              <p>{hasInvalidItemsResponse ? '接口返回的数据格式不正确，请稍后重试。' : '请确认已启用 mock 模式或后端接口可用。'}</p>
               <button type="button" onClick={() => itemsQuery.refetch()}>
                 重新加载
               </button>
             </div>
           ) : null}
 
-          {!itemsQuery.isLoading && !itemsQuery.isError && visibleItems.length === 0 ? (
+          {!itemsQuery.isLoading && !hasItemsError && visibleItems.length === 0 ? (
             <div className="favorites-empty-state compact">
               <span className="painted-asset painted-asset--empty-inline">
                 <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
@@ -259,7 +264,7 @@ export function HomePage() {
             </div>
           ) : null}
 
-          {!itemsQuery.isLoading && !itemsQuery.isError && visibleItems.length > 0 ? (
+          {!itemsQuery.isLoading && !hasItemsError && visibleItems.length > 0 ? (
             <div className="favorites-card-grid">
               {visibleItems.map((item, index) => {
                 const favorited = favoriteIds.has(item.id) || item.favorited

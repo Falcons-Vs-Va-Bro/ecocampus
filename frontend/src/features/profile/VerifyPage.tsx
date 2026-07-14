@@ -32,6 +32,7 @@ import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './VerifyPage.css'
 import '../../styles/marketplace-consistency.css'
 
@@ -54,13 +55,14 @@ const userNav = [
   { label: '我的发布', icon: Store, to: '/items/mine' },
   { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
   { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sale' },
-  { label: '消息中心', icon: MessageCircle, to: '/messages', badge: 3 },
+  { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile', active: true },
 ]
 
 const tabs = ['未核验', '审核中', '已通过', '已拒绝'] as const
 
 export function VerifyPage() {
+  const unreadMessageCount = useUnreadMessageCount()
   useDocumentTitle('厦大闲置 - 校园核验')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('未核验')
@@ -98,10 +100,10 @@ export function VerifyPage() {
         </form>
 
         <div className="verify-userbar" aria-label="用户快捷入口">
-          <NoticeButton label="通知" count={3}>
+          <NoticeButton label="通知" count={0}>
             <Bell size={25} />
           </NoticeButton>
-          <NoticeButton label="私信" count={2}>
+          <NoticeButton label="私信" count={unreadMessageCount}>
             <Mail size={26} />
           </NoticeButton>
           <button type="button" className="verify-profile-button">
@@ -129,7 +131,7 @@ export function VerifyPage() {
               <a className={item.active ? 'active' : undefined} href={item.to} key={item.label}>
                 <item.icon size={20} />
                 <span>{item.label}</span>
-                {item.badge ? <b>{item.badge}</b> : null}
+                {item.to === '/messages' && unreadMessageCount > 0 ? <b>{unreadMessageCount}</b> : null}
               </a>
             ))}
           </nav>
@@ -350,7 +352,7 @@ function NoticeButton({ children, label, count }: { children: React.ReactNode; l
   return (
     <button type="button" className="verify-notice-button" aria-label={label}>
       {children}
-      <span>{count}</span>
+      {count > 0 ? <span>{count}</span> : null}
     </button>
   )
 }

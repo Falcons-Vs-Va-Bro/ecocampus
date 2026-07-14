@@ -31,11 +31,11 @@ class AdminDashboardControllerTests {
 
 	@Test
 	void adminCanReadDashboardOverview() throws Exception {
-		String sellerToken = loginAndVerify("13800000111", "2026000111");
+		String sellerToken = loginAndVerify("229202400111", "2026000111");
 		long itemId = createAndApproveItem(sellerToken, "Dashboard Completed Item");
-		String buyerToken = loginAndVerify("13800000112", "2026000112");
+		String buyerToken = loginAndVerify("229202400112", "2026000112");
 		completeOrder(buyerToken, sellerToken, itemId);
-		AuthSession admin = loginAsAdmin("13800000113");
+		AuthSession admin = loginAsAdmin("229202400113");
 
 		MvcResult result = mockMvc.perform(get("/api/v1/admin/dashboard/overview")
 			.header("Authorization", "Bearer " + admin.token()))
@@ -50,6 +50,25 @@ class AdminDashboardControllerTests {
 		assertThat(digitalStat).isNotNull();
 		assertThat(digitalStat.get("itemCount").asLong()).isGreaterThanOrEqualTo(1);
 		assertThat(digitalStat.get("completedOrderCount").asLong()).isGreaterThanOrEqualTo(1);
+	}
+
+	@Test
+	void adminCanReadDashboardSummary() throws Exception {
+		String sellerToken = loginAndVerify("229202400121", "2026000121");
+		createPendingItem(sellerToken, "Dashboard Pending Item");
+		AuthSession admin = loginAsAdmin("229202400122");
+
+		MvcResult result = mockMvc.perform(get("/api/v1/admin/dashboard/summary")
+			.header("Authorization", "Bearer " + admin.token()))
+			.andExpect(status().isOk())
+			.andReturn();
+
+		JsonNode data = read(result, "/data");
+		assertThat(data.get("overview").get("pendingReviewCount").asLong()).isGreaterThanOrEqualTo(1);
+		assertThat(data.get("dealTrends")).hasSize(7);
+		assertThat(data.get("recentPendingItems")).isNotEmpty();
+		assertThat(data.get("recentPendingItems").get(0).get("title").asText()).isNotBlank();
+		assertThat(data.get("reminders")).isNotEmpty();
 	}
 
 	private JsonNode findCategoryStat(JsonNode categoryStats, String categoryName) {
@@ -88,6 +107,19 @@ class AdminDashboardControllerTests {
 	}
 
 	private long createAndApproveItem(String sellerToken, String title) throws Exception {
+		long itemId = createPendingItem(sellerToken, title);
+		String adminToken = loginAsAdmin("229202400114").token();
+		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
+			.header("Authorization", "Bearer " + adminToken)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"approved":true,"reason":"ok"}
+					"""))
+			.andExpect(status().isOk());
+		return itemId;
+	}
+
+	private long createPendingItem(String sellerToken, String title) throws Exception {
 		MvcResult created = mockMvc.perform(post("/api/v1/items")
 			.header("Authorization", "Bearer " + sellerToken)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -103,16 +135,7 @@ class AdminDashboardControllerTests {
 					""".formatted(title)))
 			.andExpect(status().isOk())
 			.andReturn();
-		long itemId = read(created, "/data/id").asLong();
-		String adminToken = loginAsAdmin("13800000114").token();
-		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
-			.header("Authorization", "Bearer " + adminToken)
-			.contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"approved":true,"reason":"ok"}
-					"""))
-			.andExpect(status().isOk());
-		return itemId;
+		return read(created, "/data/id").asLong();
 	}
 
 	private AuthSession loginAsAdmin(String phone) throws Exception {
@@ -139,14 +162,9 @@ class AdminDashboardControllerTests {
 	}
 
 	private AuthSession login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

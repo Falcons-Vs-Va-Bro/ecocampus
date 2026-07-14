@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -27,9 +28,12 @@ class UserControllerTests {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+
 	@Test
 	void updateProfileAndManageAddresses() throws Exception {
-		String accessToken = loginAndVerify("13800000011", "2026000011");
+		String accessToken = loginAndVerify("229202400011", "2026000011");
 
 		mockMvc.perform(put("/api/v1/users/me")
 			.header("Authorization", "Bearer " + accessToken)
@@ -89,7 +93,8 @@ class UserControllerTests {
 
 	@Test
 	void unverifiedUsersCannotManageAddresses() throws Exception {
-		String accessToken = login("13800000012");
+		String accessToken = login("229202400012");
+		jdbcTemplate.update("update users set verification_status = 'UNVERIFIED' where phone = ?", "229202400012");
 
 		mockMvc.perform(get("/api/v1/users/me/addresses").header("Authorization", "Bearer " + accessToken))
 			.andExpect(status().isForbidden())
@@ -114,14 +119,9 @@ class UserControllerTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

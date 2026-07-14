@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosHeaders } from 'axios'
 import type { ApiResponse } from '../types/api'
-import { getAccessToken } from '../stores/auth.store'
+import { getAccessToken, useAuthStore } from '../stores/auth.store'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 
@@ -51,6 +51,14 @@ apiClient.interceptors.response.use(
       status: error.response?.status,
       traceId: payload?.traceId,
     })
+
+    if (error.response?.status === 401 && !error.config?.url?.endsWith('/auth/login')) {
+      useAuthStore.getState().clearSession()
+      if (window.location.pathname !== '/login') {
+        const returnTo = `${window.location.pathname}${window.location.search}`
+        window.location.assign(`/login?returnTo=${encodeURIComponent(returnTo)}`)
+      }
+    }
 
     return Promise.reject(apiError)
   },

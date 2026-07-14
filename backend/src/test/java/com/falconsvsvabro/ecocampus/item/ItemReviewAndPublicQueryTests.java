@@ -31,10 +31,26 @@ class ItemReviewAndPublicQueryTests {
 	private JdbcTemplate jdbcTemplate;
 
 	@Test
+	void publicItemListIgnoresInvalidBearerTokenButProtectedItemActionsDoNot() throws Exception {
+		mockMvc.perform(get("/api/v1/items")
+			.header("Authorization", "Bearer expired-or-invalid-token")
+			.param("page", "1")
+			.param("size", "80"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.items").isArray());
+
+		mockMvc.perform(post("/api/v1/items")
+			.header("Authorization", "Bearer expired-or-invalid-token")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{}"))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	void adminCanReviewItemAndPublicCanQueryOnSaleItems() throws Exception {
-		String sellerToken = loginAndVerify("13800000041", "2026000041");
+		String sellerToken = loginAndVerify("229202400041", "2026000041");
 		long itemId = createItem(sellerToken, "Reviewable ZX900 Monitor");
-		String adminToken = loginAsAdmin("13800000042");
+		String adminToken = loginAsAdmin("229202400042");
 
 		mockMvc.perform(get("/api/v1/admin/items/review")
 			.header("Authorization", "Bearer " + adminToken)
@@ -129,14 +145,9 @@ class ItemReviewAndPublicQueryTests {
 	}
 
 	private String login(String phone) throws Exception {
-		mockMvc.perform(post("/api/v1/auth/sms-code").contentType(MediaType.APPLICATION_JSON)
-			.content("""
-					{"phone":"%s"}
-					""".formatted(phone)))
-			.andExpect(status().isOk());
 		MvcResult login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"phone":"%s","code":"123456"}
+					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
 			.andReturn();

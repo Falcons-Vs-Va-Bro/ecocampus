@@ -1,6 +1,7 @@
 package com.falconsvsvabro.ecocampus.admin;
 
 import com.falconsvsvabro.ecocampus.admin.dto.DashboardOverviewResponse;
+import com.falconsvsvabro.ecocampus.admin.dto.DashboardSummaryResponse;
 import com.falconsvsvabro.ecocampus.auth.AuthenticatedUser;
 import com.falconsvsvabro.ecocampus.common.api.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,12 @@ public class AdminDashboardController {
 	ApiResponse<DashboardOverviewResponse> overview(@AuthenticationPrincipal AuthenticatedUser currentUser,
 			HttpServletRequest request) {
 		return ApiResponse.ok(adminDashboardService.overview(currentUser.id()), traceId(request));
+	}
+
+	@GetMapping("/summary")
+	ApiResponse<DashboardSummaryResponse> summary(@AuthenticationPrincipal AuthenticatedUser currentUser,
+			HttpServletRequest request) {
+		return ApiResponse.ok(adminDashboardService.summary(currentUser.id()), traceId(request));
 	}
 
 	private String traceId(HttpServletRequest request) {

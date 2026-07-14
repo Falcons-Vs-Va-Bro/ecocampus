@@ -32,6 +32,10 @@ public class Conversation {
 
 	private OffsetDateTime lastMessageAt;
 
+	private OffsetDateTime userOneReadAt;
+
+	private OffsetDateTime userTwoReadAt;
+
 	@Column(nullable = false)
 	private OffsetDateTime createdAt;
 
@@ -58,6 +62,19 @@ public class Conversation {
 	public void updateLastMessage(String content) {
 		this.lastMessage = content.length() > 200 ? content.substring(0, 200) : content;
 		this.lastMessageAt = OffsetDateTime.now();
+	}
+
+	public void markRead(Long userId) {
+		if (userOneId.equals(userId)) {
+			this.userOneReadAt = OffsetDateTime.now();
+		}
+		else if (userTwoId.equals(userId)) {
+			this.userTwoReadAt = OffsetDateTime.now();
+		}
+	}
+
+	public OffsetDateTime readAt(Long userId) {
+		return userOneId.equals(userId) ? userOneReadAt : userTwoReadAt;
 	}
 
 	@PrePersist

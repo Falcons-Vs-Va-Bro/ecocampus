@@ -2,6 +2,7 @@ package com.falconsvsvabro.ecocampus.item;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.OffsetDateTime;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -78,4 +79,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 	long countByStatusNot(ItemStatus status);
 
 	long countByCategoryIdAndStatusNot(Long categoryId, ItemStatus status);
+
+	long countByStatusNotAndCreatedAtBetween(ItemStatus status, OffsetDateTime start, OffsetDateTime end);
+
+	List<Item> findTop3ByStatusOrderByCreatedAtDesc(ItemStatus status);
 }
