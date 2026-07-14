@@ -109,12 +109,15 @@ export function LoginPage() {
       return
     }
 
+    let loggedInRole: 'USER' | 'ADMIN' = 'USER'
+
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       provisionMockAccount(normalizedAccount)
       setSession({ accessToken: `mock-${normalizedAccount}-${Date.now()}`, role: 'USER', verificationStatus: 'VERIFIED' })
     } else {
       try {
         const response = await login({ account: normalizedAccount, password: normalizedPassword })
+        loggedInRole = response.data.user.role
         setSession({ accessToken: response.data.accessToken, role: response.data.user.role, verificationStatus: response.data.user.verificationStatus })
       } catch (error) {
         setLoginError(error instanceof Error ? error.message : '登录失败')
@@ -125,7 +128,7 @@ export function LoginPage() {
     setNotice(t.mockNotice)
     setLoginError('')
     const returnTo = searchParams.get('returnTo')
-    navigate(returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/')
+    navigate(resolvePostLoginPath(loggedInRole, returnTo))
   }
 
   return (
@@ -257,6 +260,18 @@ export function LoginPage() {
       <footer className="xmu-login-footer">{t.copyright}</footer>
     </main>
   )
+}
+
+function resolvePostLoginPath(role: 'USER' | 'ADMIN', returnTo: string | null) {
+  const safeReturnTo = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : undefined
+
+  if (role === 'ADMIN') {
+    return safeReturnTo === '/admin' || safeReturnTo?.startsWith('/admin/') ? safeReturnTo : '/admin'
+  }
+
+  return safeReturnTo && safeReturnTo !== '/admin' && !safeReturnTo.startsWith('/admin/')
+    ? safeReturnTo
+    : '/'
 }
 
 function provisionMockAccount(account: string) {

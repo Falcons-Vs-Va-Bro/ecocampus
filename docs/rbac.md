@@ -39,6 +39,8 @@ Spring Security filter chain
 
 Spring Security 对 `/api/v1/admin/**` 只做“已认证”检查；真正的管理员角色校验位于各后台 service。前端 `RouteGuard` 只是体验层，不是安全边界。
 
+前端产品界面按角色域隔离：`ADMIN` 登录后只进入 `/admin` 路由树，访问市场/用户路由会回到后台首页；`USER` 不能进入 `/admin`。这不改变下方后端权限矩阵，公开 API 仍可匿名或由任意合法 token 调用。
+
 公开端点：
 
 - `GET /api/v1/health`

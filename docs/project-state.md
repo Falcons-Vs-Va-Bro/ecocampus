@@ -70,6 +70,7 @@ mock 与守卫：
 - `pnpm dev:mock` 读取 `.env.mock`；API mock 覆盖类目、商品、收藏、私信、订单、后台商品和后台用户。
 - auth mock 在登录页内处理；profile/file/demand/dashboard wrappers 没有 API mock；Local mock 页面不随开关切换。
 - `auth`、`verified`、`admin` 已执行跳转；`owner` 当前只检查登录，未核对商品所有者。
+- 前端执行角色域隔离：`ADMIN` 登录默认进入 `/admin`，只能停留在 `/admin` 路由树；市场/用户路由会重定向后台首页，普通用户的后台 `returnTo` 不会被登录页恢复。
 - mock 与真实认证分别使用 v2 storage key；401 清理会话，没有 token refresh。
 
 性能与资源：
@@ -118,6 +119,7 @@ GitHub Pages frontend
 
 - `cd backend && ./mvnw test`：32 tests 通过，0 failures、0 errors、0 skipped。
 - `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.14 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
+- 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 相对 Markdown 链接检查和 `git diff --check` 通过。
 - 公网首页 HTTP 200，API health 为 `UP`；深层路由返回相同前端内容但 HTTP 404。
 
@@ -132,6 +134,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-14：修正管理员登录被送往公共首页的问题；管理员默认进入 `/admin` 并被限制在后台路由树，后台未实现入口改为禁用，同时补充后台退出登录。
 - 2026-07-14：完成全仓库文档/实现对照审计，按代码重写入口 README、API、RBAC、前端数据源和项目状态，显式记录真实 DTO 与 mock UI 差异。
 - 2026-07-14：前端改为路由级动态导入，位图统一为 WebP 并限制首屏主动加载；课堂单实例连接池和 Tomcat 并发参数上调，完成 60 并发负载基线。
 - 2026-07-14：课堂展示前端切换到 GitHub Pages，后端继续运行在 Mac mini 并经 Cloudflare Tunnel 暴露。

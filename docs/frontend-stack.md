@@ -110,6 +110,8 @@ src/
 - `admin`：无 token 先登录；角色不是 `ADMIN` 时回 `/`。
 - `owner`：当前只经过通用“已登录”检查，前端没有查询商品所有者；所有权必须由后端 service 兜底。
 
+`AppLayout` 还执行角色域隔离：已登录 `ADMIN` 访问 `/login`、公开市场或用户端路由时统一重定向 `/admin`。管理员登录默认进入 `/admin`，只在安全的 `returnTo=/admin...` 时恢复后台目标；普通用户不会恢复到 `/admin...`。后台尚无对应 API 的订单记录、求购管理等入口保持禁用，不能链接到用户端同名页面。
+
 认证状态使用独立 storage key：mock 为 `ecocampus.auth.mock.v2`，真实为 `ecocampus.auth.real.v2`。前端没有 refresh token 流程；任意非登录请求返回 401 时清理会话。
 
 ## 5. API mock 覆盖
