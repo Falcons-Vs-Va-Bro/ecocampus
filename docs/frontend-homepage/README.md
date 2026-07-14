@@ -2,6 +2,8 @@
 
 This guide fixes the frontend content direction for the public `/` route and the matching user-side visual language. It should be read together with `docs/frontend-stack.md` and `docs/api-contract.md`.
 
+Implementation status was last checked on 2026-07-14. This file defines the intended content/visual boundary; actual page data-source status and known DTO gaps are tracked in `docs/frontend-stack.md` and must not be inferred from this design guide.
+
 ## Content Review
 
 The provided reference is viable as the visual direction, but its current page content is not suitable to be used unchanged as the public homepage.
@@ -22,7 +24,7 @@ The provided reference is viable as the visual direction, but its current page c
 - filter entry points for category, price range, and delivery mode;
 - item cards with contract-backed fields such as image, title, price, category, status, and created time;
 - favorite, seller, delivery mode, or verification badges only when the current API DTO exposes the required fields;
-- public calls to publish, post demand, view demands, login, and campus verification;
+- calls to publish, post demand, view demands, login, and campus verification, with protected actions allowed to redirect through login;
 - light trust cues such as campus-only flow, safe offline pickup, and contract-backed verified states.
 
 `/` must not make these user-private features the main page content:
@@ -34,7 +36,9 @@ The provided reference is viable as the visual direction, but its current page c
 - invalid favorites;
 - batch management of selected favorites.
 
-Those features should remain under authenticated user routes such as `/favorites`, `/items/mine`, `/orders`, `/orders/sales`, and `/messages`.
+Those features should remain under authenticated user routes such as `/favorites`, `/items/mine`, `/orders/purchase`, `/orders/sale`, and `/messages`.
+
+Current implementation note: the homepage still links demand calls to the placeholder routes `/demands` and `/demands/new`; the implemented local mock demand flow lives under `/orders/purchase/demand*`. This is a known route-alignment issue, not evidence that the legacy routes are complete.
 
 ## Homepage Content Model
 
@@ -56,7 +60,7 @@ Recommended homepage sections:
 - `教材专区`: seasonal textbooks and course materials.
 - `数码好物`: laptops, earphones, calculators, keyboards, and accessories.
 - `宿舍补给`: lamps, storage, suitcase, bedding, and small appliances.
-- `求购动态`: public demand cards that can lead to `/demands`.
+- `求购动态`: demand cards; when linked to the current implemented flow they should use `/orders/purchase/demand`, while `/demands` remains a placeholder.
 
 Use compact section labels. Avoid long explanatory copy inside the application surface.
 
@@ -91,8 +95,8 @@ The provided reference is the content and visual target for `/favorites`.
 
 - Use the full hand-drawn marketplace shell shown in the reference: sketched top search, left category/user rail, tabbed favorites area, item card grid, and right invalid-favorites panel.
 - Keep `/favorites` authenticated in route metadata, but mock mode may render the page without a real backend session during frontend development.
-- The item card may show seller nickname, verification state, delivery mode, favorite count, and favorite time because `GET /users/me/favorites` defines those fields in `docs/api-contract.md`.
-- The invalid-favorites panel should derive its count from favorite items whose `status` is no longer `ON_SALE`.
+- The current mock item card may show seller nickname, verification state, delivery mode, favorite count, and favorite time. The real `GET /users/me/favorites` response does not currently define those fields; real-mode support requires an API/DTO change first.
+- The invalid-favorites panel currently relies on mock-only metadata and non-`ON_SALE` items. The real response has `status` but no `invalidReason` or `favoritedAt`.
 - Cancellation should call the favorite API boundary, then refresh or update the query cache. Components should not mutate mock arrays directly.
 
 ## Mock-First Development
@@ -100,8 +104,8 @@ The provided reference is the content and visual target for `/favorites`.
 Frontend business UI should be able to run without the backend service.
 
 - Keep mock data in frontend-owned mock modules, for example under `frontend/src/features/<feature>/mocks/` or a shared `frontend/src/api/mock/` folder when reused.
-- Mock DTOs must match `docs/api-contract.md`, including `priceCent`, enum values, pagination shape, and delivery modes.
-- Do not add extra mock-only fields to DTOs used by API modules. If the UI needs seller nickname, delivery modes, or favorite state in a list card, update `docs/api-contract.md` and the frontend API types first.
+- Mock DTOs should match `docs/api-contract.md`, including `priceCent`, enum values and pagination shape. The existing item/favorite mocks currently contain extra card display fields; this known debt is documented in `docs/project-state.md`.
+- Do not add further mock-only fields to DTOs used by API modules. If the UI needs seller nickname, delivery modes, or favorite state in a real list card, update the backend response and `docs/api-contract.md` before treating them as contract fields.
 - API modules should remain the boundary for backend calls. Components should consume hooks or API abstractions, not hardcoded mock objects directly.
 - Use an explicit local switch such as `VITE_USE_MOCKS=true` if mock and live API modes coexist.
 - Mock images should be stable local assets or deterministic remote-safe placeholders only when no local asset exists.

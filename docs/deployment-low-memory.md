@@ -1,6 +1,8 @@
 # 低内存 Linux 部署
 
-推荐使用双机部署：本机作为 runner 和应用主机，`dmit-la` 作为带公网 IP 的边缘入口。生产环境不运行 Vite、pnpm 或 Node 服务：前端构建为静态文件部署到 `dmit-la` 的 Nginx，`/api` 和 `/uploads` 通过既有 Tailscale 内网反代到本机 Spring Boot。
+状态：保留的备选部署模板，不是当前课堂展示拓扑。当前方案见 `deployment-github-pages-macmini.md`。
+
+采用本方案时，本机作为 runner 和应用主机，`dmit-la` 作为带公网 IP 的边缘入口。生产环境不运行 Vite、pnpm 或 Node 服务：前端构建为静态文件部署到 `dmit-la` 的 Nginx，`/api` 和 `/uploads` 通过 Tailscale 内网反代到本机 Spring Boot。
 
 ```text
 Internet -> dmit-la:443 (Nginx + frontend/dist)
@@ -20,8 +22,8 @@ Internet -> dmit-la:443 (Nginx + frontend/dist)
 
 ```bash
 cd frontend
-VITE_USE_MOCKS=false VITE_API_BASE_URL=/api/v1 pnpm install --frozen-lockfile
-pnpm build
+pnpm install --frozen-lockfile
+VITE_USE_MOCKS=false VITE_API_BASE_URL=/api/v1 pnpm build
 
 cd ../backend
 ./mvnw clean package
@@ -49,4 +51,6 @@ cd ../backend
 
 不要通过公网安全组开放本机 8080、3306，也不要让 `dmit-la` 访问 3306。
 
-数据库结构只通过 Flyway 迁移，生产 profile 会拒绝 H2、空数据库凭据、关闭 Flyway或不安全的 Hibernate DDL 配置。
+`nginx.conf` 会代理 `/uploads/`，但当前 Spring Security 未公开后端 `/uploads/**`。在修复安全策略前，代理存在不代表 `<img>` 可匿名读取上传图片。
+
+数据库结构只通过 Flyway 迁移，生产 profile 会拒绝 H2、空数据库凭据、关闭 Flyway或不安全的 Hibernate DDL 配置。本方案尚未由当前仓库自动化工作流部署；执行前应按实际主机、域名和 tailnet 策略复核模板。

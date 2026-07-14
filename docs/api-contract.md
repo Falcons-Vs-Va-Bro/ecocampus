@@ -1,13 +1,18 @@
-# EcoCampus 接口契约
+# EcoCampus API 契约
 
-## 1. 基本约定
+最近一次按后端控制器与 DTO 复核：2026-07-14。
 
-- Base URL: `/api/v1`
-- 数据格式: `application/json; charset=utf-8`
-- 认证方式: `Authorization: Bearer <accessToken>`
-- 时间格式: ISO-8601，例如 `2026-07-03T15:00:00+08:00`
-- 金额单位: 分，字段名使用 `priceCent`
-- 分页参数: `page` 从 `1` 开始，`size` 默认 `20`
+本文只记录当前已经实现的 HTTP API。若本文与 `backend/src/main/java` 下的 Controller、Request/Response DTO 冲突，以代码为准并应立即修正文档。
+
+## 1. 通用约定
+
+- Base URL：`/api/v1`
+- JSON：`application/json`
+- 认证：`Authorization: Bearer <accessToken>`
+- 请求追踪：前端发送 `X-Trace-Id`；未发送时后端生成 UUID。
+- 金额单位：分，字段使用 `priceCent`、`budgetMinCent`、`budgetMaxCent`。
+- 时间：ISO-8601。
+- 分页：`page` 从 1 开始，`size` 默认 20、最大 100；非法小页码归一为 1，`size < 1` 归一为 20。
 
 统一响应：
 
@@ -16,62 +21,65 @@
   "code": "OK",
   "message": "success",
   "data": {},
-  "traceId": "req-20260703-0001"
+  "traceId": "request-trace-id"
 }
 ```
 
-分页响应：
+分页 `data`：
 
 ```json
 {
   "items": [],
   "page": 1,
   "size": 20,
-  "total": 100
+  "total": 0
 }
 ```
 
-常见错误码：
+错误码：
 
-| code | HTTP | 说明 |
+| code | HTTP | 含义 |
 | --- | --- | --- |
-| `OK` | 200 | 成功 |
-| `BAD_REQUEST` | 400 | 参数错误 |
-| `UNAUTHORIZED` | 401 | 未登录或 token 无效 |
-| `FORBIDDEN` | 403 | 无权限 |
-| `NOT_FOUND` | 404 | 资源不存在 |
-| `CONFLICT` | 409 | 状态冲突，例如重复收藏、重复下单 |
-| `VALIDATION_FAILED` | 422 | 字段校验失败 |
-| `BLACKLISTED` | 423 | 用户已被黑名单限制 |
-| `INTERNAL_ERROR` | 500 | 服务端错误 |
+| `BAD_REQUEST` | 400 | 业务参数错误 |
+| `UNAUTHORIZED` | 401 | 未登录、账号密码错误或 token 无效 |
+| `FORBIDDEN` | 403 | 权限、校园核验或资源归属不满足 |
+| `NOT_FOUND` | 404 | 资源不存在或公开资源不可见 |
+| `CONFLICT` | 409 | 状态机、唯一约束或并发锁冲突 |
+| `VALIDATION_FAILED` | 422 | DTO/参数校验失败，`data.errors` 给出字段错误 |
+| `BLACKLISTED` | 423 | 当前用户处于有效黑名单限制 |
+| `INTERNAL_ERROR` | 500 | 未处理异常 |
 
-## 2. 枚举
+枚举：
 
 ```ts
-type UserRole = "USER" | "ADMIN";
-type VerificationStatus = "UNVERIFIED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED" | "BLACKLISTED";
-type ItemStatus = "DRAFT" | "PENDING_REVIEW" | "ON_SALE" | "OFF_SHELF" | "REJECTED" | "VIOLATION_REMOVED" | "SOLD" | "DELETED";
-type DeliveryMode = "SELF_PICKUP" | "DELIVER_TO_SCHOOL";
-type OrderStatus = "PENDING_COMMUNICATION" | "WAITING_PICKUP" | "COMPLETED" | "CANCELLED";
-type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
+type UserRole = 'USER' | 'ADMIN'
+type VerificationStatus = 'UNVERIFIED' | 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED' | 'BLACKLISTED'
+type ItemStatus = 'DRAFT' | 'PENDING_REVIEW' | 'ON_SALE' | 'OFF_SHELF' | 'REJECTED' | 'VIOLATION_REMOVED' | 'SOLD' | 'DELETED'
+type DeliveryMode = 'SELF_PICKUP' | 'DELIVER_TO_SCHOOL'
+type OrderRole = 'BUYER' | 'SELLER'
+type OrderStatus = 'PENDING_COMMUNICATION' | 'WAITING_PICKUP' | 'COMPLETED' | 'CANCELLED'
+type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 ```
 
-## 3. 认证与校园核验
+### 健康检查
 
-### 3.1 登录与账号建档策略
+`GET /health`，公开。
 
-系统不提供独立注册入口，mock 环境和正式环境均使用同一登录建档策略：
+```json
+{
+  "status": "UP",
+  "service": "ecocampus",
+  "timestamp": "2026-07-14T12:00:00+08:00"
+}
+```
 
-- 登录账号必须以 `2292024` 作为前 7 位。
-- 密码按用户输入提交，接口不得在响应中返回密码，后端不得明文保存密码。
-- 如果账号已存在，则校验本次密码是否与首次创建时的密码一致，通过后登录。
-- 如果账号不存在，则在登录时自动创建默认用户档案，再返回登录态。
-- 自动创建的用户默认为 `USER`，校园核验状态为 `VERIFIED`；账号前缀校验视为当前演示环境的统一身份认证结果。
-- 前端和后端均不提供显式“注册”页面、注册按钮或注册接口。
+该响应仍包装在统一 `ApiResponse.data` 中；`/actuator/health` 是独立的 Actuator 健康端点。
 
-### 3.2 账号登录
+## 2. 认证与用户
 
-`POST /auth/login`
+### 登录
+
+`POST /auth/login`，公开。
 
 ```json
 {
@@ -80,7 +88,12 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 }
 ```
 
-响应：
+- `account` 最大 20 字符，必须匹配 `2292024.+`。
+- `password` 最大 72 字符。
+- 账号不存在时自动创建 `USER/VERIFIED` 用户并保存 BCrypt 哈希；账号存在时校验首次创建时的密码。
+- 当前没有注册、刷新 token 或退出登录端点。响应会返回 refresh token，但后端尚未提供 refresh API。
+
+响应 `data`：
 
 ```json
 {
@@ -94,11 +107,24 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 }
 ```
 
-### 3.3 提交校园核验
+### 当前用户
 
-`POST /auth/campus-verification`
+`GET /auth/me`，登录用户。
 
-权限：`PENDING_USER`、`USER`
+```json
+{
+  "id": 1,
+  "nickname": "Eco User",
+  "phone": "229****0001",
+  "role": "USER",
+  "verificationStatus": "VERIFIED",
+  "studentNoMasked": null
+}
+```
+
+### 校园核验
+
+`POST /auth/campus-verification`，登录用户；有效黑名单用户被拒绝。
 
 ```json
 {
@@ -109,43 +135,29 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 }
 ```
 
-### 3.4 查询当前登录用户
+`studentNo` 必须为 8–20 位数字且全局唯一。当前实现提交后直接设为 `VERIFIED`，没有管理员核验接口或异步审核流程。响应为当前用户结构。
 
-`GET /auth/me`
+### 个人资料
 
-响应：
-
-```json
-{
-  "id": 1,
-  "nickname": "Eco 用户",
-  "phone": "229****0001",
-  "role": "USER",
-  "verificationStatus": "VERIFIED",
-  "studentNoMasked": "2026****001"
-}
-```
-
-## 4. 用户与地址
-
-### 4.1 更新个人信息
-
-`PUT /users/me`
+`PUT /users/me`，登录用户；有效黑名单用户被拒绝。
 
 ```json
 {
   "nickname": "Eco 用户",
-  "avatarUrl": "https://cdn.example.com/avatar.png"
+  "avatarUrl": "https://example.com/avatar.png"
 }
 ```
 
-### 4.2 地址列表
+响应为当前用户结构。当前 `MeResponse` 不返回 `avatarUrl`。
 
-`GET /users/me/addresses`
+### 地址
 
-### 4.3 新增地址
+- `GET /users/me/addresses`
+- `POST /users/me/addresses`
+- `PUT /users/me/addresses/{addressId}`
+- `DELETE /users/me/addresses/{addressId}`
 
-`POST /users/me/addresses`
+均要求 `VERIFIED`；只能访问自己的地址。
 
 ```json
 {
@@ -157,112 +169,81 @@ type DemandStatus = "OPEN" | "MATCHED" | "CLOSED";
 }
 ```
 
-### 4.4 更新/删除地址
+地址响应在上述字段基础上增加 `id`，`isDefault` 为布尔值。
 
-- `PUT /users/me/addresses/{addressId}`
-- `DELETE /users/me/addresses/{addressId}`
+## 3. 类目
 
-### 4.5 我的发布商品
+### 公开类目
 
-`GET /users/me/items?status=ON_SALE&page=1&size=20`
-
-权限：`USER`
-
-说明：用于“我的发布/上下架管理”页面。`status` 可选，不传时返回当前用户全部未删除商品。
-
-响应：
-
-```json
-{
-  "items": [
-    {
-      "id": 1001,
-      "title": "数据结构教材",
-      "categoryName": "教材",
-      "priceCent": 3200,
-      "status": "ON_SALE",
-      "coverImageUrl": "https://cdn.example.com/item/1001.png",
-      "createdAt": "2026-07-03T15:00:00+08:00",
-      "deliveryModes": ["SELF_PICKUP"],
-      "seller": {
-        "id": 7,
-        "nickname": "李同学",
-        "verificationStatus": "VERIFIED"
-      },
-      "favorited": false,
-      "favoriteCount": 18
-    }
-  ],
-  "page": 1,
-  "size": 20,
-  "total": 1
-}
-```
-
-## 5. 类目
-
-### 5.1 前台类目列表
-
-`GET /categories`
-
-响应：
+`GET /categories`，公开。响应 `data` 为按 `sort,id` 排序的扁平数组：
 
 ```json
 [
-  { "id": 1, "name": "教材", "sort": 10 },
-  { "id": 2, "name": "数码", "sort": 20 },
-  { "id": 3, "name": "宿舍用品", "sort": 30 },
-  { "id": 4, "name": "运动器材", "sort": 40 }
+  { "id": 1, "name": "教材", "sort": 10 }
 ]
 ```
 
-## 6. 文件上传
+### 后台类目
 
-### 6.1 上传图片
+- `GET /admin/categories`
+- `POST /admin/categories`
+- `PUT /admin/categories/{categoryId}`
+- `DELETE /admin/categories/{categoryId}`
 
-`POST /files/images`
+仅 `ADMIN`。创建/更新请求：
 
-Content-Type: `multipart/form-data`
+```json
+{ "name": "教材", "sort": 10 }
+```
+
+`name` 最大 40 字符，`sort` 为 0–10000。当前模型只有一级类目和排序，没有父子关系、启停状态或商品数。
+
+## 4. 文件
+
+`POST /files/images`，`multipart/form-data`，要求 `VERIFIED`。
 
 字段：
 
-- `file`: 图片文件
-- `scene`: `ITEM`、`AVATAR`、`REPORT`
+- `file`：非空且可解码的图片；当前支持 JPEG、PNG、GIF。仓库未显式配置 multipart 大小上限，实际限制沿用 Spring Boot 默认值。
+- `scene`：`ITEM`、`AVATAR` 或 `REPORT`。
 
 响应：
 
 ```json
+{ "url": "/uploads/ITEM/uuid.jpg", "width": 1200, "height": 900 }
+```
+
+当前实现只有本地文件存储，不包含对象存储实现。虽然 MVC 注册了 `/uploads/**` 静态资源处理器，但 Spring Security 当前没有将该路径设为公开，读取会要求有效 Bearer token；普通 `<img src>` 无法自动附带该 header，这是尚未解决的真实展示问题。
+
+## 5. 商品
+
+### 商品摘要类型
+
+公开列表与收藏列表当前共用以下真实响应，不包含 mock UI 中的卖家、配送和收藏展示元数据：
+
+```json
 {
-  "url": "https://cdn.example.com/item/1.png",
-  "width": 1200,
-  "height": 900
+  "id": 1001,
+  "title": "数据结构教材",
+  "categoryName": "教材",
+  "priceCent": 3200,
+  "status": "ON_SALE",
+  "coverImageUrl": "/uploads/item/1001.png",
+  "createdAt": "2026-07-03T15:00:00+08:00"
 }
 ```
 
-## 7. 商品
+### 公开列表
 
-### 7.1 商品列表
+`GET /items`，公开；只返回 `ON_SALE`。
 
-`GET /items`
+参数：`keyword`、`categoryId`、`minPriceCent`、`maxPriceCent`、`deliveryMode`、`page`、`size`。
 
-查询参数：
+响应 `data` 为分页商品摘要。
 
-| 参数 | 说明 |
-| --- | --- |
-| `keyword` | 关键词 |
-| `categoryId` | 类目 |
-| `minPriceCent` | 最低价 |
-| `maxPriceCent` | 最高价 |
-| `deliveryMode` | 自提/送货到校 |
-| `page` / `size` | 分页 |
+### 公开详情
 
-响应字段与 `GET /users/me/items` 中商品摘要保持一致，并额外返回公开浏览所需的 `deliveryModes`、`seller`、`favorited` 和 `favoriteCount`。
-
-### 7.2 商品详情
-
-`GET /items/{itemId}`
-
-响应：
+`GET /items/{itemId}`，公开；非 `ON_SALE` 对外返回 404。登录用户可得到自己的 `favorited` 状态。
 
 ```json
 {
@@ -274,22 +255,22 @@ Content-Type: `multipart/form-data`
   "priceCent": 3200,
   "deliveryModes": ["SELF_PICKUP"],
   "status": "ON_SALE",
-  "imageUrls": ["https://cdn.example.com/item/1001.png"],
-  "seller": {
-    "id": 7,
-    "nickname": "匿名同学"
-  },
+  "imageUrls": ["/uploads/item/1001.png"],
+  "seller": { "id": 7, "nickname": "Eco User" },
   "favorited": false,
   "favoriteCount": 8,
   "createdAt": "2026-07-03T15:00:00+08:00"
 }
 ```
 
-### 7.3 发布商品
+若公开商品 GET 携带无效 Bearer token，JWT filter 会对商品列表/详情降级为匿名访问；其他端点仍返回 401。
 
-`POST /items`
+### 发布与编辑
 
-权限：`USER`
+- `POST /items`
+- `PUT /items/{itemId}`
+
+要求 `VERIFIED`；更新仅限商品所有者。请求：
 
 ```json
 {
@@ -298,163 +279,82 @@ Content-Type: `multipart/form-data`
   "categoryId": 1,
   "priceCent": 3200,
   "deliveryModes": ["SELF_PICKUP", "DELIVER_TO_SCHOOL"],
-  "imageUrls": ["https://cdn.example.com/item/1001.png"]
+  "imageUrls": ["/uploads/item/1001.png"]
 }
 ```
 
-创建后状态为 `PENDING_REVIEW`。
+图片 1–9 张。新建状态为 `PENDING_REVIEW`；编辑 `ON_SALE`、`REJECTED` 或 `OFF_SHELF` 商品后也回到 `PENDING_REVIEW`。响应为卖家商品详情，不含 `seller/favorited/favoriteCount`。
 
-### 7.4 编辑商品
+### 上下架与我的发布
 
-`PUT /items/{itemId}`
+- `POST /items/{itemId}/on-sale`：所有者申请重新审核，响应卖家商品详情。
+- `POST /items/{itemId}/off-shelf`：所有者下架，响应卖家商品详情。
+- `GET /users/me/items?status=ON_SALE&page=1&size=20`：分页返回自己的商品。
 
-权限：商品所有者，且商品未被违规下架/售出。
+“我的发布”摘要字段只有 `id/title/categoryName/priceCent/status/coverImageUrl/createdAt`。
 
-### 7.5 上下架商品
+实现注意：`off-shelf` 当前只拒绝 `SOLD/DELETED`，因此甚至能把 `VIOLATION_REMOVED` 改成 `OFF_SHELF`，随后再申请上架审核；这是现有状态校验漏洞，不是期望业务规则。
 
-- `POST /items/{itemId}/on-sale`
-- `POST /items/{itemId}/off-shelf`
+### 收藏
 
-重新上架需要进入 `PENDING_REVIEW`。
+- `POST /items/{itemId}/favorite`：要求 `VERIFIED`，不能收藏自己的商品或重复收藏；响应公开商品详情。
+- `DELETE /items/{itemId}/favorite`：删除自己的收藏。
+- `GET /users/me/favorites?page=1&size=20`：分页返回商品摘要。
 
-## 8. 收藏
+当前收藏列表响应不含 `favoritedAt`、`invalidReason`、`seller`、`deliveryModes` 或 `favoriteCount`；这些字段目前只存在于部分前端 mock 类型/展示中。
 
-### 8.1 收藏商品
+## 6. 私信
 
-`POST /items/{itemId}/favorite`
+全部端点要求 `VERIFIED`。会话必须包含商品卖家，且双方都必须是已核验用户。
 
-### 8.2 取消收藏
+- `POST /conversations`
+- `GET /conversations?page=1&size=20`
+- `GET /conversations/{conversationId}/messages?page=1&size=20`
+- `POST /conversations/{conversationId}/messages`
 
-`DELETE /items/{itemId}/favorite`
-
-### 8.3 我的收藏
-
-`GET /users/me/favorites`
-
-权限：`USER`
-
-查询参数：
-
-| 参数 | 说明 |
-| --- | --- |
-| `page` / `size` | 分页 |
-
-响应：
+创建/获取会话请求：
 
 ```json
-{
-  "items": [
-    {
-      "id": 1001,
-      "title": "数据结构教材",
-      "categoryName": "教材",
-      "priceCent": 3200,
-      "status": "ON_SALE",
-      "coverImageUrl": "https://cdn.example.com/item/1001.png",
-      "createdAt": "2026-07-03T15:00:00+08:00",
-      "deliveryModes": ["SELF_PICKUP"],
-      "seller": {
-        "id": 7,
-        "nickname": "匿名同学",
-        "verificationStatus": "VERIFIED"
-      },
-      "favorited": true,
-      "favoriteCount": 8,
-      "favoritedAt": "2026-07-03T16:00:00+08:00",
-      "invalidReason": null
-    }
-  ],
-  "page": 1,
-  "size": 20,
-  "total": 1
-}
+{ "itemId": 1001, "targetUserId": 7 }
 ```
 
-说明：`status != ON_SALE` 时前端可归入“已失效的收藏”，`invalidReason` 用于展示下架、售出或违规移除等原因。
-
-## 9. 私信聊天
-
-### 9.1 创建/获取商品会话
-
-`POST /conversations`
+会话摘要：
 
 ```json
 {
+  "id": 501,
   "itemId": 1001,
-  "targetUserId": 7
+  "itemTitle": "二手显示器",
+  "targetUserId": 7,
+  "targetNickname": "张三",
+  "lastMessage": "今天下午可以自提吗？",
+  "lastMessageAt": "2026-07-03T16:00:00+08:00",
+  "createdAt": "2026-07-03T15:30:00+08:00",
+  "unreadCount": 1
 }
 ```
 
-### 9.2 会话列表
-
-`GET /conversations?page=1&size=20`
-
-每个会话摘要包含 `unreadCount`。调用该会话的消息列表接口后，当前用户的已读时间会更新，随后会话列表中的 `unreadCount` 归零。
-
-响应 `data` 为分页对象，`size` 默认 20，最大 100：
+读取消息列表会更新当前用户已读时间。消息按 `createdAt asc, id asc` 返回：
 
 ```json
 {
-  "items": [
-    {
-      "id": 501,
-      "itemId": 1001,
-      "itemTitle": "二手显示器",
-      "targetUserId": 7,
-      "targetNickname": "张三",
-      "lastMessage": "你好，请问今天下午可以自提吗？",
-      "lastMessageAt": "2026-07-03T16:00:00+08:00",
-      "createdAt": "2026-07-03T15:30:00+08:00"
-    }
-  ],
-  "page": 1,
-  "size": 20,
-  "total": 1
+  "id": 9001,
+  "conversationId": 501,
+  "senderId": 7,
+  "content": "今天下午可以自提吗？",
+  "createdAt": "2026-07-03T16:00:00+08:00"
 }
 ```
 
-### 9.3 消息列表
+发送请求为 `{ "content": "..." }`，最多 1000 字符。当前没有 WebSocket/SSE，前端按需查询刷新。
 
-`GET /conversations/{conversationId}/messages?page=1&size=20`
+## 7. 订单
 
-响应 `data` 为分页对象，`size` 默认 20，最大 100。消息按 `createdAt asc, id asc` 返回：
+全部端点要求 `VERIFIED`。
 
-```json
-{
-  "items": [
-    {
-      "id": 9001,
-      "conversationId": 501,
-      "senderId": 7,
-      "content": "你好，请问今天下午可以自提吗？",
-      "createdAt": "2026-07-03T16:00:00+08:00"
-    }
-  ],
-  "page": 1,
-  "size": 20,
-  "total": 1
-}
-```
-
-### 9.4 发送消息
-
-`POST /conversations/{conversationId}/messages`
-
-```json
-{
-  "content": "你好，请问今天下午可以自提吗？"
-}
-```
-
-实时能力可在后续用 WebSocket/SSE 扩展；MVP 可先轮询。
-
-## 10. 订单
-
-### 10.1 创建订单
+### 创建
 
 `POST /orders`
-
-权限：`USER`
 
 ```json
 {
@@ -464,9 +364,14 @@ Content-Type: `multipart/form-data`
 }
 ```
 
-创建后状态为 `PENDING_COMMUNICATION`。
+商品必须在售、配送方式受支持、买家不能是卖家，同一商品只能有一个活跃订单。创建状态为 `PENDING_COMMUNICATION`。
 
-响应 `data` 为订单摘要：
+### 查询
+
+- `GET /orders?role=BUYER|SELLER&status=PENDING_COMMUNICATION&page=1&size=20`，`role` 默认 `BUYER`。
+- `GET /orders/{orderId}`，仅买卖双方。
+
+订单摘要：
 
 ```json
 {
@@ -482,53 +387,28 @@ Content-Type: `multipart/form-data`
 }
 ```
 
-### 10.2 我的订单
+不返回商品图片、价格或双方昵称；前端 mock 会补充展示元数据。
 
-`GET /orders?role=BUYER|SELLER&status=PENDING_COMMUNICATION`
-
-权限：`USER`
-
-查询参数：
-
-| 参数 | 说明 |
-| --- | --- |
-| `role` | `BUYER` 或 `SELLER`，默认 `BUYER` |
-| `status` | 可选订单状态 |
-| `page` / `size` | 分页，`size` 默认 20，最大 100 |
-
-响应 `data` 为分页对象，`items` 字段使用 10.1 的订单摘要结构。
-
-### 10.3 订单详情
-
-`GET /orders/{orderId}`
-
-响应 `data` 使用 10.1 的订单摘要结构。当前订单接口不直接返回商品图片、价格、买家昵称或卖家昵称；需要展示这些信息时，前端应通过商品/用户资料接口或 mock 展示元数据补充。
-
-### 10.4 更新订单状态
+### 状态变更
 
 `POST /orders/{orderId}/status`
 
 ```json
-{
-  "targetStatus": "WAITING_PICKUP",
-  "remark": "双方已确认明天 18:00 自提"
-}
+{ "targetStatus": "WAITING_PICKUP", "remark": "明天 18:00 自提" }
 ```
 
-状态流转限制：
+- `PENDING_COMMUNICATION -> WAITING_PICKUP`：仅卖家。
+- `WAITING_PICKUP -> COMPLETED`：仅买家；同时将商品设为 `SOLD`。
+- 两个活跃状态均可转 `CANCELLED`：买卖双方都可执行。
 
-- `PENDING_COMMUNICATION -> WAITING_PICKUP`
-- `WAITING_PICKUP -> COMPLETED`
-- `PENDING_COMMUNICATION -> CANCELLED`
-- `WAITING_PICKUP -> CANCELLED`
+## 8. 求购
 
-## 11. 闲置求购
+### 发布与公开列表
 
-### 11.1 发布求购
+- `POST /demands`，要求 `VERIFIED`。
+- `GET /demands?categoryId=2&keyword=显示器&page=1&size=20`，公开，只返回 `OPEN`。
 
-`POST /demands`
-
-权限：`USER`
+请求：
 
 ```json
 {
@@ -541,25 +421,15 @@ Content-Type: `multipart/form-data`
 }
 ```
 
-### 11.2 求购列表
+关键词 1–8 个，每个最多 40 字符。响应包含 `id/title/description/categoryId/categoryName/budgetMinCent/budgetMaxCent/keywords/status/createdAt`。
 
-`GET /demands?categoryId=2&keyword=显示器&page=1&size=20`
+### 我的求购、关闭和匹配
 
-### 11.3 我的求购
+- `GET /users/me/demands?page=1&size=20`
+- `POST /demands/{demandId}/close`
+- `GET /demands/{demandId}/matches?limit=20`
 
-`GET /users/me/demands`
-
-### 11.4 关闭求购
-
-`POST /demands/{demandId}/close`
-
-### 11.5 求购匹配结果
-
-`GET /demands/{demandId}/matches?limit=20`
-
-`limit` 默认 20，最大 50。匹配查询在数据库侧按求购关键词、类目和预算过滤，再返回有限数量结果。
-
-响应：
+均要求 `VERIFIED` 且只允许求购所有者。`limit` 默认 20、最大 50；匹配在数据库侧按类目、预算和关键词过滤。
 
 ```json
 [
@@ -567,116 +437,58 @@ Content-Type: `multipart/form-data`
     "itemId": 1001,
     "title": "二手显示器",
     "priceCent": 26000,
-    "matchReason": "关键词和预算匹配"
+    "matchReason": "keyword and budget matched"
   }
 ]
 ```
 
-## 12. 后台管理
+当前没有 `GET /demands/{demandId}` 详情端点，也没有编辑求购端点。前端求购详情页使用本地数据。
 
-后台接口统一要求 `ADMIN` 权限。
+## 9. 后台管理
 
-### 12.1 商品审核
+后台业务在 service 层统一要求 `ADMIN`。
 
-`GET /admin/items/review?status=PENDING_REVIEW&page=1&size=20`
+### 商品审核与治理
 
-`POST /admin/items/{itemId}/review`
+- `GET /admin/items/review?status=PENDING_REVIEW&page=1&size=20`
+- `POST /admin/items/{itemId}/review`
+- `GET /admin/items?status=ON_SALE&keyword=教材&categoryId=1&page=1&size=20`
+- `POST /admin/items/{itemId}/violation-remove`
 
-```json
-{
-  "approved": true,
-  "reason": "信息完整，允许上架"
-}
-```
-
-### 12.2 违规下架
-
-`GET /admin/items?status=ON_SALE&keyword=教材&categoryId=1&page=1&size=20`
-
-说明：用于后台商品治理页面，可按状态、关键词、类目筛选全站商品。
-
-响应：
+审核请求：
 
 ```json
-{
-  "items": [
-    {
-      "id": 1001,
-      "title": "数据结构教材",
-      "sellerId": 7,
-      "sellerNickname": "匿名同学",
-      "categoryName": "教材",
-      "priceCent": 3200,
-      "status": "ON_SALE",
-      "createdAt": "2026-07-03T15:00:00+08:00"
-    }
-  ],
-  "page": 1,
-  "size": 20,
-  "total": 1
-}
+{ "approved": true, "reason": "信息完整" }
 ```
 
-`POST /admin/items/{itemId}/violation-remove`
+违规下架请求：
 
 ```json
-{
-  "reason": "疑似商贩批量发布"
-}
+{ "reason": "疑似违规发布" }
 ```
 
-### 12.3 用户黑名单
+后台商品摘要真实字段：`id/title/sellerId/sellerNickname/categoryName/priceCent/status/createdAt`。不包含图片、完整描述、举报数、审核标记或卖家历史违规数；这些目前是前端 mock 展示字段。
 
-`GET /admin/users?keyword=张三&verificationStatus=VERIFIED&page=1&size=20`
+### 用户黑名单
 
-说明：用于后台用户与黑名单页面，可按昵称、手机号尾号、学号尾号、核验状态筛选用户。
+- `GET /admin/users?keyword=张三&verificationStatus=VERIFIED&page=1&size=20`
+- `POST /admin/users/{userId}/blacklist`
+- `DELETE /admin/users/{userId}/blacklist`
 
-响应：
+列表字段：`id/nickname/phoneMasked/studentNoMasked/role/verificationStatus/blacklisted`。
 
 ```json
-{
-  "items": [
-    {
-      "id": 7,
-      "nickname": "匿名同学",
-      "phoneMasked": "138****0000",
-      "studentNoMasked": "2026****001",
-      "role": "USER",
-      "verificationStatus": "VERIFIED",
-      "blacklisted": false
-    }
-  ],
-  "page": 1,
-  "size": 20,
-  "total": 1
-}
+{ "reason": "违规交易", "expireAt": null }
 ```
 
-`POST /admin/users/{userId}/blacklist`
+`reason` 必填且最多 255 字符；管理员不能拉黑自己。
 
-前端必须提交处理原因；`reason` 不能为空且最长 255 字符，`expireAt` 可选。
+### 数据看板
 
-```json
-{
-  "reason": "校外商贩或违规交易",
-  "expireAt": null
-}
-```
+- `GET /admin/dashboard/overview`
+- `GET /admin/dashboard/summary`
 
-`DELETE /admin/users/{userId}/blacklist`
-
-### 12.4 类目管理
-
-- `GET /admin/categories`
-- `POST /admin/categories`
-- `PUT /admin/categories/{categoryId}`
-- `DELETE /admin/categories/{categoryId}`
-
-### 12.5 数据看板
-
-`GET /admin/dashboard/overview`
-
-响应：
+overview：
 
 ```json
 {
@@ -690,10 +502,16 @@ Content-Type: `multipart/form-data`
 }
 ```
 
-## 13. 前后端对接要求
+summary 在 `overview` 之外增加：
 
-- 所有需要校园身份的接口必须检查 `verificationStatus == VERIFIED`。
-- 黑名单用户进入受限态，交易类接口统一返回 `BLACKLISTED`。
-- 商品发布、审核、下架、订单状态变更都要写审计日志。
-- 图片上传接口只返回 URL，不在商品接口里传 Base64。
-- 前端展示用中文，接口枚举保持英文，避免后续多端扩展时混乱。
+- `dealTrends[]`：`date/label/currentWeekCount/previousWeekCount`
+- `recentPendingItems[]`：`id/title/sellerNickname/categoryName/submittedAt/coverImageUrl`
+- `reminders[]`：`key/label/count/severity`
+
+## 10. 安全与审计实现边界
+
+- 公开端点：健康检查、公开类目、商品列表/详情、公开求购列表、登录、Actuator health，以及启用时的 Swagger/OpenAPI。
+- 交易类 service 使用 `CampusAccessGuard.requireVerifiedUser`，有效黑名单返回 423。
+- 管理接口在 service 层检查 `ADMIN`；Spring Security 过滤链只要求这些 URL 已认证。
+- 商品创建/编辑/上下架/审核/违规下架和订单创建/状态变更会写 `audit_logs`。
+- 用户黑名单、类目 CRUD、求购和私信当前不写通用审计日志。

@@ -1,217 +1,184 @@
-# EcoCampus 前端技术栈
+# EcoCampus 前端技术栈、路由与数据源
 
-## 1. 目标
+最近一次按 `frontend/package.json`、`routeCatalog.ts`、`routes.tsx`、API wrappers 和页面组件复核：2026-07-14。
 
-当前阶段优先交付 Web 端，同时适配移动端 H5。前端需要覆盖普通用户的浏览、发布、收藏、私信、订单、求购流程，以及管理员的审核、黑名单、类目和数据看板能力。
+## 1. 技术栈
 
-## 2. 技术栈决策
+| 层级 | 当前实现 |
+| --- | --- |
+| 框架 | React 19.2、TypeScript 6 |
+| 构建 | Vite 8，pnpm lockfile |
+| 路由 | React Router 7，`createBrowserRouter` |
+| 服务端状态 | TanStack Query 5 |
+| 本地状态 | Zustand 5；认证使用 persist |
+| 请求 | Axios，统一 token、`X-Trace-Id`、401 清会话 |
+| 样式 | Tailwind CSS Vite plugin 已安装；当前业务页面主要使用普通 CSS 文件和共享样式 |
+| 后台 UI | Ant Design 6 与自定义 CSS |
+| 图标/动画 | lucide-react、Motion for React |
+| 表单依赖 | React Hook Form、Zod 已安装；现有不少页面仍使用组件本地状态 |
 
-| 层级 | 选择 | 用途 |
-| --- | --- | --- |
-| 基础框架 | React + TypeScript | 组件化开发和类型约束 |
-| 构建工具 | Vite | 本地开发、打包和环境变量管理 |
-| 路由 | React Router | 前台/后台路由、受保护路由、详情页参数 |
-| 服务端状态 | TanStack Query | 列表、详情、分页、缓存、刷新和 mutation |
-| 本地状态 | Zustand | 登录态摘要、UI 面板、筛选条件草稿等轻量状态 |
-| 请求层 | Axios 或 Fetch 封装 | 统一 token、错误码、traceId、重试策略 |
-| 表单 | React Hook Form + Zod | 发布商品、校园核验、地址、求购、后台审核 |
-| 样式 | Tailwind CSS + CSS Modules | H5 响应式页面和局部复杂样式 |
-| 管理后台组件 | Ant Design | 表格、筛选、弹窗、表单、数据看板 |
-| 图标 | lucide-react | 通用工具图标 |
-| 动画 | Motion for React | 页面切换、卡片进场、收藏反馈、筛选抽屉 |
+常用命令：
 
-## 3. 推荐目录
-
-```text
-frontend/
-  src/
-    app/
-      App.tsx
-      routes.tsx
-      providers.tsx
-    api/
-      http.ts
-      auth.api.ts
-      item.api.ts
-      order.api.ts
-      admin.api.ts
-    components/
-      common/
-      marketplace/
-      item/
-      order/
-      chat/
-      admin/
-      motion/
-    features/
-      auth/
-      item-market/
-      item-publish/
-      favorites/
-      conversations/
-      orders/
-      demands/
-      admin/
-    hooks/
-    stores/
-    styles/
-    types/
+```bash
+cd frontend
+pnpm dev
+pnpm dev:mock
+pnpm lint
+pnpm build
+pnpm preview
 ```
 
-## 4. 路由规划
+`pnpm dev:mock` 通过 `.env.mock` 设置 `VITE_USE_MOCKS=true`。默认 API base 为同源 `/api/v1`，可用 `VITE_API_BASE_URL` 覆盖；仓库没有 Vite dev proxy，本地连接 8080 后端时应设置 `VITE_API_BASE_URL=http://localhost:8080/api/v1`。`VITE_BASE_PATH` 同时服务 Vite base 和 React Router basename。
 
-### 4.1 前台用户端
+## 2. 代码边界
 
-| 路由 | 页面 | 权限 |
+```text
+src/
+├── app/                 # providers、路由元数据与组件映射
+├── api/                 # API wrappers、query keys 和 API mock
+├── components/
+│   ├── marketplace/     # 用户端共享壳、商品卡片、占位页
+│   ├── admin/           # 管理后台共享壳
+│   └── layout/          # RouteGuard、404、基础布局
+├── features/            # 页面与页面级样式/本地演示数据
+├── hooks/               # 当前用户、未读消息、document title
+├── stores/              # Zustand 认证状态
+└── types/               # 通用 API/路由类型
+```
+
+路由元数据位于 `src/app/routeCatalog.ts`，组件映射位于 `src/app/routes.tsx`，页面组件由 `src/app/routeComponents.ts` 通过 `React.lazy` 按路由加载，`App.tsx` 提供 `Suspense` 回退。判断页面是否已实现必须同时看 catalog 和组件映射；出现在 catalog 中不代表已有真实业务 UI 或后端接线。
+
+## 3. 路由现状
+
+状态含义：
+
+- **API-backed**：页面调用 `src/api/` wrapper，可在 wrapper 支持时切换 mock/真实 API。
+- **Local mock**：有完整业务 UI，但关键数据或提交只在组件、本地模块或 `localStorage` 中处理。
+- **Placeholder**：catalog 中存在，但渲染统一占位页。
+- **Redirect**：仅兼容跳转。
+
+### 用户端
+
+| 路由 | 页面状态 | 当前数据源/说明 |
 | --- | --- | --- |
-| `/login` | 统一身份认证登录 | 公开 |
-| `/` | 商品首页/推荐流 | 公开 |
-| `/items` | 商品搜索与分类筛选 | 公开 |
-| `/items/:id` | 商品详情 | 公开，互动需登录 |
-| `/publish` | 发布商品 | `USER` |
-| `/items/mine` | 我的发布/上下架管理 | `USER` |
-| `/items/:id/edit` | 编辑商品 | 商品所有者 |
-| `/favorites` | 我的收藏 | `USER` |
-| `/messages` | 私信会话列表 | `USER` |
-| `/messages/:conversationId` | 私信详情 | `USER` |
-| `/orders` | 购买订单兼容入口，重定向到 `/orders/purchase` | `USER` |
-| `/orders/sales` | 出售订单旧入口，重定向到 `/orders/sale` | `USER` |
-| `/orders/purchase` | 购买订单 | `USER` |
-| `/orders/sale` | 出售订单 | `USER` |
-| `/orders/purchase/demand` | 求购广场 | `USER` |
-| `/orders/purchase/demand/:id/detail` | 求购详情 | `USER` |
-| `/orders/purchase/demand/new` | 发布求购 | `USER` |
-| `/orders/purchase/demand/mine` | 我的求购 / 匹配结果 | `USER` |
-| `/demands` | 求购列表 | 公开 |
-| `/demands/new` | 发布求购 | `USER` |
-| `/demands/mine` | 我的求购/匹配结果 | `USER` |
-| `/profile` | 个人信息/地址 | `USER` |
-| `/verify` | 校园核验 | 登录用户 |
+| `/login` | API-backed | 真实模式调用 `POST /auth/login`；mock 模式本地自动建档并生成 mock token |
+| `/` | API-backed | `GET /items`、`GET /categories`；真实商品列表 DTO 目前与卡片所需字段不一致 |
+| `/items` | API-backed | `GET /items`；客户端筛选和分页 |
+| `/items/textbook` 等 9 个分类路由 | Local mock | 共用 `ItemsPage`，分类专属商品集合和筛选主要来自组件内本地数据；仍会发起通用商品查询 |
+| `/items/:id` | API-backed | 商品详情、收藏、创建会话、下单；相关商品依赖列表 DTO |
+| `/favorites` | API-backed + Local mock | 商品收藏走 favorite API；“求购关注”存 `localStorage` |
+| `/messages` | API-backed | 会话列表 API；商品图/状态等使用 mock 展示元数据 |
+| `/messages/:conversationId` | API-backed | 会话和消息 API；当前消息归属判断仍使用 mock 当前用户 id |
+| `/orders/purchase` | API-backed | `GET /orders?role=BUYER` 与状态 mutation；图片/价格/昵称来自 mock 展示元数据 |
+| `/orders/sale` | API-backed | `GET /orders?role=SELLER` 与状态 mutation；展示元数据同上 |
+| `/orders` | Redirect | 跳转 `/orders/purchase` |
+| `/orders/sales` | Redirect | 跳转 `/orders/sale` |
+| `/orders/purchase/demand` | Local mock | 求购广场使用 `features/orders/demandData.ts` |
+| `/orders/purchase/demand/:id/detail` | Local mock | 本地求购详情和关注状态；未调用 demand API |
+| `/orders/purchase/demand/new` | Local mock | 表单演示，不调用 `POST /demands` |
+| `/orders/purchase/demand/mine` | Local mock | 我的求购/匹配展示，不调用 demand API |
+| `/publish` | Local mock | 草稿和发布商品写入 `localStorage`，未调用上传/类目/商品 API |
+| `/items/mine` | Local mock | `myItems.mock.ts` + `localStorage`，未调用我的商品 API |
+| `/items/:id/edit` | Local mock | 编辑本地发布数据，未调用商品详情/更新 API |
+| `/profile` | 部分 API-backed | 顶部身份可调用 `/auth/me`；资料与地址表单主体为本地演示，未调用 profile API |
+| `/verify` | Local mock | 本地核验演示，未调用 `/auth/campus-verification` |
+| `/demands` | Placeholder | catalog 保留的旧公开求购入口 |
+| `/demands/new` | Placeholder | catalog 保留的旧发布求购入口 |
+| `/demands/mine` | Placeholder | catalog 保留的旧我的求购入口 |
 
-说明：`/login` 当前按厦门大学统一身份认证对接页处理，视觉上独立复现学校 SSO 登录页，不纳入用户端彩绘风格统一。系统不提供注册功能；mock 与正式环境均只校验账号前 7 位是否为 `2292024`，账号不存在时在登录流程中自动建档。
+九个分类路径为：`textbook`、`digital`、`dorm`、`outdoors`、`daily-goods`、`make-up`、`instruments`、`tickets`、`others`。
 
-市场端公共壳根据持久化 JWT 决定用户快捷入口：游客只显示“登录 / 注册”；登录后通过 `GET /auth/me` 展示真实昵称和角色，并提供退出入口。生产会话使用带版本的独立 Zustand storage key，部署期可以显式失效旧演示会话而不影响后续正常持久化。
+### 管理端
 
-### 4.2 后台管理端
-
-| 路由 | 页面 | 权限 |
+| 路由 | 页面状态 | 当前数据源/说明 |
 | --- | --- | --- |
-| `/admin` | 数据看板 | `ADMIN` |
-| `/admin/items/review` | 商品审核 | `ADMIN` |
-| `/admin/items` | 商品治理/违规下架 | `ADMIN` |
-| `/admin/users` | 用户与黑名单 | `ADMIN` |
-| `/admin/categories` | 类目管理 | `ADMIN` |
+| `/admin` | API-backed | 调用真实 `GET /admin/dashboard/summary`；没有 dashboard mock |
+| `/admin/items/review` | API-backed | wrapper 支持 mock/真实；真实后台摘要缺少页面使用的图片、描述、标记等字段 |
+| `/admin/items` | API-backed | wrapper 支持 mock/真实；真实响应是后台商品摘要，不是前端声明的完整 `ItemSummary` |
+| `/admin/users` | API-backed + Local UI model | 用户列表和黑名单 mutation 支持 mock/真实；顶部总量、注册日期、发布数等为硬编码展示值 |
+| `/admin/categories` | API-backed + Local UI model | 页面调用一级类目列表/创建/更新；删除 wrapper 存在但页面未调用，树层级、启停、商品数和预置子类目为本地展示模型 |
 
-## 5. 路由与接口映射自检
+当前 `routes.tsx` 已为 catalog 中所有管理路由映射真实页面，没有后台占位路由。
 
-### 5.1 前台用户端
+## 4. 路由守卫
 
-| 路由 | 主要接口 | 对接状态 |
+`RouteGuard` 当前执行：
+
+- `public`、`interaction`：直接渲染；商品详情的互动按钮自行触发登录/请求。
+- `auth`：无 token 时跳 `/login?returnTo=...`。
+- `verified`：无 token 先登录；非管理员且状态不是 `VERIFIED` 时跳 `/verify`。
+- `admin`：无 token 先登录；角色不是 `ADMIN` 时回 `/`。
+- `owner`：当前只经过通用“已登录”检查，前端没有查询商品所有者；所有权必须由后端 service 兜底。
+
+认证状态使用独立 storage key：mock 为 `ecocampus.auth.mock.v2`，真实为 `ecocampus.auth.real.v2`。前端没有 refresh token 流程；任意非登录请求返回 401 时清理会话。
+
+## 5. API mock 覆盖
+
+`VITE_USE_MOCKS=true` 时，以下 wrapper 使用 `src/api/mock/`：
+
+- 类目公开列表与后台 CRUD。
+- 商品列表/详情。
+- 商品收藏/取消/收藏列表。
+- 会话创建、会话/消息列表和发送消息。
+- 订单创建、列表、详情和状态变更。
+- 后台商品审核/治理、后台用户和黑名单。
+
+以下 wrapper 当前没有 API mock，会继续发真实请求：
+
+- auth（`LoginPage` 自己分支处理 mock 登录）。
+- profile、地址、文件上传。
+- demand API。
+- dashboard overview/summary。
+
+页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如求购四个页面即使开启或关闭 `VITE_USE_MOCKS` 都使用本地数据。
+
+## 6. 当前 DTO 对齐风险
+
+真实后端是字段事实源，当前前端类型仍有以下未解决差异：
+
+| 前端期望 | 后端真实响应 | 影响 |
 | --- | --- | --- |
-| `/login` | `POST /auth/login` | 已覆盖 |
-| `/` | `GET /items`, `GET /categories` | 已覆盖 |
-| `/items` | `GET /items`, `GET /categories` | 已覆盖 |
-| `/items/:id` | `GET /items/{itemId}`, `POST /items/{itemId}/favorite`, `DELETE /items/{itemId}/favorite`, `POST /conversations`, `POST /orders` | 已覆盖 |
-| `/publish` | `POST /files/images`, `GET /categories`, `POST /items` | 已覆盖 |
-| `/items/mine` | `GET /users/me/items`, `POST /items/{itemId}/on-sale`, `POST /items/{itemId}/off-shelf` | 已覆盖 |
-| `/items/:id/edit` | `GET /items/{itemId}`, `POST /files/images`, `GET /categories`, `PUT /items/{itemId}` | 已覆盖 |
-| `/favorites` | `GET /users/me/favorites`, `DELETE /items/{itemId}/favorite` | 已覆盖 |
-| `/messages` | `GET /conversations?page=1&size=20` | 已覆盖 |
-| `/messages/:conversationId` | `GET /conversations/{conversationId}/messages?page=1&size=20`, `POST /conversations/{conversationId}/messages` | 已覆盖 |
-| `/orders/purchase` | `GET /orders?role=BUYER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
-| `/orders/sale` | `GET /orders?role=SELLER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
-| `/orders/purchase/demand` | `GET /demands` | mock-first 页面已覆盖 |
-| `/orders/purchase/demand/:id/detail` | `GET /demands/{demandId}`, `GET /demands/{demandId}/matches` | mock-first 页面已覆盖 |
-| `/orders/purchase/demand/new` | `POST /demands` | mock-first 页面已覆盖 |
-| `/orders/purchase/demand/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches`, `POST /demands/{demandId}/close` | mock-first 页面已覆盖 |
-| `/demands` | `GET /demands` | 已覆盖 |
-| `/demands/new` | `GET /categories`, `POST /demands` | 已覆盖 |
-| `/demands/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches?limit=20`, `POST /demands/{demandId}/close` | 已覆盖 |
-| `/profile` | `GET /auth/me`, `PUT /users/me`, `GET /users/me/addresses`, `POST /users/me/addresses`, `PUT /users/me/addresses/{addressId}`, `DELETE /users/me/addresses/{addressId}` | 已覆盖 |
-| `/verify` | `GET /auth/me`, `POST /auth/campus-verification` | 已覆盖 |
+| `ItemSummary` 含 `deliveryModes/seller/favorited/favoriteCount` | `GET /items` 仅返回基础商品摘要 | 首页和通用商品页真实模式可能在筛选或渲染时访问不存在字段 |
+| 商品详情 seller 含 `verificationStatus` | 详情 seller 只有 `id/nickname` | 核验文案依赖未定义字段 |
+| 收藏项含 `favoritedAt/invalidReason` 和完整 `ItemSummary` | 收藏列表仍是基础商品摘要 | 真实收藏页的配送、卖家与失效面板数据不足 |
+| 后台审核/治理复用或扩展 `ItemSummary` | 后台商品摘要只有治理基础字段 | 真实模式缺图片、描述、举报/审核展示元数据 |
+| 校园核验、收藏、上下架、关闭求购、审核/违规下架等 wrappers 中部分声明 `void` | 后端实际返回当前用户、商品/求购详情或后台摘要 | 当前页面多半忽略响应，但类型不准确 |
 
-### 5.2 后台管理端
+市场公共壳的游客入口当前文案仍是“登录 / 注册”，但只链接 `/login`，后端没有独立注册端点；真实行为是登录时自动建档。
 
-| 路由 | 主要接口 | 对接状态 |
-| --- | --- | --- |
-| `/admin` | `GET /admin/dashboard/overview` | 已覆盖 |
-| `/admin/items/review` | `GET /admin/items/review`, `POST /admin/items/{itemId}/review` | 已覆盖 |
-| `/admin/items` | `GET /admin/items`, `POST /admin/items/{itemId}/violation-remove` | 已覆盖 |
-| `/admin/users` | `GET /admin/users`, `POST /admin/users/{userId}/blacklist`, `DELETE /admin/users/{userId}/blacklist` | 已覆盖 |
-| `/admin/categories` | `GET /admin/categories`, `POST /admin/categories`, `PUT /admin/categories/{categoryId}`, `DELETE /admin/categories/{categoryId}` | 一级类目 CRUD 已接入；二级类目/启停待扩展契约 |
+新增真实接线前应先修正 DTO 或后端响应，并同步 `docs/api-contract.md`。不能用 mock 字段反推真实接口已经支持。
 
-## 6. 动画使用边界
+## 7. 视觉与动画边界
 
-动画只用于增强理解和反馈，不做装饰性堆叠。
+- `/` 保持公开市场首页；收藏管理仅在 `/favorites`。
+- 用户端复用 `components/marketplace/` 的 `MarketplaceShell`、卡片和手绘动画语义。
+- `/login` 采用厦门大学统一身份认证风格的视觉模拟，但当前生产行为是项目自有账号密码 API，不是跳转学校 SSO。
+- 后台复用 `components/admin/AdminShell.tsx`，以表格、筛选和操作效率为先。
+- 动画使用 Motion + CSS keyframes，尊重 `prefers-reduced-motion`；详细规范见 `frontend-animation/README.md`。
 
-用户端彩绘、手绘动画的具体风格以 `docs/frontend-animation/README.md` 为准。当前默认组合仍是 Motion for React + CSS keyframes：Motion 负责页面区域、卡片和交互反馈，CSS keyframes 负责插画绘制感、笔触扫过、纸面和铅笔纹理。
+## 8. 部署
 
-推荐使用场景：
+`.github/workflows/deploy-pages.yml` 使用 Node.js 22、pnpm 10 构建 `frontend/`，设置：
 
-- 商品卡片进入列表时使用轻量 fade + translate。
-- 收藏按钮使用 120ms 左右的缩放反馈。
-- 筛选面板、发布页步骤切换使用横向 slide。
-- 订单状态流转使用状态点高亮和短动效。
-- 后台图表加载时使用 skeleton，而不是复杂动画。
+```text
+VITE_USE_MOCKS=false
+VITE_API_BASE_URL=https://ecocampus-api.teamdsb.online/api/v1
+VITE_BASE_PATH=<GitHub Pages base path>/
+```
 
-不推荐使用场景：
+构建后复制 `index.html` 为 `404.html`，配合 `basename` 支持 Pages 深层路由。`frontend/sites/` 是历史 Sites 适配层，不是当前 GitHub Pages 构建入口。
 
-- 大面积循环背景动画。
-- 影响表单输入和后台表格效率的动画。
-- 无法关闭的长过渡。
+## 9. 前端性能基线
 
-实现要求：
+- 页面组件统一通过 `src/app/routeComponents.ts` 使用 `React.lazy` 按路由加载；不要在 `routes.tsx` 或共享壳中重新静态导入完整页面。
+- 管理后台壳只在进入后台路由时加载，公开首页不会预加载后台页面代码。
+- 仓库内业务位图已转换为 WebP。商品列表仅前 4 张首屏图主动加载，其余商品图、侧栏和空状态插画懒加载并异步解码。
+- 图片应声明稳定宽高；新增图片先压缩，不同时把 PNG/JPEG 原图和 WebP 副本打入生产包。
+- 2026-07-14 基线的入口 chunk 约 628 kB（gzip 约 206 kB），其余页面按路由拆分。
 
-- 尊重 `prefers-reduced-motion`。
-- 列表动画不要阻塞数据加载。
-- H5 低端设备优先使用 opacity/transform。
-- 不新增动画库，除非先更新 `docs/frontend-animation/README.md` 和本技术栈文档，说明引入原因、影响范围和降级策略。
+## 10. 变更验收
 
-## 7. API 对接策略
-
-- 前端类型以 `docs/api-contract.md` 为准，优先从接口契约手写 TypeScript DTO。
-- TanStack Query 管理服务端状态，所有查询 key 统一放在 `api/queryKeys.ts`。
-- mutation 成功后按场景失效缓存，例如发布商品后刷新 `items.list` 和 `users.me.items`。
-- 请求失败统一显示后端 `message`，并在开发环境暴露 `traceId`。
-- `401` 统一清理本地会话；受保护路由由路由守卫带 `returnTo` 跳转登录。`403` 展示无权限，`BLACKLISTED` 展示账号受限说明。
-
-## 8. 权限守卫
-
-前端不作为安全边界，但需要改善体验：
-
-- `RequireAuth`: 未登录跳转登录。
-- `RequireVerified`: 未校园核验跳转 `/verify`。
-- `RequireAdmin`: 非管理员返回公开首页。
-- 发布、下单、私信、求购按钮在未核验时置灰并引导认证。
-
-## 9. UI 风格建议
-
-用户端应强调校园交易场景：
-
-- `/`、`/favorites` 和公开/用户侧占位路由应复用 `frontend/src/components/marketplace/` 下的市场端公共壳、商品卡片和手绘动画样式；不要再从某个 feature 目录交叉引用页面级 CSS。
-- 商品卡片优先展示图片、标题、价格、类目、取货方式。
-- 类目固定覆盖教材、数码、宿舍用品、运动器材。
-- H5 下筛选使用底部抽屉，桌面端使用侧栏或顶部筛选条。
-- 订单状态用“待沟通 → 待自提 → 已完成”的短流程展示。
-
-后台端应强调效率：
-
-- 表格、筛选、批量操作和审核弹窗优先。
-- 商品审核页要同时展示图片、描述、发布人核验状态和历史违规记录。
-- 数据看板先做发布量、成交统计、待审核数量、活跃用户。
-
-## 10. 前端性能基线
-
-- 页面组件统一通过 `frontend/src/app/routeComponents.ts` 使用 `React.lazy` 按路由加载，`App.tsx` 提供轻量 `Suspense` 回退；不要在 `routes.tsx` 或共享壳中重新静态导入完整页面。
-- 管理后台壳仅在进入后台路由时加载，公开市场首页不应预加载后台表格、图表和管理页面代码。
-- 仓库内位图资产统一使用 WebP。商品列表首屏仅允许前 4 张商品图使用 eager/high priority，其余商品图、侧栏插画和空状态插画使用 `loading="lazy"` 与异步解码。
-- 图片元素应声明稳定宽高，避免加载期间布局抖动；新增图片需先压缩，不把 PNG/JPEG 原图与 WebP 副本同时打入生产包。
-- 当前生产构建的入口 chunk 约 628 kB（gzip 约 206 kB），路由页面拆为独立 chunk；后续新增页面不得无理由回到单一页面大包。
-
-## 11. 参考来源
-
-- React 官方建议新项目使用构建工具，Vite 是可选方案之一：https://react.dev/learn/build-a-react-app-from-scratch
-- Vite 官方 React/TypeScript 模板说明：https://vite.dev/guide/
-- React Router 官方文档：https://reactrouter.com/
-- TanStack Query React 文档：https://tanstack.com/query/latest/docs/framework/react/overview
-- Motion React 文档：https://motion.dev/docs
+- 路由新增/删除：同时更新 `routeCatalog.ts`、`routes.tsx`、`routeComponents.ts`、本文件和 `project-state.md`。
+- 真实 API 字段变化：同时更新后端 DTO、前端类型/API wrapper 和 `api-contract.md`。
+- 新页面应明确标记 API-backed、Local mock 或 Placeholder，不使用笼统“已覆盖”。
+- 前端代码变更运行 `pnpm lint` 和 `pnpm build`；纯文档变更至少运行 `git diff --check`。

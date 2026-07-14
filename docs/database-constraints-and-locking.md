@@ -2,25 +2,31 @@
 
 本文记录 EcoCampus 后端当前数据库约束、索引和锁的设计意图。数据库结构以 `backend/src/main/resources/db/migration/` 下的 Flyway migration 为准。
 
+最近一次按 V1–V4 migration、JPA entity 和 repository 复核：2026-07-14。
+
 ## 初始化方式
 
 - 使用 Flyway 管理表结构和种子数据，避免开发、测试和真实 MySQL 环境使用不同建表脚本。
 - `application.yml` 已关闭旧的 `schema.sql` / `data.sql` 自动初始化，防止重复建表或重复写入种子数据。
+- V1 创建核心表、约束和索引；V2 自动插入 4 个初始类目；V3 为 `users` 增加可空的 `password_hash`；V4 为会话增加双方已读时间。
+- `db/seed/mysql-demo-seed.sql` 是 Flyway 后手动导入的演示数据，不属于 migration，不会随应用启动自动执行。
 
 ## 生产数据库配置
 
 - `application-prod.yml` 只在 `prod` profile 下生效，并强制使用 MySQL driver、Flyway migration、`spring.sql.init.mode=never` 和 `spring.jpa.hibernate.ddl-auto=validate`。
 - 生产数据库连接必须通过 `DB_URL`、`DB_USERNAME` 和 `DB_PASSWORD` 显式提供；`prod` profile 不提供可工作的默认数据库地址、账号或密码。
+- `JWT_SECRET` 也必须显式提供，至少 32 字符，且不能包含开发/示例占位内容。
 - 生产 Hikari 连接池通过 `DB_POOL_MAX_SIZE`、`DB_POOL_MIN_IDLE`、`DB_POOL_CONNECTION_TIMEOUT_MS`、`DB_POOL_VALIDATION_TIMEOUT_MS`、`DB_POOL_IDLE_TIMEOUT_MS`、`DB_POOL_MAX_LIFETIME_MS` 和 `DB_POOL_LEAK_DETECTION_MS` 配置，并在启动阶段校验基础取值。
 - `ProdDatabaseSafetyEnvironmentPostProcessor` 在配置加载后、应用上下文创建前执行防呆校验：`prod` profile 下非 MySQL URL、非 MySQL driver、默认账号、示例密码、不安全 DDL 策略、SQL 自动初始化或非法连接池参数都会直接阻止启动。
 
 ## 核心约束
 
-- 用户表保留手机号、学号唯一约束，防止多账号绑定同一校园身份。
+- `users.phone` 目前兼作唯一登录账号，账号和学号分别有唯一约束；密码只存 `password_hash`（BCrypt）。
 - 枚举字段使用 `check` 约束，覆盖用户角色、核验状态、商品状态、订单状态、配送方式和求购状态。
 - 商品价格和求购预算使用非负约束，求购最低预算不能高于最高预算。
 - 收藏使用 `(user_id, item_id)` 唯一约束，防止重复收藏。
 - 会话使用 `(item_id, user_one_id, user_two_id)` 唯一约束，并要求 `user_one_id < user_two_id`，防止同一对用户生成重复会话。
+- 会话保存 `user_one_read_at` 和 `user_two_read_at`，用于计算每个参与者的未读数。
 - 商品配送方式、商品图片和求购关键词使用组合主键，防止重复明细。
 
 ## 活跃订单约束
@@ -50,6 +56,8 @@
 - 会话行悲观写锁：发送消息时锁定会话，保证 `lastMessage` 对应最后一次提交的消息。
 - 用户地址悲观写锁：管理默认地址时锁定该用户已有地址，减少并发设置默认地址的窗口。
 - 商品、订单、用户、求购聚合根增加乐观锁版本号，用于捕获后台治理、用户编辑和系统任务之间的后写覆盖。
+
+当前类目仍是扁平一级模型，没有父类、启停状态或商品数列。`MATCHED`、`DRAFT`、`DELETED` 等枚举虽受数据库约束允许，但当前未必有对应写入端点。
 
 ## 异常处理
 
