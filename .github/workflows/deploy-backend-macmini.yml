@@ -1,0 +1,46 @@
+name: Deploy backend to Mac mini
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - backend/**
+      - deploy/macos/**
+      - .github/workflows/deploy-backend-macmini.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecocampus-backend-production
+  cancel-in-progress: false
+
+jobs:
+  test-build-deploy:
+    name: Test, build and deploy
+    runs-on: [self-hosted, macOS, ARM64, ecocampus-deploy]
+    timeout-minutes: 20
+    environment:
+      name: macmini-production
+      url: https://ecocampus-api.teamdsb.online/api/v1/health
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+
+      - name: Verify Java runtime
+        run: java -version
+
+      - name: Test backend
+        working-directory: backend
+        run: ./mvnw --batch-mode test
+
+      - name: Build production JAR
+        working-directory: backend
+        run: ./mvnw --batch-mode -DskipTests package
+
+      - name: Deploy with health check and rollback
+        run: |
+          "$HOME/.local/bin/ecocampus-deploy-backend" \
+            "$GITHUB_WORKSPACE/backend/target/ecocampus-0.0.1-SNAPSHOT.jar" \
+            "$GITHUB_SHA"
