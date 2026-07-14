@@ -26,7 +26,7 @@ npm run build
 
 Sites 项目标识只保存在 `frontend/sites/.openai/hosting.json`。生产前端使用独立 Sites 版本发布，不在 DMIT 运行 Node、Vite 或静态文件服务。
 
-当前 Sites 前端已绑定 `ecocampus.teamdsb.online`，访问策略保持 owner-only 私有预览；正式对校园用户开放前，需要单独确认并切换为 public。
+当前 Sites 前端已绑定 `ecocampus.teamdsb.online`，访问策略为 public；首页和 React Router 深层路由均可匿名访问。
 
 ## 后端与数据库
 
