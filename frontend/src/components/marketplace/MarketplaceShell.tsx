@@ -41,8 +41,8 @@ const categoryNav = [
 const userNav = [
   { label: '我的收藏', icon: Star, to: '/favorites' },
   { label: '我的发布', icon: Store, to: '/items/mine' },
-  { label: '购买订单', icon: ClipboardList, to: '/orders' },
-  { label: '出售订单', icon: Store, to: '/orders/sales' },
+  { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
+  { label: '出售订单', icon: Store, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
 ]

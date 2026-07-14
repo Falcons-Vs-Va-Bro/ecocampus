@@ -2,12 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { listMyFavorites, unfavoriteItem } from '../../api/favorite.api'
 import type { FavoriteItemSummary } from '../../api/favorite.api'
 import { queryKeys } from '../../api/queryKeys'
 import emptyFavoritesImage from '../../assets/favorites/empty-favorites.png'
 import { MarketplaceItemCard, MarketplaceShell } from '../../components/marketplace'
+import { listDemandFavorites, subscribeDemandFavorites, unfavoriteDemand } from '../orders/demandFavorites'
+
+type FavoriteTab = 'items' | 'demands' | 'price'
 
 const pageSize = 8
 const emptyFavorites: FavoriteItemSummary[] = []
@@ -33,6 +36,10 @@ export function FavoritesPage() {
   const [pickupMode, setPickupMode] = useState<PickupMode>('全部')
   const [page, setPage] = useState(1)
   const [batchMode, setBatchMode] = useState(false)
+  const [activeTab, setActiveTab] = useState<FavoriteTab>('items')
+  const [, setDemandFavoriteVersion] = useState(0)
+
+  useEffect(() => subscribeDemandFavorites(() => setDemandFavoriteVersion((value) => value + 1)), [])
 
   const favoritesQuery = useQuery({
     queryKey: queryKeys.favorites.mine,
@@ -48,6 +55,7 @@ export function FavoritesPage() {
 
   const allItems = favoritesQuery.data?.data.items ?? emptyFavorites
   const invalidItems = allItems.filter((item) => item.status !== 'ON_SALE')
+  const demandFavorites = listDemandFavorites()
 
   const filteredItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -104,21 +112,39 @@ export function FavoritesPage() {
       >
         <h1>我的收藏</h1>
         <div className="favorite-tabs" role="tablist" aria-label="收藏类型">
-          <button type="button" className="active" role="tab" aria-selected="true">
+          <button
+            type="button"
+            className={activeTab === 'items' ? 'active' : undefined}
+            role="tab"
+            aria-selected={activeTab === 'items'}
+            onClick={() => setActiveTab('items')}
+          >
             商品收藏（{allItems.length}）
           </button>
-          <button type="button" role="tab" aria-selected="false">
-            求购关注（5）
+          <button
+            type="button"
+            className={activeTab === 'demands' ? 'active' : undefined}
+            role="tab"
+            aria-selected={activeTab === 'demands'}
+            onClick={() => setActiveTab('demands')}
+          >
+            求购关注（{demandFavorites.length}）
           </button>
-          <button type="button" role="tab" aria-selected="false">
-            降价提醒（3）
+          <button
+            type="button"
+            className={activeTab === 'price' ? 'active' : undefined}
+            role="tab"
+            aria-selected={activeTab === 'price'}
+            onClick={() => setActiveTab('price')}
+          >
+            降价提醒（0）
           </button>
         </div>
       </motion.section>
 
       <section className="favorites-content-grid">
         <div className="favorites-list-panel">
-          <div className="filters-panel" aria-label="收藏筛选">
+          {activeTab === 'items' ? <div className="filters-panel" aria-label="收藏筛选">
             <FilterRow label="分类">
               {categories.map((item) => (
                 <button
@@ -157,9 +183,9 @@ export function FavoritesPage() {
                 </button>
               ))}
             </FilterRow>
-          </div>
+          </div> : null}
 
-          <div className="favorites-toolbar">
+          {activeTab === 'items' ? <div className="favorites-toolbar">
             <label className="batch-toggle">
               <input type="checkbox" checked={batchMode} onChange={(event) => setBatchMode(event.target.checked)} />
               批量管理
@@ -168,9 +194,9 @@ export function FavoritesPage() {
               最新收藏
               <ChevronDown size={17} />
             </button>
-          </div>
+          </div> : null}
 
-          {favoritesQuery.isLoading ? (
+          {activeTab === 'items' && favoritesQuery.isLoading ? (
             <div className="favorites-card-grid" aria-label="收藏加载中">
               {Array.from({ length: 8 }).map((_, index) => (
                 <div className="favorite-card skeleton" key={index}>
@@ -182,7 +208,7 @@ export function FavoritesPage() {
             </div>
           ) : null}
 
-          {favoritesQuery.isError ? (
+          {activeTab === 'items' && favoritesQuery.isError ? (
             <div className="favorites-empty-state compact">
               <span className="painted-asset painted-asset--empty-inline">
                 <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
@@ -195,7 +221,7 @@ export function FavoritesPage() {
             </div>
           ) : null}
 
-          {!favoritesQuery.isLoading && !favoritesQuery.isError && visibleItems.length === 0 ? (
+          {activeTab === 'items' && !favoritesQuery.isLoading && !favoritesQuery.isError && visibleItems.length === 0 ? (
             <div className="favorites-empty-state compact">
               <span className="painted-asset painted-asset--empty-inline">
                 <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
@@ -205,7 +231,7 @@ export function FavoritesPage() {
             </div>
           ) : null}
 
-          {!favoritesQuery.isLoading && !favoritesQuery.isError && visibleItems.length > 0 ? (
+          {activeTab === 'items' && !favoritesQuery.isLoading && !favoritesQuery.isError && visibleItems.length > 0 ? (
             <div className="favorites-card-grid">
               {visibleItems.map((item, index) => (
                 <MarketplaceItemCard
@@ -241,7 +267,58 @@ export function FavoritesPage() {
             </div>
           ) : null}
 
-          <footer className="favorites-pagination" aria-label="收藏分页">
+          {activeTab === 'demands' && demandFavorites.length === 0 ? (
+            <div className="favorites-empty-state compact">
+              <span className="painted-asset painted-asset--empty-inline">
+                <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+              </span>
+              <h2>还没有关注求购</h2>
+              <p>去求购广场看看同学们正在找什么，关注后会出现在这里。</p>
+              <a className="favorites-empty-link" href="/orders/purchase/demand">
+                去求购广场
+              </a>
+            </div>
+          ) : null}
+
+          {activeTab === 'demands' && demandFavorites.length > 0 ? (
+            <div className="demand-follow-list">
+              {demandFavorites.map((item) => (
+                <article className="demand-follow-card" key={item.id}>
+                  <img src={item.image} alt={item.title} />
+                  <div>
+                    <header>
+                      <h2>{item.title}</h2>
+                      <strong>{item.budget}</strong>
+                    </header>
+                    <p>期望分类：{item.category}</p>
+                    <p>{item.description}</p>
+                    <small>
+                      发布者：{item.author} · {item.publishedAt}
+                    </small>
+                    <footer>
+                      <a href={`/orders/purchase/demand/${item.id}/detail`}>查看详情</a>
+                      <a href="/messages">联系发布者</a>
+                      <button type="button" onClick={() => unfavoriteDemand(item.id)}>
+                        取消关注
+                      </button>
+                    </footer>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
+
+          {activeTab === 'price' ? (
+            <div className="favorites-empty-state compact">
+              <span className="painted-asset painted-asset--empty-inline">
+                <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+              </span>
+              <h2>暂无降价提醒</h2>
+              <p>收藏商品后，后续可以在这里查看价格变化。</p>
+            </div>
+          ) : null}
+
+          {activeTab === 'items' ? <footer className="favorites-pagination" aria-label="收藏分页">
             <span>共 {allItems.length} 条收藏</span>
             <div>
               <button type="button" onClick={() => setPage(Math.max(1, currentPage - 1))} aria-label="上一页">
@@ -268,7 +345,7 @@ export function FavoritesPage() {
               8 条/页
               <ChevronDown size={16} />
             </button>
-          </footer>
+          </footer> : null}
         </div>
 
         <aside className="expired-panel">

@@ -28,9 +28,11 @@ import {
 import { useMemo, useState } from 'react'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
+import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './MyItemsPage.css'
+import '../../styles/marketplace-consistency.css'
 import { mineItems, statusLabels } from './myItems.mock'
 import type { MineItem, MineStatus } from './myItems.mock'
 
@@ -51,8 +53,8 @@ const categoryNav = [
 const userNav = [
   { label: '我的收藏', icon: Star, to: '/favorites' },
   { label: '我的发布', icon: Store, to: '/items/mine', active: true },
-  { label: '购买订单', icon: ClipboardList, to: '/orders' },
-  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sales' },
+  { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
+  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
@@ -97,7 +99,8 @@ export function MyItemsPage() {
   }
 
   return (
-    <div className="mine-page">
+    <UnifiedMarketplacePage activeUserLabel="我的发布">
+      <div className="mine-page">
       <header className="mine-topbar">
         <a className="mine-brand" href="/">
           <img src={campusGateImage} alt="" aria-hidden="true" />
@@ -249,7 +252,8 @@ export function MyItemsPage() {
           </aside>
         </main>
       </div>
-    </div>
+      </div>
+    </UnifiedMarketplacePage>
   )
 }
 

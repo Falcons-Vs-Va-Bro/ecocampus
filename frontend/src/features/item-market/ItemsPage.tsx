@@ -73,6 +73,7 @@ import ticketsGraduationImage from '../../assets/favorites/items/tickets-graduat
 import ticketsLectureImage from '../../assets/favorites/items/tickets-lecture.png'
 import ticketsMovieImage from '../../assets/favorites/items/tickets-movie.png'
 import ticketsTheaterImage from '../../assets/favorites/items/tickets-theater.png'
+import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './HomePage.css'
 import './ItemsPage.css'
@@ -167,8 +168,8 @@ const conditionFilters = ['全部', '全新', '九成新', '八成新', '可小�
 const userNav = [
   { label: '我的收藏', icon: Star, to: '/favorites' },
   { label: '我的发布', icon: Store, to: '/items/mine' },
-  { label: '购买订单', icon: ClipboardList, to: '/orders' },
-  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sales' },
+  { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
+  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
 ]
@@ -498,7 +499,13 @@ export function ItemsPage() {
   }
 
   return (
-    <div className="market-page items-page">
+    <UnifiedMarketplacePage
+      activeCategoryLabel={categoryRoutes.find((item) => item.to === location.pathname)?.sidebarLabel ?? '全部分类'}
+      keyword={keyword}
+      onKeywordChange={(value) => resetPage(() => setKeyword(value))}
+      onSearch={() => setPage(1)}
+    >
+      <div className="market-page items-page">
       <header className="market-topbar">
         <a className="market-brand" href="/">
           <img src={campusGateImage} alt="" aria-hidden="true" />
@@ -743,7 +750,8 @@ export function ItemsPage() {
           </section>
         </main>
       </div>
-    </div>
+      </div>
+    </UnifiedMarketplacePage>
   )
 }
 

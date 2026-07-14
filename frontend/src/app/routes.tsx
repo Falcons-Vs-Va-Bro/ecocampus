@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom'
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { NotFoundPage } from '../components/layout/NotFoundPage'
 import { PlaceholderPage } from '../components/layout/PlaceholderPage'
@@ -15,7 +15,7 @@ import { ItemsPage } from '../features/item-market/ItemsPage'
 import { EditItemPage } from '../features/item-publish/EditItemPage'
 import { MyItemsPage } from '../features/item-publish/MyItemsPage'
 import { PublishPage } from '../features/item-publish/PublishPage'
-import { OrdersPage } from '../features/orders'
+import { OrdersPage, PurchaseDemandDetailPage, PurchaseDemandMinePage, PurchaseDemandNewPage, PurchaseDemandPage } from '../features/orders'
 import { ProfilePage } from '../features/profile/ProfilePage'
 import { VerifyPage } from '../features/profile/VerifyPage'
 import type { RouteMeta } from '../types/routes'
@@ -115,14 +115,56 @@ function createRoute(meta: RouteMeta): RouteObject {
   if (meta.path === '/orders') {
     return {
       path: 'orders',
-      element: <OrdersPage role="BUYER" />,
+      element: <Navigate to="/orders/purchase" replace />,
+    }
+  }
+
+  if (meta.path === '/orders/purchase') {
+    return {
+      path: meta.path.replace(/^\//, ''),
+      element: <OrdersPage />,
     }
   }
 
   if (meta.path === '/orders/sales') {
     return {
       path: 'orders/sales',
+      element: <Navigate to="/orders/sale" replace />,
+    }
+  }
+
+  if (meta.path === '/orders/sale') {
+    return {
+      path: 'orders/sale',
       element: <OrdersPage role="SELLER" />,
+    }
+  }
+
+  if (meta.path === '/orders/purchase/demand') {
+    return {
+      path: 'orders/purchase/demand',
+      element: <PurchaseDemandPage />,
+    }
+  }
+
+  if (meta.path === '/orders/purchase/demand/:id/detail') {
+    return {
+      path: 'orders/purchase/demand/:id/detail',
+      element: <PurchaseDemandDetailPage />,
+    }
+  }
+
+  if (meta.path === '/orders/purchase/demand/new') {
+    return {
+      path: 'orders/purchase/demand/new',
+      element: <PurchaseDemandNewPage />,
+    }
+  }
+
+  if (meta.path === '/orders/purchase/demand/mine') {
+    return {
+      path: 'orders/purchase/demand/mine',
+      element: <PurchaseDemandMinePage />,
     }
   }
 

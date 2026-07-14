@@ -32,9 +32,11 @@ import { useRef, useState } from 'react'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import profileVerifyCardImage from '../../assets/favorites/profile-verify-card.png'
+import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './ProfilePage.css'
+import '../../styles/marketplace-consistency.css'
 
 const categoryNav = [
   { label: '首页', icon: Home, to: '/' },
@@ -53,8 +55,8 @@ const categoryNav = [
 const userNav = [
   { label: '我的收藏', icon: Star, to: '/favorites' },
   { label: '我的发布', icon: Store, to: '/items/mine' },
-  { label: '购买订单', icon: ClipboardList, to: '/orders' },
-  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sales' },
+  { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
+  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile', active: true },
 ]
@@ -146,7 +148,8 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="profile-page">
+    <UnifiedMarketplacePage activeUserLabel="个人中心">
+      <div className="profile-page">
       <header className="profile-topbar">
         <a className="profile-brand" href="/">
           <img src={campusGateImage} alt="" aria-hidden="true" />
@@ -379,7 +382,8 @@ export function ProfilePage() {
           </section>
         </div>
       ) : null}
-    </div>
+      </div>
+    </UnifiedMarketplacePage>
   )
 }
 

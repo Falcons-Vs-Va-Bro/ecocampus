@@ -30,9 +30,11 @@ import {
 import { useRef, useState } from 'react'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
+import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './VerifyPage.css'
+import '../../styles/marketplace-consistency.css'
 
 const categoryNav = [
   { label: '首页', icon: Home, to: '/' },
@@ -51,8 +53,8 @@ const categoryNav = [
 const userNav = [
   { label: '我的收藏', icon: Star, to: '/favorites' },
   { label: '我的发布', icon: Store, to: '/items/mine' },
-  { label: '购买订单', icon: ClipboardList, to: '/orders' },
-  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sales' },
+  { label: '购买订单', icon: ClipboardList, to: '/orders/purchase' },
+  { label: '出售订单', icon: BriefcaseBusiness, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile', active: true },
 ]
@@ -80,7 +82,8 @@ export function VerifyPage() {
   }
 
   return (
-    <div className="verify-page">
+    <UnifiedMarketplacePage activeUserLabel="个人中心">
+      <div className="verify-page">
       <header className="verify-topbar">
         <a className="verify-brand" href="/">
           <img src={campusGateImage} alt="" aria-hidden="true" />
@@ -340,7 +343,8 @@ export function VerifyPage() {
           </aside>
         </main>
       </div>
-    </div>
+      </div>
+    </UnifiedMarketplacePage>
   )
 }
 

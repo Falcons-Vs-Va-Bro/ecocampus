@@ -74,8 +74,14 @@ frontend/
 | `/favorites` | 我的收藏 | `USER` |
 | `/messages` | 私信会话列表 | `USER` |
 | `/messages/:conversationId` | 私信详情 | `USER` |
-| `/orders` | 购买订单 | `USER` |
-| `/orders/sales` | 出售订单 | `USER` |
+| `/orders` | 购买订单兼容入口，重定向到 `/orders/purchase` | `USER` |
+| `/orders/sales` | 出售订单旧入口，重定向到 `/orders/sale` | `USER` |
+| `/orders/purchase` | 购买订单 | `USER` |
+| `/orders/sale` | 出售订单 | `USER` |
+| `/orders/purchase/demand` | 求购广场 | `USER` |
+| `/orders/purchase/demand/:id/detail` | 求购详情 | `USER` |
+| `/orders/purchase/demand/new` | 发布求购 | `USER` |
+| `/orders/purchase/demand/mine` | 我的求购 / 匹配结果 | `USER` |
 | `/demands` | 求购列表 | 公开 |
 | `/demands/new` | 发布求购 | `USER` |
 | `/demands/mine` | 我的求购/匹配结果 | `USER` |
@@ -110,8 +116,12 @@ frontend/
 | `/favorites` | `GET /users/me/favorites`, `DELETE /items/{itemId}/favorite` | 已覆盖 |
 | `/messages` | `GET /conversations?page=1&size=20` | 已覆盖 |
 | `/messages/:conversationId` | `GET /conversations/{conversationId}/messages?page=1&size=20`, `POST /conversations/{conversationId}/messages` | 已覆盖 |
-| `/orders` | `GET /orders?role=BUYER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
-| `/orders/sales` | `GET /orders?role=SELLER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
+| `/orders/purchase` | `GET /orders?role=BUYER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
+| `/orders/sale` | `GET /orders?role=SELLER`, `GET /orders/{orderId}`, `POST /orders/{orderId}/status` | 已覆盖 |
+| `/orders/purchase/demand` | `GET /demands` | mock-first 页面已覆盖 |
+| `/orders/purchase/demand/:id/detail` | `GET /demands/{demandId}`, `GET /demands/{demandId}/matches` | mock-first 页面已覆盖 |
+| `/orders/purchase/demand/new` | `POST /demands` | mock-first 页面已覆盖 |
+| `/orders/purchase/demand/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches`, `POST /demands/{demandId}/close` | mock-first 页面已覆盖 |
 | `/demands` | `GET /demands` | 已覆盖 |
 | `/demands/new` | `GET /categories`, `POST /demands` | 已覆盖 |
 | `/demands/mine` | `GET /users/me/demands`, `GET /demands/{demandId}/matches?limit=20`, `POST /demands/{demandId}/close` | 已覆盖 |
