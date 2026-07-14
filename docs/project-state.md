@@ -123,6 +123,7 @@ GitHub Pages frontend
 - `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.14 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-14 管理员路由域隔离已由 GitHub Pages 发布；真实管理员登录返回 `ADMIN/VERIFIED`，后台 summary API 返回 200，线上产物确认登录默认目标、全局管理员重定向和退出登录逻辑均已包含。
+- 2026-07-14 self-hosted 后端 CD 首次运行成功：Mac mini Runner 在 48 秒内完成 32 项测试、JAR 构建、原子部署和健康检查；部署 SHA 与 `main` 一致，公网 health 为 `UP`，Runner 空闲 RSS 约 97 MB。
 - 相对 Markdown 链接检查和 `git diff --check` 通过。
 - 公网首页 HTTP 200，API health 为 `UP`；深层路由返回相同前端内容但 HTTP 404。
 
