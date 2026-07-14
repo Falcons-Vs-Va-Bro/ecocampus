@@ -48,6 +48,8 @@ springdoc:
     enabled: ${SPRINGDOC_ENABLED:false}
 
 ecocampus:
+  cors:
+    allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:}
   security:
     jwt-secret: ${JWT_SECRET:}
   swagger-ui:
