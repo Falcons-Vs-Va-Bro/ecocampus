@@ -228,9 +228,12 @@ function createRoute(meta: RouteMeta): RouteObject {
   }
 }
 
-export const router = createBrowserRouter([
-  {
-    element: <AppLayout />,
-    children: [...routeCatalog.map(createRoute), { path: '*', element: <NotFoundPage /> }],
-  },
-])
+export const router = createBrowserRouter(
+  [
+    {
+      element: <AppLayout />,
+      children: [...routeCatalog.map(createRoute), { path: '*', element: <NotFoundPage /> }],
+    },
+  ],
+  { basename: import.meta.env.BASE_URL },
+)
