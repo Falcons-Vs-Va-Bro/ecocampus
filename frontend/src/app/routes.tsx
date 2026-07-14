@@ -34,7 +34,7 @@ const itemCategoryPaths = [
   '/items/others',
 ]
 
-function createRoute(meta: RouteMeta): RouteObject {
+function createRouteContent(meta: RouteMeta): RouteObject {
   if (meta.path === '/login') {
     return {
       path: 'login',
@@ -171,60 +171,60 @@ function createRoute(meta: RouteMeta): RouteObject {
   if (meta.path === '/admin/items/review') {
     return {
       path: 'admin/items/review',
-      element: (
-        <RouteGuard meta={meta} showNotice={false}>
-          <AdminReviewPage />
-        </RouteGuard>
-      ),
+      element: <AdminReviewPage />,
     }
   }
 
   if (meta.path === '/admin/items') {
     return {
       path: 'admin/items',
-      element: (
-        <RouteGuard meta={meta} showNotice={false}>
-          <AdminItemsPage />
-        </RouteGuard>
-      ),
+      element: <AdminItemsPage />,
     }
   }
 
   if (meta.path === '/admin') {
     return {
       path: 'admin',
-      element: (
-        <RouteGuard meta={meta} showNotice={false}>
-          <AdminDashboardPage />
-        </RouteGuard>
-      ),
+      element: <AdminDashboardPage />,
     }
   }
 
   if (meta.path === '/admin/users') {
-    return { path: 'admin/users', element: <RouteGuard meta={meta} showNotice={false}><AdminUsersPage /></RouteGuard> }
+    return { path: 'admin/users', element: <AdminUsersPage /> }
   }
 
   if (meta.path === '/admin/categories') {
-    return { path: 'admin/categories', element: <RouteGuard meta={meta} showNotice={false}><AdminCategoriesPage /></RouteGuard> }
+    return { path: 'admin/categories', element: <AdminCategoriesPage /> }
   }
 
   if (meta.path === '/') {
     return { index: true, element: <HomePage /> }
   }
 
-  const element =
-    meta.module === 'admin' ? (
-      <RouteGuard meta={meta}>
-        <PlaceholderPage meta={meta} />
-      </RouteGuard>
-    ) : (
-      <MarketplacePlaceholderPage meta={meta} />
-    )
+  const element = meta.module === 'admin'
+    ? <PlaceholderPage meta={meta} />
+    : <MarketplacePlaceholderPage meta={meta} />
 
   return {
     path: meta.path.replace(/^\//, ''),
     element,
+  }
+}
+
+function createRoute(meta: RouteMeta): RouteObject {
+  const route = createRouteContent(meta)
+
+  if (!route.element || meta.guard === 'public' || meta.guard === 'interaction') {
+    return route
+  }
+
+  return {
+    ...route,
+    element: (
+      <RouteGuard meta={meta} showNotice={false}>
+        {route.element}
+      </RouteGuard>
+    ),
   }
 }
 

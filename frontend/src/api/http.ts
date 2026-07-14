@@ -54,10 +54,6 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !error.config?.url?.endsWith('/auth/login')) {
       useAuthStore.getState().clearSession()
-      if (window.location.pathname !== '/login') {
-        const returnTo = `${window.location.pathname}${window.location.search}`
-        window.location.assign(`/login?returnTo=${encodeURIComponent(returnTo)}`)
-      }
     }
 
     return Promise.reject(apiError)

@@ -253,6 +253,12 @@
     transform 180ms ease;
 }
 
+a.icon-button {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+
 .icon-button:hover {
   color: #2d77bd;
   transform: translateY(-2px) rotate(-2deg);
@@ -283,6 +289,38 @@
   color: #2f2a25;
   font-size: 16px;
   font-weight: 800;
+  text-decoration: none;
+}
+
+.student-profile--guest {
+  min-height: 48px;
+  padding: 0 14px 0 4px;
+  border: 2px solid rgba(55, 128, 198, 0.55);
+  border-radius: 9px;
+  color: #256aa9;
+  background: rgba(238, 246, 255, 0.78);
+}
+
+.student-logout {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid rgba(72, 105, 139, 0.34);
+  border-radius: 7px;
+  color: #5d5147;
+  background: rgba(255, 255, 255, 0.62);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.student-logout:hover {
+  border-color: #c95d54;
+  color: #b8433b;
+  background: #fff4f1;
 }
 
 .student-profile strong {

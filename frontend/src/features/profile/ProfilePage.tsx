@@ -28,12 +28,14 @@ import {
   User,
 } from 'lucide-react'
 import type { ChangeEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
 import profileVerifyCardImage from '../../assets/favorites/profile-verify-card.png'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useCurrentUserIdentity } from '../../hooks/useCurrentUserIdentity'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './ProfilePage.css'
 import '../../styles/marketplace-consistency.css'
@@ -79,6 +81,8 @@ const initialAddresses: Address[] = [
 ]
 
 export function ProfilePage() {
+  const navigate = useNavigate()
+  const identity = useCurrentUserIdentity()
   const unreadMessageCount = useUnreadMessageCount()
   useDocumentTitle('厦大闲置 - 个人中心')
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -92,6 +96,21 @@ export function ProfilePage() {
   const [phoneVisible, setPhoneVisible] = useState(true)
   const [messageReminder, setMessageReminder] = useState(true)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const displayNickname = identity.currentUser?.nickname ?? identity.nickname
+  const verificationLabel = verificationStatusLabel(identity.currentUser?.verificationStatus)
+
+  useEffect(() => {
+    if (!identity.currentUser) {
+      return
+    }
+
+    const nextStudentNo = identity.currentUser.studentNoMasked ?? '尚未提交'
+    const nextPhone = maskAccount(identity.currentUser.phone)
+    setStudentNo(nextStudentNo)
+    setPhoneNumber(nextPhone)
+    setDraftStudentNo(nextStudentNo)
+    setDraftPhoneNumber(nextPhone)
+  }, [identity.currentUser])
 
   function setDefaultAddress(addressId: number) {
     setAddresses((current) => current.map((item) => ({ ...item, isDefault: item.id === addressId })))
@@ -144,7 +163,8 @@ export function ProfilePage() {
   }
 
   function confirmLogout() {
-    window.location.href = '/login'
+    identity.logout()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -173,9 +193,9 @@ export function ProfilePage() {
             <Mail size={26} />
           </NoticeButton>
           <button type="button" className="profile-user-button">
-            <span className="profile-avatar mini">海</span>
-            <strong>海风吹过嘉庚楼</strong>
-            <em>学生</em>
+            <span className="profile-avatar mini">{identity.avatarText}</span>
+            <strong>{displayNickname}</strong>
+            <em>{identity.roleLabel}</em>
             <ChevronDown size={17} />
           </button>
         </div>
@@ -215,10 +235,10 @@ export function ProfilePage() {
             <section className="profile-card">
               <div className="student-card">
                 <div className="profile-avatar large" aria-hidden="true">
-                  {avatarPreview ? <img src={avatarPreview} alt="" /> : '海'}
+                  {avatarPreview ? <img src={avatarPreview} alt="" /> : identity.avatarText}
                 </div>
                 <div>
-                  <h2>海风吹过嘉庚楼</h2>
+                  <h2>{displayNickname}</h2>
                   {isEditingProfile ? (
                     <div className="profile-edit-fields">
                       <label>
@@ -247,7 +267,7 @@ export function ProfilePage() {
                   校园核验：
                   <strong>
                     <CheckCircle2 size={19} />
-                    已核验
+                    {verificationLabel}
                   </strong>
                 </p>
                 <p>
@@ -389,6 +409,29 @@ export function ProfilePage() {
 
 function XCircleIcon() {
   return <span className="x-circle-icon">×</span>
+}
+
+function maskAccount(value: string) {
+  if (value.length <= 7) {
+    return value
+  }
+
+  return `${value.slice(0, 3)}****${value.slice(-4)}`
+}
+
+function verificationStatusLabel(status?: string) {
+  switch (status) {
+    case 'VERIFIED':
+      return '已核验'
+    case 'PENDING_REVIEW':
+      return '审核中'
+    case 'REJECTED':
+      return '未通过'
+    case 'BLACKLISTED':
+      return '已限制'
+    default:
+      return '未核验'
+  }
 }
 
 function AddressCard({

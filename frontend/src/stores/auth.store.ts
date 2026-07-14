@@ -14,7 +14,9 @@ interface AuthState {
   clearSession: () => void
 }
 
-const authStorageName = import.meta.env.VITE_USE_MOCKS === 'true' ? 'ecocampus.auth.mock' : 'ecocampus.auth.real'
+// v2 intentionally invalidates the pre-production session that shared the same
+// custom domain. New logins remain persisted normally after the migration.
+const authStorageName = import.meta.env.VITE_USE_MOCKS === 'true' ? 'ecocampus.auth.mock.v2' : 'ecocampus.auth.real.v2'
 
 export const useAuthStore = create<AuthState>()(persist((set) => ({
   accessToken: undefined,

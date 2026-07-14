@@ -3,11 +3,12 @@ import {
   BookOpen,
   Box,
   Camera,
-  ChevronDown,
   ClipboardList,
   Dumbbell,
   Grid3X3,
   Home,
+  LogIn,
+  LogOut,
   Mail,
   MessageCircle,
   Package,
@@ -19,6 +20,8 @@ import {
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useCurrentUserIdentity } from '../../hooks/useCurrentUserIdentity'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import campusGateImage from '../../assets/favorites/campus-gate.png'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
@@ -73,6 +76,8 @@ export function MarketplaceShell({
   shellClassName,
 }: MarketplaceShellProps) {
   const shouldReduceMotion = useReducedMotion()
+  const navigate = useNavigate()
+  const identity = useCurrentUserIdentity()
   const unreadMessageCount = useUnreadMessageCount()
   const notificationCount = 0
 
@@ -112,20 +117,39 @@ export function MarketplaceShell({
         </form>
 
         <div className="favorites-userbar" aria-label="用户快捷入口">
-          <button type="button" className="icon-button" aria-label="通知">
-            <Bell size={25} />
-            {notificationCount > 0 ? <span>{notificationCount}</span> : null}
-          </button>
-          <button type="button" className="icon-button" aria-label="站内信">
-            <Mail size={26} />
-            {unreadMessageCount > 0 ? <span>{unreadMessageCount}</span> : null}
-          </button>
-          <div className="student-profile">
-            <span className="student-avatar">海</span>
-            <strong>海风吹过嘉庚楼</strong>
-            <em>学生</em>
-            <ChevronDown size={18} />
-          </div>
+          {identity.isAuthenticated ? (
+            <>
+              <button type="button" className="icon-button" aria-label="通知">
+                <Bell size={25} />
+                {notificationCount > 0 ? <span>{notificationCount}</span> : null}
+              </button>
+              <Link className="icon-button" aria-label="站内信" to="/messages">
+                <Mail size={26} />
+                {unreadMessageCount > 0 ? <span>{unreadMessageCount}</span> : null}
+              </Link>
+              <Link className="student-profile" to="/profile" aria-label="当前登录用户">
+                <span className="student-avatar">{identity.avatarText}</span>
+                <strong>{identity.nickname}</strong>
+                <em>{identity.roleLabel}</em>
+              </Link>
+              <button
+                type="button"
+                className="student-logout"
+                onClick={() => {
+                  identity.logout()
+                  navigate('/')
+                }}
+              >
+                <LogOut size={17} />
+                退出
+              </button>
+            </>
+          ) : (
+            <Link className="student-profile student-profile--guest" to="/login">
+              <span className="student-avatar"><LogIn size={20} /></span>
+              <strong>登录 / 注册</strong>
+            </Link>
+          )}
         </div>
       </motion.header>
 
