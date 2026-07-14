@@ -38,6 +38,7 @@ https://ecocampus.teamdsb.online
 ## 验证
 
 - GitHub Actions 的 `Deploy frontend to GitHub Pages` 工作流成功。
+- Pages 自定义域名显示 DNS check successful，并启用强制 HTTPS。
 - `/`、`/messages`、`/admin/users` 直接访问均返回前端应用。
 - `https://ecocampus-api.teamdsb.online/api/v1/health` 返回 `UP`。
 - 登录、`/auth/me` 和正式前端 Origin 的 CORS 预检成功。
