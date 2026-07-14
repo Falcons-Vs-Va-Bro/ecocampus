@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { listMyFavorites, unfavoriteItem } from '../../api/favorite.api'
 import type { FavoriteItemSummary } from '../../api/favorite.api'
 import { queryKeys } from '../../api/queryKeys'
-import emptyFavoritesImage from '../../assets/favorites/empty-favorites.png'
+import emptyFavoritesImage from '../../assets/favorites/empty-favorites.webp'
 import { MarketplaceItemCard, MarketplaceShell } from '../../components/marketplace'
 import { listDemandFavorites, subscribeDemandFavorites, unfavoriteDemand } from '../orders/demandFavorites'
 

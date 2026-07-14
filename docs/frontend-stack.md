@@ -200,7 +200,15 @@ frontend/
 - 商品审核页要同时展示图片、描述、发布人核验状态和历史违规记录。
 - 数据看板先做发布量、成交统计、待审核数量、活跃用户。
 
-## 10. 参考来源
+## 10. 前端性能基线
+
+- 页面组件统一通过 `frontend/src/app/routeComponents.ts` 使用 `React.lazy` 按路由加载，`App.tsx` 提供轻量 `Suspense` 回退；不要在 `routes.tsx` 或共享壳中重新静态导入完整页面。
+- 管理后台壳仅在进入后台路由时加载，公开市场首页不应预加载后台表格、图表和管理页面代码。
+- 仓库内位图资产统一使用 WebP。商品列表首屏仅允许前 4 张商品图使用 eager/high priority，其余商品图、侧栏插画和空状态插画使用 `loading="lazy"` 与异步解码。
+- 图片元素应声明稳定宽高，避免加载期间布局抖动；新增图片需先压缩，不把 PNG/JPEG 原图与 WebP 副本同时打入生产包。
+- 当前生产构建的入口 chunk 约 628 kB（gzip 约 206 kB），路由页面拆为独立 chunk；后续新增页面不得无理由回到单一页面大包。
+
+## 11. 参考来源
 
 - React 官方建议新项目使用构建工具，Vite 是可选方案之一：https://react.dev/learn/build-a-react-app-from-scratch
 - Vite 官方 React/TypeScript 模板说明：https://vite.dev/guide/

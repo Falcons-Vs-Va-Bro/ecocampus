@@ -57,7 +57,15 @@ export function MarketplaceItemCard({
       </button>
       <div className="favorite-image">
         {coverImageUrl ? (
-          <img src={coverImageUrl} alt={title} loading="lazy" />
+          <img
+            src={coverImageUrl}
+            alt={title}
+            loading={motionIndex < 4 ? 'eager' : 'lazy'}
+            decoding="async"
+            fetchPriority={motionIndex === 0 ? 'high' : 'auto'}
+            width="360"
+            height="240"
+          />
         ) : (
           <span className="favorite-image-placeholder">待上传</span>
         )}

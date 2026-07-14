@@ -1,9 +1,9 @@
-import basketballImage from '../../assets/favorites/items/basketball.jpg'
-import calculatorImage from '../../assets/favorites/items/calculator.jpg'
-import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
-import guitarImage from '../../assets/favorites/items/instruments-guitar.png'
-import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
-import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
+import basketballImage from '../../assets/favorites/items/basketball.webp'
+import calculatorImage from '../../assets/favorites/items/calculator.webp'
+import deskLampImage from '../../assets/favorites/items/desk-lamp.webp'
+import guitarImage from '../../assets/favorites/items/instruments-guitar.webp'
+import mathBooksImage from '../../assets/favorites/items/math-books.webp'
+import suitcaseImage from '../../assets/favorites/items/suitcase.webp'
 
 export type DemandStatus = 'matching' | 'talking' | 'matched' | 'expiring'
 

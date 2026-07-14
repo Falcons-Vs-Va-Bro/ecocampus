@@ -17,8 +17,8 @@ import { motion, useReducedMotion } from 'motion/react'
 import type { FormEvent, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import campusGateImage from '../../assets/favorites/campus-gate.png'
-import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
+import campusGateImage from '../../assets/favorites/campus-gate.webp'
+import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
 import './AdminShell.css'
 
 interface AdminShellProps {

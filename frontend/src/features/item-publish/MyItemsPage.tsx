@@ -26,8 +26,8 @@ import {
   User,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import campusGateImage from '../../assets/favorites/campus-gate.png'
-import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
+import campusGateImage from '../../assets/favorites/campus-gate.webp'
+import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'

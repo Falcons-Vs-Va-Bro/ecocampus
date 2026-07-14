@@ -1,5 +1,7 @@
+import { lazy } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { AdminShell } from '../admin'
+
+const AdminShell = lazy(() => import('../admin/AdminShell').then((module) => ({ default: module.AdminShell })))
 
 export function AppLayout() {
   const location = useLocation()

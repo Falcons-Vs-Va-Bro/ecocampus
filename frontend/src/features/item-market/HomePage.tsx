@@ -19,7 +19,7 @@ import { listCategories } from '../../api/category.api'
 import { listItems } from '../../api/item.api'
 import type { ItemSummary } from '../../api/item.api'
 import { queryKeys } from '../../api/queryKeys'
-import emptyFavoritesImage from '../../assets/favorites/empty-favorites.png'
+import emptyFavoritesImage from '../../assets/favorites/empty-favorites.webp'
 import { MarketplaceItemCard, MarketplaceShell } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './HomePage.css'
@@ -244,7 +244,7 @@ export function HomePage() {
           {hasItemsError ? (
             <div className="favorites-empty-state compact">
               <span className="painted-asset painted-asset--empty-inline">
-                <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+                <img src={emptyFavoritesImage} alt="" aria-hidden="true" loading="lazy" decoding="async" width="520" height="520" />
               </span>
               <h2>商品加载失败</h2>
               <p>{hasInvalidItemsResponse ? '接口返回的数据格式不正确，请稍后重试。' : '请确认已启用 mock 模式或后端接口可用。'}</p>
@@ -257,7 +257,7 @@ export function HomePage() {
           {!itemsQuery.isLoading && !hasItemsError && visibleItems.length === 0 ? (
             <div className="favorites-empty-state compact">
               <span className="painted-asset painted-asset--empty-inline">
-                <img src={emptyFavoritesImage} alt="" aria-hidden="true" />
+                <img src={emptyFavoritesImage} alt="" aria-hidden="true" loading="lazy" decoding="async" width="520" height="520" />
               </span>
               <h2>暂无符合条件的商品</h2>
               <p>换个分类、价格或关键词再试试。</p>

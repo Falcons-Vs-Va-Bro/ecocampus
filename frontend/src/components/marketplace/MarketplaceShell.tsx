@@ -23,8 +23,8 @@ import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCurrentUserIdentity } from '../../hooks/useCurrentUserIdentity'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
-import campusGateImage from '../../assets/favorites/campus-gate.png'
-import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
+import campusGateImage from '../../assets/favorites/campus-gate.webp'
+import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
 import './MarketplaceShell.css'
 
 const categoryNav = [
@@ -91,7 +91,16 @@ export function MarketplaceShell({
       >
         <a className="favorites-logo" href="/">
           <span className="painted-asset painted-asset--gate">
-            <img className="campus-gate-image" src={campusGateImage} alt="" aria-hidden="true" />
+            <img
+              className="campus-gate-image"
+              src={campusGateImage}
+              alt=""
+              aria-hidden="true"
+              decoding="async"
+              fetchPriority="high"
+              width="300"
+              height="127"
+            />
           </span>
           <span>
             <strong>厦大闲置</strong>
@@ -194,7 +203,7 @@ export function MarketplaceShell({
           </nav>
 
           <div className="campus-sketch painted-asset painted-asset--sidebar" aria-hidden="true">
-            <img src={campusSidebarImage} alt="" loading="lazy" />
+            <img src={campusSidebarImage} alt="" loading="lazy" decoding="async" width="280" height="420" />
           </div>
         </motion.aside>
 

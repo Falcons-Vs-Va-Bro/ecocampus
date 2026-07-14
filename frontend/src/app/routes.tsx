@@ -2,24 +2,35 @@ import type { RouteObject } from 'react-router-dom'
 import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { NotFoundPage } from '../components/layout/NotFoundPage'
-import { PlaceholderPage } from '../components/layout/PlaceholderPage'
 import { RouteGuard } from '../components/layout/RouteGuard'
-import { MarketplacePlaceholderPage } from '../components/marketplace'
-import { AdminCategoriesPage, AdminDashboardPage, AdminItemsPage, AdminReviewPage, AdminUsersPage } from '../features/admin'
-import { LoginPage } from '../features/auth/LoginPage'
-import { ConversationDetailPage, MessagesPage } from '../features/conversations'
-import { FavoritesPage } from '../features/favorites/FavoritesPage'
-import { ItemDetailPage } from '../features/item-detail'
-import { HomePage } from '../features/item-market/HomePage'
-import { ItemsPage } from '../features/item-market/ItemsPage'
-import { EditItemPage } from '../features/item-publish/EditItemPage'
-import { MyItemsPage } from '../features/item-publish/MyItemsPage'
-import { PublishPage } from '../features/item-publish/PublishPage'
-import { OrdersPage, PurchaseDemandDetailPage, PurchaseDemandMinePage, PurchaseDemandNewPage, PurchaseDemandPage } from '../features/orders'
-import { ProfilePage } from '../features/profile/ProfilePage'
-import { VerifyPage } from '../features/profile/VerifyPage'
 import type { RouteMeta } from '../types/routes'
 import { routeCatalog } from './routeCatalog'
+import {
+  AdminCategoriesPage,
+  AdminDashboardPage,
+  AdminItemsPage,
+  AdminReviewPage,
+  AdminUsersPage,
+  ConversationDetailPage,
+  EditItemPage,
+  FavoritesPage,
+  HomePage,
+  ItemDetailPage,
+  ItemsPage,
+  LoginPage,
+  MarketplacePlaceholderPage,
+  MessagesPage,
+  MyItemsPage,
+  OrdersPage,
+  PlaceholderPage,
+  ProfilePage,
+  PublishPage,
+  PurchaseDemandDetailPage,
+  PurchaseDemandMinePage,
+  PurchaseDemandNewPage,
+  PurchaseDemandPage,
+  VerifyPage,
+} from './routeComponents'
 
 const itemCategoryPaths = [
   '/items',

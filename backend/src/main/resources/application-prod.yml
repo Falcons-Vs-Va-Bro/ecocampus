@@ -9,9 +9,9 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       pool-name: EcoCampusMySqlPool
-      maximum-pool-size: ${DB_POOL_MAX_SIZE:5}
-      minimum-idle: ${DB_POOL_MIN_IDLE:1}
-      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS:30000}
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:12}
+      minimum-idle: ${DB_POOL_MIN_IDLE:3}
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT_MS:10000}
       validation-timeout: ${DB_POOL_VALIDATION_TIMEOUT_MS:5000}
       idle-timeout: ${DB_POOL_IDLE_TIMEOUT_MS:600000}
       max-lifetime: ${DB_POOL_MAX_LIFETIME_MS:1800000}
@@ -38,10 +38,10 @@ server:
   address: ${SERVER_ADDRESS:127.0.0.1}
   tomcat:
     threads:
-      max: ${SERVER_THREADS_MAX:40}
-      min-spare: ${SERVER_THREADS_MIN_SPARE:4}
-    max-connections: ${SERVER_MAX_CONNECTIONS:200}
-    accept-count: ${SERVER_ACCEPT_COUNT:50}
+      max: ${SERVER_THREADS_MAX:100}
+      min-spare: ${SERVER_THREADS_MIN_SPARE:8}
+    max-connections: ${SERVER_MAX_CONNECTIONS:300}
+    accept-count: ${SERVER_ACCEPT_COUNT:100}
 
 springdoc:
   api-docs:

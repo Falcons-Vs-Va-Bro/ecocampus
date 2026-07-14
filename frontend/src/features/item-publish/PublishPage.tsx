@@ -28,9 +28,9 @@ import {
   X,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
-import campusGateImage from '../../assets/favorites/campus-gate.png'
-import campusSidebarImage from '../../assets/favorites/campus-sidebar.png'
-import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
+import campusGateImage from '../../assets/favorites/campus-gate.webp'
+import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
+import deskLampImage from '../../assets/favorites/items/desk-lamp.webp'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'

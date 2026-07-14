@@ -1,9 +1,9 @@
-import airpodsImage from '../../assets/favorites/items/airpods.jpg'
-import basketballImage from '../../assets/favorites/items/basketball.jpg'
-import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
-import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
-import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.jpg'
-import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
+import airpodsImage from '../../assets/favorites/items/airpods.webp'
+import basketballImage from '../../assets/favorites/items/basketball.webp'
+import deskLampImage from '../../assets/favorites/items/desk-lamp.webp'
+import mathBooksImage from '../../assets/favorites/items/math-books.webp'
+import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.webp'
+import suitcaseImage from '../../assets/favorites/items/suitcase.webp'
 
 export type MineStatus = 'on_sale' | 'off_shelf' | 'reviewing' | 'violation'
 

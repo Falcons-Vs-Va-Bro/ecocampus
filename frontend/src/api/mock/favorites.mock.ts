@@ -1,13 +1,13 @@
 import type { ApiResponse, PageResult } from '../../types/api'
 import type { FavoriteItemSummary, FavoriteListParams } from '../favorite.api'
-import airpodsImage from '../../assets/favorites/items/airpods.jpg'
-import basketballImage from '../../assets/favorites/items/basketball.jpg'
-import calculatorImage from '../../assets/favorites/items/calculator.jpg'
-import deskLampImage from '../../assets/favorites/items/desk-lamp.jpg'
-import macbookAirImage from '../../assets/favorites/items/macbook-air.jpg'
-import mathBooksImage from '../../assets/favorites/items/math-books.jpg'
-import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.jpg'
-import suitcaseImage from '../../assets/favorites/items/suitcase.jpg'
+import airpodsImage from '../../assets/favorites/items/airpods.webp'
+import basketballImage from '../../assets/favorites/items/basketball.webp'
+import calculatorImage from '../../assets/favorites/items/calculator.webp'
+import deskLampImage from '../../assets/favorites/items/desk-lamp.webp'
+import macbookAirImage from '../../assets/favorites/items/macbook-air.webp'
+import mathBooksImage from '../../assets/favorites/items/math-books.webp'
+import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.webp'
+import suitcaseImage from '../../assets/favorites/items/suitcase.webp'
 
 const mockLatencyMs = 180
 
