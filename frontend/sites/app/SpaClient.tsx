@@ -1,31 +1,15 @@
 'use client'
 
-import type { ComponentType } from 'react'
-import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import 'antd/dist/reset.css'
 import '../../src/index.css'
 import '../../src/styles/marketplace-consistency.css'
 
+const Application = dynamic(() => import('../../src/app/App'), {
+  ssr: false,
+  loading: () => <main aria-busy="true" aria-label="正在加载厦大闲置" />,
+})
+
 export function SpaClient() {
-  const [Application, setApplication] = useState<ComponentType | null>(null)
-
-  useEffect(() => {
-    let mounted = true
-
-    import('../../src/app/App').then(({ default: App }) => {
-      if (mounted) {
-        setApplication(() => App)
-      }
-    })
-
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  if (!Application) {
-    return <main aria-busy="true" aria-label="正在加载厦大闲置" />
-  }
-
   return <Application />
 }
