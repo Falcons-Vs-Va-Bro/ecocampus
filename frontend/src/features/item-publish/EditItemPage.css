@@ -364,6 +364,14 @@
   background: rgba(255, 252, 246, 0.92);
 }
 
+.edit-image-error {
+  width: 100%;
+  margin: 2px 0 0;
+  color: #b83a31;
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .edit-file-input {
   position: absolute;
   width: 1px;

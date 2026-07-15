@@ -61,7 +61,7 @@ API 模块：
 页面数据源摘要：
 
 - API-backed：`/login`、`/`、`/items`、`/items/:id`、商品收藏、私信、购买/出售订单、后台看板、后台商品/用户/类目。
-- Local mock：九个分类页的专属商品集合；求购四页；发布/我的商品/编辑；资料表单与核验表单；收藏里的求购关注。
+- Local mock：九个分类页的专属商品集合；求购四页；发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；资料表单与核验表单；收藏里的求购关注。
 - Placeholder：`/demands`、`/demands/new`、`/demands/mine`。
 - Redirect：`/orders -> /orders/purchase`，`/orders/sales -> /orders/sale`。
 
@@ -126,6 +126,7 @@ GitHub Pages frontend
 - 2026-07-14 self-hosted 后端 CD 首次运行成功：Mac mini Runner 在 48 秒内完成 32 项测试、JAR 构建、原子部署和健康检查；部署 SHA 与 `main` 一致，公网 health 为 `UP`，Runner 空闲 RSS 约 97 MB。
 - 相对 Markdown 链接检查和 `git diff --check` 通过。
 - 公网首页 HTTP 200，API health 为 `UP`；深层路由返回相同前端内容但 HTTP 404。
+- 2026-07-15 发布/编辑商品图片预览修复后运行 `cd frontend && pnpm lint && pnpm build` 通过；Chrome 自动化验证选择非台灯图片后，发布页预览与“我的发布”封面一致，控制台 0 error。
 
 ## 文档维护规则
 
@@ -138,6 +139,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-15：修复 Local mock 发布/编辑商品时上传图片始终显示固定台灯素材的问题；选择的图片会压缩为 WebP 数据，真实用于预览、草稿和新发布商品封面。
 - 2026-07-14：在 Mac mini 注册仓库级专用 self-hosted Runner，新增后端 `main` 自动测试、构建、原子部署、健康检查与失败回滚链路；构建不再经过 GitHub 托管 Runner。
 - 2026-07-14：修正管理员登录被送往公共首页的问题；管理员默认进入 `/admin` 并被限制在后台路由树，后台未实现入口改为禁用，同时补充后台退出登录。
 - 2026-07-14：完成全仓库文档/实现对照审计，按代码重写入口 README、API、RBAC、前端数据源和项目状态，显式记录真实 DTO 与 mock UI 差异。
