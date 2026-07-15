@@ -126,7 +126,7 @@ Mac mini 使用 macOS GUI/系统扩展版 Tailscale，因此不启用 Tailscale 
 
 2026-07-14 基线结果：商品列表 600 请求、60 并发时失败数 0、吞吐 439.30 req/s、P95 269 ms；MySQL 连接峰值 10/151，慢查询 0。
 
-2026-07-15 经运维明确授权，通过受限 SSH 隧道将 `R__mysql_demo_seed.sql` 导入真实 `ecocampus`。Flyway repeatable migration 执行成功，JDBC 核对结果为 9 类目、36 用户、27 商品、14 收藏、9 订单、5 会话、11 消息、4 求购和 4 审计记录。生产 profile 仍只加载结构 migration，后续生产启动不会自动重跑 demo seed。
+2026-07-15 经运维明确授权，通过受限 SSH 隧道将 `R__mysql_demo_seed.sql` 导入真实 `ecocampus`。Flyway repeatable migration 执行成功，JDBC 核对结果为 9 类目、36 用户、27 商品、14 收藏、9 订单、5 会话、11 消息、4 求购和 4 审计记录。生产 profile 同时扫描 `db/migration` 与 `db/seed`，确保已登记的 repeatable migration 始终可解析；脚本校验和不变时不会重复执行。
 
 同日继续导入 `R__mysql_catalog_seed.sql`，新增 72 件校园二手商品，九类目各 8 件，并写入 72 张图片关联和 82 条配送方式。真实库商品总数增至 99，其中新增数据为 63 件在售、5 件已售、4 件下架；Flyway history 中 `mysql catalog seed` 执行成功。
 

@@ -31,11 +31,11 @@
 运行与数据：
 
 - 默认 `application.yml` 使用本地 MySQL、Flyway、`ddl-auto=validate`，并自动加载 `db/migration` 与 `db/seed`。
-- `application-prod.yml` 要求显式 MySQL 凭据，使用 `ddl-auto=validate`，并由启动期防呆阻止不安全生产配置。
+- `application-prod.yml` 要求显式 MySQL 凭据，使用 `ddl-auto=validate`，同时扫描 `db/migration` 与 `db/seed`，并由启动期防呆阻止不安全生产配置。
 - H2 依赖与配置已移除；测试使用独立的 `ecocampus_test` MySQL，只加载 `db/migration`，并在测试上下文启动时自动清库、迁移。
 - 课堂单实例默认基线：Hikari 最大 12/最小空闲 3、连接等待 10 秒；Tomcat 最大线程 100、最小空闲 8、最大连接 300、等待队列 100。
 - Flyway 当前为 V1–V4：核心表、4 个初始类目、账号密码哈希列、会话双方已读时间。
-- `db/seed/R__mysql_demo_seed.sql` 和 `R__mysql_catalog_seed.sql` 是默认环境自动执行的 repeatable Flyway 演示 seed；后者使用预留 ID `50001`–`50072` 为九类目各补 8 件商品。`prod` profile 只加载结构 migration，不自动导入演示数据。
+- `db/seed/R__mysql_demo_seed.sql` 和 `R__mysql_catalog_seed.sql` 是 repeatable Flyway 演示 seed；后者使用预留 ID `50001`–`50072` 为九类目各补 8 件商品。生产 profile 会解析这两份已登记脚本，校验和不变时不会重复执行，脚本变更则会按 Flyway repeatable 语义再次运行。
 - 2026-07-15 已按运维授权通过 SSH 隧道将两份 repeatable seed 导入真实 `ecocampus`：9 类目、36 用户、99 商品、14 收藏、9 订单、5 会话、11 消息、4 求购、4 审计记录；扩展商品九类目各 8 件，Flyway history 均标记执行成功。
 - 112 条 seed 商品图片记录已统一改为 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；真实库旧 `/src/assets` 图片地址为 0，Vite 生产构建已确认复制全部 112 个文件。
 - Maven 已移除 Redis 依赖和业务使用；`application-local.example.yml` 中 Redis 段只是未生效的遗留占位。
@@ -172,16 +172,17 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-16：修复生产 Flyway 只扫描结构迁移、无法解析真实库中已执行 repeatable seed 的问题；生产 profile 改为同时扫描 `db/migration` 与 `db/seed`，避免后端启动和 CD 回滚健康检查失败。
 - 2026-07-16：后端 self-hosted 部署工作流在测试前自动准备隔离的本机 MySQL 测试库和权限，不写入生产数据库凭据，也不清理生产 schema。
 - 2026-07-16：后端部署失败时上传短期保留的脱敏 LaunchAgent、进程、端口和本机健康诊断工件，便于在受限 SSH 不提供 Shell 的前提下定位 Mac mini 服务故障。
 - 2026-07-16：新增 Mac mini 后端手动诊断工作流，收集服务状态与两份启动日志末尾并替换常见凭据形式，不授予交互式 Shell。
 - 2026-07-16：配置完整图片缓存链路：匿名开放 `GET /uploads/**`，添加一年期 `public, immutable` 缓存头，并让生产上传响应默认返回 API 域名完整 URL；Cloudflare 已启用仅匹配 `ecocampus-api.teamdsb.online/uploads/*` 的一年期 Edge/Browser Cache Rule，未匹配 `/api/*` 或启用 Cache Reserve。
 - 2026-07-15：修复真实 API 首页商品图片不显示：将 seed 图片从不可发布的 `/src/assets` 迁移到 `frontend/public/catalog/`，同步真实 MySQL，并验证 112 个静态图片进入生产构建。
 - 2026-07-15：参考公开商品目录的名称和价格区间，新增经校园二手场景重写的 `R__mysql_catalog_seed.sql`；未采集用户身份、商家描述或第三方图片，真实库商品总数从 27 增至 99。
-- 2026-07-15：经运维明确授权，将 `R__mysql_demo_seed.sql` 导入 Mac mini 真实 `ecocampus` 并通过 JDBC 核对各业务表数量；生产 profile 仍保持默认不自动执行 demo seed。
+- 2026-07-15：经运维明确授权，将 `R__mysql_demo_seed.sql` 导入 Mac mini 真实 `ecocampus` 并通过 JDBC 核对各业务表数量。
 - 2026-07-15：确认内网数据库运维入口为 Shadowrocket 节点 `100.80.234.31:22`，受限 SSH 隧道转发本地 `13306` 至目标 MySQL；真实库认证、Flyway V1–V4、JPA 和数据库型 API 验证通过。
 - 2026-07-15：补齐用户端共享顶栏交互：通知按钮展示状态面板，私信入口跳转消息中心，用户区提供个人中心、校园核验和退出登录菜单；公共入口移除不存在的“注册”文案。
-- 2026-07-15：默认后端、测试和生产数据源统一为 MySQL，完整移除 H2；MySQL demo seed 改为默认环境自动执行的 Flyway repeatable migration，生产 profile 继续排除演示 seed。
+- 2026-07-15：默认后端、测试和生产数据源统一为 MySQL，完整移除 H2；MySQL demo seed 改为 Flyway repeatable migration。
 - 2026-07-15：移除主页求购摘要、九个分类页和个人地址区的页面硬编码业务数据；分别接入 demand、item 与 profile address API，并增加可选的 Vite `/api` 联调代理。
 - 2026-07-15：分别重构分类、发布和消息页的移动端信息密度；分类筛选默认折叠并展示双列商品，发布表单改为无溢出的单列结构，消息统计与会话列表改为紧凑首屏布局，桌面端保持原状。
 - 2026-07-15：调整 `/profile` 移动端页面比例，固定“个人中心”为单行标题，缩小头像与资料字号，并将资料操作、地址区和设置区改为更紧凑的手机布局；桌面端不受影响。
