@@ -13,6 +13,7 @@ import com.falconsvsvabro.ecocampus.order.dto.CreateOrderRequest;
 import com.falconsvsvabro.ecocampus.order.dto.OrderResponse;
 import com.falconsvsvabro.ecocampus.order.dto.UpdateOrderStatusRequest;
 import com.falconsvsvabro.ecocampus.user.User;
+import com.falconsvsvabro.ecocampus.user.UserRepository;
 import java.util.List;
 import java.util.Set;
 import org.springframework.data.domain.PageRequest;
@@ -30,13 +31,15 @@ public class OrderService {
 	private final ItemRepository itemRepository;
 	private final AuditLogRepository auditLogRepository;
 	private final CampusAccessGuard campusAccessGuard;
+	private final UserRepository userRepository;
 
 	public OrderService(OrderRepository orderRepository, ItemRepository itemRepository,
-			AuditLogRepository auditLogRepository, CampusAccessGuard campusAccessGuard) {
+			AuditLogRepository auditLogRepository, CampusAccessGuard campusAccessGuard, UserRepository userRepository) {
 		this.orderRepository = orderRepository;
 		this.itemRepository = itemRepository;
 		this.auditLogRepository = auditLogRepository;
 		this.campusAccessGuard = campusAccessGuard;
+		this.userRepository = userRepository;
 	}
 
 	@Transactional
@@ -59,7 +62,7 @@ public class OrderService {
 		TradeOrder order = orderRepository.save(new TradeOrder(item.getId(), buyer.getId(), item.getSellerId(),
 				request.deliveryMode(), request.remark()));
 		writeAudit(buyer.getId(), order.getId(), "ORDER_CREATED", "order created");
-		return OrderResponse.from(order, item.getTitle());
+		return toResponse(order);
 	}
 
 	@Transactional(readOnly = true)
@@ -117,7 +120,10 @@ public class OrderService {
 	}
 
 	private OrderResponse toResponse(TradeOrder order) {
-		return OrderResponse.from(order, getItem(order.getItemId()).getTitle());
+		Item item = getItem(order.getItemId());
+		User buyer = getUser(order.getBuyerId());
+		User seller = getUser(order.getSellerId());
+		return OrderResponse.from(order, item, buyer, seller);
 	}
 
 	private Item getItem(Long itemId) {
@@ -128,6 +134,11 @@ public class OrderService {
 	private Item getItemForUpdate(Long itemId) {
 		return itemRepository.findByIdForUpdate(itemId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+	}
+
+	private User getUser(Long userId) {
+		return userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "user not found"));
 	}
 
 	private void ensureTransitionActor(User user, TradeOrder order, OrderStatus targetStatus) {

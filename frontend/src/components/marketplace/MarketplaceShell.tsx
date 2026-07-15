@@ -13,6 +13,7 @@ import {
   Mail,
   MessageCircle,
   Package,
+  Plus,
   Search,
   ShoppingBasket,
   Star,
@@ -23,11 +24,12 @@ import {
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUserIdentity } from '../../hooks/useCurrentUserIdentity'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
+import { useMobileMarketplaceLayout } from './useMobileMarketplaceLayout'
 import './MarketplaceShell.css'
 
 const categoryNav = [
@@ -80,11 +82,13 @@ export function MarketplaceShell({
 }: MarketplaceShellProps) {
   const shouldReduceMotion = useReducedMotion()
   const navigate = useNavigate()
+  const location = useLocation()
   const identity = useCurrentUserIdentity()
   const unreadMessageCount = useUnreadMessageCount()
   const notificationCount = 0
   const [openMenu, setOpenMenu] = useState<'notifications' | 'profile' | null>(null)
   const userbarRef = useRef<HTMLDivElement>(null)
+  const isMobileLayout = useMobileMarketplaceLayout()
 
   useEffect(() => {
     function closeOnOutsideClick(event: PointerEvent) {
@@ -107,6 +111,98 @@ export function MarketplaceShell({
       document.removeEventListener('keydown', closeOnEscape)
     }
   }, [])
+
+  if (isMobileLayout) {
+    const bottomNav = [
+      { label: '首页', icon: Home, to: '/' },
+      { label: '分类', icon: Grid3X3, to: '/items' },
+      { label: '发布', icon: Plus, to: '/publish', primary: true },
+      { label: '消息', icon: MessageCircle, to: '/messages' },
+      { label: '我的', icon: User, to: '/profile' },
+    ]
+
+    return (
+      <div className={classNames('mobile-market-shell', shellClassName)}>
+        <div className="mobile-market-sticky">
+          <header className="mobile-market-header">
+            <Link className="mobile-market-brand" to="/">
+              <strong>厦大闲置</strong>
+              <small>校园二手</small>
+            </Link>
+
+            <div className="mobile-market-userbar" aria-label="用户快捷入口">
+              <Link className="mobile-market-icon-button" aria-label="站内信" to="/messages">
+                <Mail size={21} />
+                {unreadMessageCount > 0 ? <span>{unreadMessageCount}</span> : null}
+              </Link>
+              {identity.isAuthenticated ? (
+                <Link className="mobile-market-profile" to="/profile" aria-label="当前登录用户">
+                  <span>{identity.avatarText}</span>
+                  <strong>{identity.nickname}</strong>
+                </Link>
+              ) : (
+                <Link className="mobile-market-profile" to="/login">
+                  <span><LogIn size={17} /></span>
+                  <strong>登录</strong>
+                </Link>
+              )}
+            </div>
+          </header>
+
+          <form
+            className="mobile-market-search"
+            onSubmit={(event) => {
+              event.preventDefault()
+              onSearch?.()
+            }}
+          >
+            <Search size={20} />
+            <input
+              aria-label={searchLabel}
+              placeholder={searchPlaceholder}
+              value={keyword}
+              onChange={(event) => onKeywordChange(event.target.value)}
+            />
+            <button type="submit">搜索</button>
+          </form>
+
+          <nav className="mobile-market-category-strip" aria-label="快捷分类">
+            {categoryNav.map((item) => (
+              <Link
+                className={activeCategoryLabel === item.label ? 'active' : undefined}
+                to={item.to}
+                key={item.label}
+              >
+                <item.icon size={17} />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <main className={classNames('mobile-market-main', mainClassName)}>{children}</main>
+
+        <nav className="mobile-market-bottom-nav" aria-label="移动端主导航">
+          {bottomNav.map((item) => {
+            const active = isMobileBottomNavActive(location.pathname, item.to)
+            return (
+              <Link
+                className={classNames(active && 'active', item.primary && 'primary')}
+                to={item.to}
+                key={item.label}
+              >
+                <span>
+                  <item.icon size={item.primary ? 25 : 21} />
+                  {item.to === '/messages' && unreadMessageCount > 0 ? <b>{unreadMessageCount}</b> : null}
+                </span>
+                <small>{item.label}</small>
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+    )
+  }
 
   return (
     <div className={classNames('favorites-shell', shellClassName)}>
@@ -286,4 +382,16 @@ export function MarketplaceShell({
 
 function classNames(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ')
+}
+
+function isMobileBottomNavActive(pathname: string, target: string) {
+  if (target === '/') {
+    return pathname === '/'
+  }
+
+  if (target === '/profile') {
+    return pathname === '/profile' || pathname === '/favorites' || pathname.startsWith('/orders') || pathname === '/items/mine'
+  }
+
+  return pathname === target || pathname.startsWith(`${target}/`)
 }

@@ -1,6 +1,6 @@
 # EcoCampus 前端技术栈、路由与数据源
 
-最近一次按 `frontend/package.json`、`routeCatalog.ts`、`routes.tsx`、API wrappers 和页面组件复核：2026-07-14。
+最近一次按 `frontend/package.json`、`routeCatalog.ts`、`routes.tsx`、API wrappers 和页面组件全量复核：2026-07-14；登录页与市场首页移动响应式实现复核：2026-07-15。
 
 ## 1. 技术栈
 
@@ -28,7 +28,7 @@ pnpm build
 pnpm preview
 ```
 
-`pnpm dev:mock` 通过 `.env.mock` 设置 `VITE_USE_MOCKS=true`。默认 API base 为同源 `/api/v1`，可用 `VITE_API_BASE_URL` 覆盖；仓库没有 Vite dev proxy，本地连接 8080 后端时应设置 `VITE_API_BASE_URL=http://localhost:8080/api/v1`。`VITE_BASE_PATH` 同时服务 Vite base 和 React Router basename。
+`pnpm dev:mock` 通过 `.env.mock` 设置 `VITE_USE_MOCKS=true`。默认 API base 为同源 `/api/v1`，可用 `VITE_API_BASE_URL` 覆盖。需要通过 Vite 同源代理联调远端后端时，可设置 `VITE_API_PROXY_TARGET=https://example-api.invalid`；代理会转发 `/api/**` 并避免浏览器跨域限制。本地直连 8080 后端仍可设置 `VITE_API_BASE_URL=http://localhost:8080/api/v1`。`VITE_BASE_PATH` 同时服务 Vite base 和 React Router basename。
 
 ## 2. 代码边界
 
@@ -61,26 +61,26 @@ src/
 
 | 路由 | 页面状态 | 当前数据源/说明 |
 | --- | --- | --- |
-| `/login` | API-backed | 真实模式调用 `POST /auth/login`；mock 模式本地自动建档并生成 mock token |
-| `/` | API-backed | `GET /items`、`GET /categories`；真实商品列表 DTO 目前与卡片所需字段不一致 |
+| `/login` | API-backed | 真实模式调用 `POST /auth/login`；mock 模式本地自动建档并生成 mock token；桌面与移动端使用独立厦大统一认证布局 |
+| `/` | API-backed | `GET /items`、`GET /categories`、`GET /demands`；商品卡片和“同学正在求购”均来自 API |
 | `/items` | API-backed | `GET /items`；客户端筛选和分页 |
-| `/items/textbook` 等 9 个分类路由 | Local mock | 共用 `ItemsPage`，分类专属商品集合和筛选主要来自组件内本地数据；仍会发起通用商品查询 |
+| `/items/textbook` 等 9 个分类路由 | API-backed | 共用 `ItemsPage`，商品来自 `GET /items`，再按真实 `categoryName`、价格、配送和认证字段做客户端筛选与排序；不再使用组件内分类商品数组 |
 | `/items/:id` | API-backed | 商品详情、收藏、创建会话、下单；相关商品依赖列表 DTO |
-| `/favorites` | API-backed + Local mock | 商品收藏走 favorite API；“求购关注”存 `localStorage` |
+| `/favorites` | API-backed + Local mock | 商品收藏走 favorite API，失效商品收藏由真实状态与 `invalidReason` 支撑；“求购关注”存 `localStorage` |
 | `/messages` | API-backed | 会话列表 API；商品图/状态等使用 mock 展示元数据 |
-| `/messages/:conversationId` | API-backed | 会话和消息 API；当前消息归属判断仍使用 mock 当前用户 id |
-| `/orders/purchase` | API-backed | `GET /orders?role=BUYER` 与状态 mutation；图片/价格/昵称来自 mock 展示元数据 |
-| `/orders/sale` | API-backed | `GET /orders?role=SELLER` 与状态 mutation；展示元数据同上 |
+| `/messages/:conversationId` | API-backed | 会话和消息 API；消息归属使用真实 `/auth/me` 当前用户 id |
+| `/orders/purchase` | API-backed | `GET /orders?role=BUYER` 与状态 mutation；图片、价格和昵称来自真实订单响应 |
+| `/orders/sale` | API-backed | `GET /orders?role=SELLER` 与状态 mutation；图片、价格和昵称来自真实订单响应 |
 | `/orders` | Redirect | 跳转 `/orders/purchase` |
 | `/orders/sales` | Redirect | 跳转 `/orders/sale` |
-| `/orders/purchase/demand` | Local mock | 求购广场使用 `features/orders/demandData.ts` |
-| `/orders/purchase/demand/:id/detail` | Local mock | 本地求购详情和关注状态；未调用 demand API |
-| `/orders/purchase/demand/new` | Local mock | 表单演示，不调用 `POST /demands` |
-| `/orders/purchase/demand/mine` | Local mock | 我的求购/匹配展示，不调用 demand API |
+| `/orders/purchase/demand` | API-backed + Local favorite | 求购广场调用 `GET /demands` 与 `GET /categories`；求购关注仍存 `localStorage` |
+| `/orders/purchase/demand/:id/detail` | API-backed limited | 后端没有单条详情端点，页面通过 `GET /demands` 的公开列表兜底定位开放求购，找不到时提示接口限制 |
+| `/orders/purchase/demand/new` | API-backed | 发布调用 `POST /demands`；分类来自 `GET /categories`；草稿/编辑不是后端能力 |
+| `/orders/purchase/demand/mine` | API-backed | 我的求购调用 `GET /users/me/demands`，匹配调用 `GET /demands/{demandId}/matches`，关闭调用 `POST /demands/{demandId}/close` |
 | `/publish` | Local mock | 草稿和发布商品写入 `localStorage`，未调用上传/类目/商品 API |
 | `/items/mine` | Local mock | `myItems.mock.ts` + `localStorage`，未调用我的商品 API |
 | `/items/:id/edit` | Local mock | 编辑本地发布数据，未调用商品详情/更新 API |
-| `/profile` | 部分 API-backed | 顶部身份可调用 `/auth/me`；资料与地址表单主体为本地演示，未调用 profile API |
+| `/profile` | API-backed + Local profile UI | 顶部身份调用 `/auth/me`；常用地址调用 `GET/POST/PUT/DELETE /users/me/addresses` 并刷新 Query cache；头像和基本资料编辑仍是本地交互 |
 | `/verify` | Local mock | 本地核验演示，未调用 `/auth/campus-verification` |
 | `/demands` | Placeholder | catalog 保留的旧公开求购入口 |
 | `/demands/new` | Placeholder | catalog 保留的旧发布求购入口 |
@@ -132,7 +132,7 @@ src/
 - demand API。
 - dashboard overview/summary。
 
-页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如求购四个页面即使开启或关闭 `VITE_USE_MOCKS` 都使用本地数据。
+页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如发布/我的商品、头像与基本资料编辑、核验页面即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。真实模式下主页求购摘要、分类商品和个人地址都通过现有 API wrapper 获取，不再读取页面硬编码业务数组。
 
 ## 6. 当前 DTO 对齐风险
 
@@ -140,11 +140,10 @@ src/
 
 | 前端期望 | 后端真实响应 | 影响 |
 | --- | --- | --- |
-| `ItemSummary` 含 `deliveryModes/seller/favorited/favoriteCount` | `GET /items` 仅返回基础商品摘要 | 首页和通用商品页真实模式可能在筛选或渲染时访问不存在字段 |
-| 商品详情 seller 含 `verificationStatus` | 详情 seller 只有 `id/nickname` | 核验文案依赖未定义字段 |
-| 收藏项含 `favoritedAt/invalidReason` 和完整 `ItemSummary` | 收藏列表仍是基础商品摘要 | 真实收藏页的配送、卖家与失效面板数据不足 |
 | 后台审核/治理复用或扩展 `ItemSummary` | 后台商品摘要只有治理基础字段 | 真实模式缺图片、描述、举报/审核展示元数据 |
 | 校园核验、收藏、上下架、关闭求购、审核/违规下架等 wrappers 中部分声明 `void` | 后端实际返回当前用户、商品/求购详情或后台摘要 | 当前页面多半忽略响应，但类型不准确 |
+
+2026-07-15 已对齐：`GET /items`、商品详情 seller、商品收藏列表、购买/出售订单卡片字段、私信详情当前用户判断、求购广场/发布/我的求购/匹配结果，以及主页求购摘要、九个分类商品页和个人常用地址 CRUD 的主要 API 接线。
 
 市场公共壳的游客入口当前文案仍是“登录 / 注册”，但只链接 `/login`，后端没有独立注册端点；真实行为是登录时自动建档。
 
@@ -154,7 +153,11 @@ src/
 
 - `/` 保持公开市场首页；收藏管理仅在 `/favorites`。
 - 用户端复用 `components/marketplace/` 的 `MarketplaceShell`、卡片和手绘动画语义。
+- 市场端宽度不超过 `720px` 时，`MarketplaceShell` 渲染独立移动壳：紧凑品牌/搜索/横向分类区和固定五项底部导航；不渲染桌面顶部栏、左侧导航或桌面用户快捷区。`721px` 起保持原桌面壳。
+- `/` 的移动内容由 `MobileHomePageContent` 独立编排，使用快捷发布、横向分区、折叠筛选和双列紧凑商品卡；求购、热门类目和安全提示后置。移动端和桌面端的求购摘要都消费 `GET /demands`，桌面三栏结构和完整筛选面板保持不变。
 - `/login` 采用厦门大学统一身份认证风格的视觉模拟，但当前生产行为是项目自有账号密码 API，不是跳转学校 SSO。
+- 登录页只共享认证状态和提交逻辑：宽度不超过 `640px` 时渲染独立移动布局，粗指针且高度不超过 `500px` 时保持横屏手机版；其余尺寸渲染现有桌面轮播与扫码/账号双标签布局。
+- 移动版默认中文，只保留账号密码登录，使用仓库内的官网移动背景、Logo 和密码显隐图标；不渲染桌面轮播、扫码入口、轮播圆点或版权页脚。
 - 后台复用 `components/admin/AdminShell.tsx`，以表格、筛选和操作效率为先。
 - 动画使用 Motion + CSS keyframes，尊重 `prefers-reduced-motion`；详细规范见 `frontend-animation/README.md`。
 

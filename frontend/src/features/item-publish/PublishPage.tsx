@@ -30,12 +30,12 @@ import {
 import { useRef, useState } from 'react'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
-import deskLampImage from '../../assets/favorites/items/desk-lamp.webp'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './PublishPage.css'
 import '../../styles/marketplace-consistency.css'
+import { createLocalImages } from './localImage'
 import type { MineItem } from './myItems.mock'
 
 const categoryNav = [
@@ -75,13 +75,13 @@ const categoryOptions = [
 
 const pickupPlaces = ['芙蓉园门口', '翔安一期食堂', '思明校门口', '海韵教学楼']
 const deliveryModes = ['自提', '送货到校'] as const
-const initialImages = [
-  { id: 'sample-1', crop: false },
-  { id: 'sample-2', crop: false },
-  { id: 'sample-3', crop: true },
-]
 const publishedItemsStorageKey = 'ecocampus:published-items'
 const publishDraftStorageKey = 'ecocampus:publish-draft'
+
+interface UploadedImage {
+  id: string
+  src: string
+}
 
 interface PublishDraft {
   title: string
@@ -92,7 +92,8 @@ interface PublishDraft {
   pickupPlace: string
   customPickupPlace: string
   description: string
-  uploadedImageCount: number
+  uploadedImages?: string[]
+  uploadedImageCount?: number
 }
 
 export function PublishPage() {
@@ -109,11 +110,16 @@ export function PublishPage() {
   const [pickupPlace, setPickupPlace] = useState(draft?.pickupPlace ?? '')
   const [customPickupPlace, setCustomPickupPlace] = useState(draft?.customPickupPlace ?? '')
   const [description, setDescription] = useState(draft?.description ?? '')
-  const [uploadedImages, setUploadedImages] = useState(() =>
-    draft ? createDraftImages(draft.uploadedImageCount) : initialImages,
-  )
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(() => createDraftImages(draft))
+  const [uploadError, setUploadError] = useState('')
 
   function submitPublish() {
+    const coverImage = uploadedImages[0]?.src
+    if (!coverImage) {
+      setUploadError('请至少上传一张商品图片')
+      return
+    }
+
     const normalizedTitle = title.trim() || '新发布的闲置商品'
     const normalizedPrice = formatCurrency(price || '0.00')
     const normalizedOriginalPrice = originalPrice.trim() ? formatCurrency(originalPrice) : '¥0.00'
@@ -131,11 +137,16 @@ export function PublishPage() {
       pickupPlace: pickupPlace || '待补充自提地址',
       description: description.trim() || '卖家暂未填写详细描述。',
       updatedAt: formatDateTime(now),
-      image: deskLampImage,
+      image: coverImage,
       status: 'reviewing',
     }
     const storedItems = readPublishedItems()
-    window.localStorage.setItem(publishedItemsStorageKey, JSON.stringify([newItem, ...storedItems]))
+    try {
+      window.localStorage.setItem(publishedItemsStorageKey, JSON.stringify([newItem, ...storedItems]))
+    } catch {
+      setUploadError('图片占用空间过大，请减少图片数量后重试')
+      return
+    }
     window.localStorage.removeItem(publishDraftStorageKey)
     window.location.href = '/items/mine?tab=reviewing'
   }
@@ -150,10 +161,25 @@ export function PublishPage() {
       pickupPlace,
       customPickupPlace,
       description,
-      uploadedImageCount: uploadedImages.length,
+      uploadedImages: uploadedImages.map((image) => image.src),
     }
-    window.localStorage.setItem(publishDraftStorageKey, JSON.stringify(draftValue))
+    try {
+      window.localStorage.setItem(publishDraftStorageKey, JSON.stringify(draftValue))
+    } catch {
+      setUploadError('图片占用空间过大，请减少图片数量后再保存草稿')
+      return
+    }
     window.location.href = '/items/mine'
+  }
+
+  async function addImages(files: File[]) {
+    try {
+      const nextImages = await createLocalImages(files, 9 - uploadedImages.length, 'published')
+      setUploadedImages((current) => [...current, ...nextImages].slice(0, 9))
+      setUploadError('')
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : '图片读取失败，请重新选择')
+    }
   }
 
   return (
@@ -227,9 +253,9 @@ export function PublishPage() {
               <div className="upload-row">
                 {uploadedImages.map((image) => (
                   <PreviewImage
-                    crop={image.crop}
                     key={image.id}
                     onRemove={() => setUploadedImages((current) => current.filter((item) => item.id !== image.id))}
+                    src={image.src}
                   />
                 ))}
                 <input
@@ -239,14 +265,7 @@ export function PublishPage() {
                   multiple
                   className="visually-hidden-file"
                   onChange={(event) => {
-                    const fileCount = event.currentTarget.files?.length ?? 0
-                    setUploadedImages((current) => [
-                      ...current,
-                      ...Array.from({ length: Math.max(0, Math.min(fileCount, 9 - current.length)) }, (_, index) => ({
-                        id: `uploaded-${Date.now()}-${index}`,
-                        crop: false,
-                      })),
-                    ])
+                    void addImages(Array.from(event.currentTarget.files ?? []))
                     event.currentTarget.value = ''
                   }}
                 />
@@ -259,6 +278,7 @@ export function PublishPage() {
                   <Plus size={34} />
                 </button>
                 <p className="upload-hint">最多 9 张，首图将作为封面</p>
+                {uploadError ? <p className="upload-error" role="alert">{uploadError}</p> : null}
               </div>
             </div>
 
@@ -451,11 +471,10 @@ function FormRow({ label, children }: { label: string; children: React.ReactNode
   )
 }
 
-function PreviewImage({ crop = false, onRemove }: { crop?: boolean; onRemove: () => void }) {
+function PreviewImage({ src, onRemove }: { src: string; onRemove: () => void }) {
   return (
     <div className="preview-image">
-      <img src={deskLampImage} alt="" aria-hidden="true" />
-      {crop ? <span className="preview-crop" /> : null}
+      <img src={src} alt="商品图片预览" />
       <button type="button" aria-label="删除图片" onClick={onRemove}>
         <X size={16} />
       </button>
@@ -492,11 +511,10 @@ function readPublishDraft(): PublishDraft | null {
   }
 }
 
-function createDraftImages(count: number) {
-  const imageCount = Math.max(0, Math.min(9, count))
-  return Array.from({ length: imageCount }, (_, index) => ({
+function createDraftImages(draft: PublishDraft | null): UploadedImage[] {
+  return (draft?.uploadedImages ?? []).slice(0, 9).map((src, index) => ({
     id: `draft-${index}`,
-    crop: index === 2,
+    src,
   }))
 }
 

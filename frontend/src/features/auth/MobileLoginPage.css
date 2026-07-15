@@ -1,0 +1,273 @@
+.xmu-mobile-login-page,
+.xmu-mobile-login-page * {
+  box-sizing: border-box;
+}
+
+.xmu-mobile-login-page {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100svh;
+  overflow: hidden;
+  color: #fff;
+  background-color: #fff;
+  background-image: url("../../assets/auth/xmu-mobile-background.jpg");
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: cover;
+  font-family: PingFangSC-Regular, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+.xmu-mobile-language-switch {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  width: 128px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 30px;
+  transform: translateX(-50%);
+}
+
+.xmu-mobile-language-switch button {
+  width: 64px;
+  min-width: 64px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  color: #666;
+  background: #cdcdcd;
+  font: inherit;
+  font-size: 13px;
+  line-height: 40px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.xmu-mobile-language-switch button.active {
+  color: #fff;
+  background: #003d86;
+}
+
+.xmu-mobile-login-card {
+  position: absolute;
+  top: 12%;
+  left: 20px;
+  width: calc(100% - 40px);
+  max-height: 80svh;
+  padding: 24px 42px;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(5.43656px);
+  scrollbar-width: none;
+  -webkit-backdrop-filter: blur(5.43656px);
+}
+
+.xmu-mobile-login-card::-webkit-scrollbar {
+  display: none;
+}
+
+.xmu-mobile-login-brand {
+  display: flex;
+  height: 90px;
+  align-items: center;
+  justify-content: center;
+}
+
+.xmu-mobile-login-brand img {
+  display: block;
+  width: calc(100% - 130px);
+  max-width: 300px;
+  height: auto;
+  flex-shrink: 1;
+}
+
+.xmu-mobile-login-brand h1 {
+  margin: 0 0 0 10px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 32px;
+  white-space: nowrap;
+}
+
+.xmu-mobile-login-tab {
+  height: 35px;
+  margin-top: 24px;
+  overflow: hidden;
+  border-bottom: 3px solid #fff;
+  color: #fff;
+  font-size: 15px;
+  line-height: 32px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xmu-mobile-login-form {
+  width: 100%;
+}
+
+.xmu-mobile-login-field {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 64px;
+}
+
+.xmu-mobile-login-field input {
+  width: 100%;
+  height: 40px;
+  margin-top: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  outline: none;
+  color: #222;
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+  transition: box-shadow 150ms ease;
+}
+
+.xmu-mobile-login-field input:focus {
+  box-shadow: 0 0 0 2px rgba(0, 61, 134, 0.32);
+}
+
+.xmu-mobile-login-field input::placeholder {
+  color: #c4c8ce;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.xmu-mobile-login-field .xmu-mobile-password-input {
+  padding-right: 48px;
+}
+
+.xmu-mobile-password-toggle {
+  position: absolute;
+  right: 10px;
+  bottom: 5px;
+  width: 35px;
+  height: 25px;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 24px 24px;
+  cursor: pointer;
+}
+
+.xmu-mobile-login-submit {
+  display: block;
+  width: 100%;
+  height: 46px;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: #003d86;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 46px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.xmu-mobile-login-submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.xmu-mobile-login-details {
+  margin-top: 20px;
+  padding-bottom: 1px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.xmu-mobile-login-details > a {
+  display: inline-block;
+  height: 20px;
+  color: #fff;
+  line-height: 20px;
+  text-decoration: none;
+}
+
+.xmu-mobile-login-tips,
+.xmu-mobile-login-warning,
+.xmu-mobile-login-error,
+.xmu-mobile-login-notice {
+  margin: 0;
+  color: #fff;
+}
+
+.xmu-mobile-login-tips {
+  margin-top: 3px;
+  line-height: 20px;
+}
+
+.xmu-mobile-login-warning {
+  margin-top: 14px;
+  line-height: 22px;
+}
+
+.xmu-mobile-login-error {
+  margin-top: 10px;
+  color: #ffe1dc;
+  font-weight: 700;
+}
+
+.xmu-mobile-login-notice {
+  margin-top: 8px;
+}
+
+.xmu-mobile-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 340px) {
+  .xmu-mobile-login-card {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .xmu-mobile-login-brand img {
+    width: calc(100% - 124px);
+  }
+
+  .xmu-mobile-login-brand h1 {
+    font-size: 18px;
+  }
+}
+
+@media (max-height: 500px) and (pointer: coarse) {
+  .xmu-mobile-language-switch {
+    top: 8px;
+  }
+
+  .xmu-mobile-login-card {
+    top: 58px;
+    max-height: calc(100dvh - 66px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xmu-mobile-login-field input {
+    transition: none;
+  }
+}

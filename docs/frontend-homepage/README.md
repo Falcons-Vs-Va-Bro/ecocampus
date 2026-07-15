@@ -2,7 +2,7 @@
 
 This guide fixes the frontend content direction for the public `/` route and the matching user-side visual language. It should be read together with `docs/frontend-stack.md` and `docs/api-contract.md`.
 
-Implementation status was last checked on 2026-07-14. This file defines the intended content/visual boundary; actual page data-source status and known DTO gaps are tracked in `docs/frontend-stack.md` and must not be inferred from this design guide.
+Implementation status was last checked on 2026-07-15. This file defines the intended content/visual boundary; actual page data-source status and known DTO gaps are tracked in `docs/frontend-stack.md` and must not be inferred from this design guide.
 
 ## Content Review
 
@@ -38,7 +38,7 @@ The provided reference is viable as the visual direction, but its current page c
 
 Those features should remain under authenticated user routes such as `/favorites`, `/items/mine`, `/orders/purchase`, `/orders/sale`, and `/messages`.
 
-Current implementation note: the homepage still links demand calls to the placeholder routes `/demands` and `/demands/new`; the implemented local mock demand flow lives under `/orders/purchase/demand*`. This is a known route-alignment issue, not evidence that the legacy routes are complete.
+Current implementation note: the independent mobile homepage links demand calls to `/orders/purchase/demand*`; the desktop homepage still links to placeholder routes `/demands` and `/demands/new`. This is a known route-alignment issue, not evidence that the legacy routes are complete.
 
 ## Homepage Content Model
 
@@ -53,6 +53,25 @@ Recommended desktop layout:
 - main area: homepage title or section title, filters, item grid, pagination or infinite loading;
 - right panel: demand highlights, recently active categories, or campus trading tips.
 
+Mobile/H5 is an independent composition rather than a compressed desktop grid. At widths up to `720px` it uses:
+
+- a compact sticky brand row, search bar, and horizontally scrollable category strip;
+- a fixed five-item bottom navigation for home, categories, publish, messages, and profile;
+- publish-item and post-demand quick actions before the discovery feed;
+- horizontally scrollable homepage section tabs and a collapsed filter drawer;
+- a dense two-column item grid that exposes title, price, delivery mode, seller, verification, favorite count, and favorite action without requiring a detail-page visit;
+- demand highlights, hot categories, and safety guidance after the primary product feed instead of occupying the first screen.
+
+The shared mobile shell belongs in `components/marketplace/`; homepage-specific ordering and compact item cards belong in `features/item-market/`. Desktop keeps the existing top bar, left rail, three-column content area, and full filter panel.
+
+Supporting marketplace pages must follow the same mobile information-density rule instead of stacking desktop-sized panels vertically. The current implementation applies these page-specific boundaries at widths up to `720px`:
+
+- `/items` keeps filters collapsed by default behind an explicit toggle, uses horizontally scrollable filter choices when expanded, and shows the result toolbar plus a compact two-column item grid before secondary helpers;
+- `/publish` uses a width-safe single-column form with compact image upload, full-width controls and two-column submit actions; desktop-only notice, review-flow and success helper panels are omitted from the mobile flow;
+- `/messages` compresses the three statistics into one horizontal summary row, reuses the shared shell search instead of repeating the inner search, presents compact conversation rows, and omits the desktop helper panel.
+
+These changes are responsive composition rules only. They do not change route protection, page data sources, API contracts or desktop layouts.
+
 Recommended homepage sections:
 
 - `今日推荐`: mixed high-quality on-sale items.
@@ -60,7 +79,7 @@ Recommended homepage sections:
 - `教材专区`: seasonal textbooks and course materials.
 - `数码好物`: laptops, earphones, calculators, keyboards, and accessories.
 - `宿舍补给`: lamps, storage, suitcase, bedding, and small appliances.
-- `求购动态`: demand cards; when linked to the current implemented flow they should use `/orders/purchase/demand`, while `/demands` remains a placeholder.
+- `求购动态`: demand cards loaded from `GET /demands`; “更多” uses `/orders/purchase/demand`, and each card links to `/orders/purchase/demand/:id/detail`. `/demands` remains only a legacy placeholder route.
 
 Use compact section labels. Avoid long explanatory copy inside the application surface.
 
@@ -107,6 +126,7 @@ Frontend business UI should be able to run without the backend service.
 - Mock DTOs should match `docs/api-contract.md`, including `priceCent`, enum values and pagination shape. The existing item/favorite mocks currently contain extra card display fields; this known debt is documented in `docs/project-state.md`.
 - Do not add further mock-only fields to DTOs used by API modules. If the UI needs seller nickname, delivery modes, or favorite state in a real list card, update the backend response and `docs/api-contract.md` before treating them as contract fields.
 - API modules should remain the boundary for backend calls. Components should consume hooks or API abstractions, not hardcoded mock objects directly.
+- Homepage demand highlights and category-specific product pages must use their API wrappers in real mode; do not restore page-local arrays that can diverge from backend data.
 - Use an explicit local switch such as `VITE_USE_MOCKS=true` if mock and live API modes coexist.
 - Mock images should be stable local assets or deterministic remote-safe placeholders only when no local asset exists.
 - Do not block frontend implementation on missing backend endpoints if the API contract already defines the response shape.

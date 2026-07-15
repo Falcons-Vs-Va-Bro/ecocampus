@@ -4,7 +4,7 @@
 
 适用范围：普通用户端页面，包括 `/`、`/favorites`、商品列表、商品详情、发布、求购、个人中心和空状态。后台管理端以效率优先，不默认套用本动画规范。
 
-例外：`/login` 使用厦门大学统一身份认证风格的独立视觉结构，不套用彩绘、手绘风格。当前生产实现并未跳转学校 SSO，而是向项目后端提交 `2292024` 前缀账号和密码；mock 模式只在本地保存账号列表用于自动建档演示，不保存密码。
+例外：`/login` 使用厦门大学统一身份认证风格的独立视觉结构，不套用彩绘、手绘风格。桌面版保留背景轮播和扫码/账号标签，移动版使用官网移动背景并只保留账号密码登录；两者共享项目认证逻辑。当前生产实现并未跳转学校 SSO，而是向项目后端提交 `2292024` 前缀账号和密码；mock 模式只在本地保存账号列表用于自动建档演示，不保存密码。
 
 ## 1. 动画目标
 
@@ -46,6 +46,8 @@
 - 共享组件入口：`frontend/src/components/marketplace/MarketplaceShell.tsx`、`frontend/src/components/marketplace/MarketplaceItemCard.tsx`
 - 样式入口：`frontend/src/components/marketplace/MarketplaceShell.css`
 - 公开/用户侧占位页入口：`frontend/src/components/marketplace/MarketplacePlaceholderPage.tsx`
+
+移动端共享壳同样位于 `MarketplaceShell.tsx`，但在 `720px` 及以下使用独立 DOM 和信息层级。移动首页的双列卡片只做轻量进入与按压反馈，固定底部导航、横向分类和筛选展开不得使用会阻塞滚动或触发布局抖动的持续动画；`721px` 起继续使用原桌面动画结构。
 
 已形成的可复用模式：
 

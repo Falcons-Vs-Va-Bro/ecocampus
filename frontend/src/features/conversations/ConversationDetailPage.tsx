@@ -6,10 +6,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { listConversations, listMessages, sendMessage } from '../../api/conversation.api'
 import type { ConversationSummary, MessageSummary } from '../../api/conversation.api'
-import { getMockConversationMeta, mockCurrentUserId } from '../../api/mock/conversations.mock'
+import { getMockConversationMeta } from '../../api/mock/conversations.mock'
 import { queryKeys } from '../../api/queryKeys'
 import tradeReminderImage from '../../assets/messages/trade-reminder.webp'
 import { MarketplaceShell } from '../../components/marketplace'
+import { useCurrentUserIdentity } from '../../hooks/useCurrentUserIdentity'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './MessagesPage.css'
 
@@ -24,6 +25,7 @@ export function ConversationDetailPage() {
   const [keyword, setKeyword] = useState('')
   const [draft, setDraft] = useState('')
   const messageEndRef = useRef<HTMLDivElement | null>(null)
+  const { currentUser } = useCurrentUserIdentity()
 
   useDocumentTitle('厦大闲置 - 私信详情')
 
@@ -145,6 +147,7 @@ export function ConversationDetailPage() {
               ) : (
                 messages.map((message, index) => (
                   <MessageBubble
+                    currentUserId={currentUser?.id}
                     message={message}
                     previousMessage={messages[index - 1]}
                     reduceMotion={shouldReduceMotion}
@@ -216,14 +219,15 @@ export function ConversationDetailPage() {
 }
 
 interface MessageBubbleProps {
+  currentUserId?: number
   message: MessageSummary
   previousMessage?: MessageSummary
   reduceMotion: boolean
   targetName: string
 }
 
-function MessageBubble({ message, previousMessage, reduceMotion, targetName }: MessageBubbleProps) {
-  const isMine = message.senderId === mockCurrentUserId
+function MessageBubble({ currentUserId, message, previousMessage, reduceMotion, targetName }: MessageBubbleProps) {
+  const isMine = currentUserId != null && message.senderId === currentUserId
   const showTime = !previousMessage || previousMessage.createdAt !== message.createdAt
 
   return (

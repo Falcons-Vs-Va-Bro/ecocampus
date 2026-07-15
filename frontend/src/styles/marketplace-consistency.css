@@ -351,3 +351,144 @@
   font-size: 17px;
   font-weight: 800;
 }
+
+@media (max-width: 720px) {
+  .mobile-market-shell .unified-marketplace-content .profile-heading {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .mobile-market-shell .unified-marketplace-content .profile-heading h1 {
+    font-size: 30px;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .mobile-market-shell .unified-marketplace-content .profile-heading p {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .mobile-market-shell .profile-card {
+    gap: 18px;
+    padding: 16px;
+  }
+
+  .mobile-market-shell .student-card {
+    gap: 16px;
+  }
+
+  .mobile-market-shell .profile-avatar.large {
+    width: 104px;
+    height: 104px;
+    font-size: 32px;
+  }
+
+  .mobile-market-shell .student-card h2 {
+    margin-bottom: 6px;
+    font-size: 22px;
+  }
+
+  .mobile-market-shell :is(.student-card p, .profile-verify-info p, .address-card p, .setting-card p) {
+    margin-top: 5px;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .profile-tags {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .mobile-market-shell .profile-tags span {
+    padding: 3px 8px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .mobile-market-shell .profile-verify-info {
+    gap: 8px;
+    padding: 14px 0 0;
+    border-top: 1px solid rgba(112, 133, 149, 0.4);
+    border-left: 0;
+  }
+
+  .mobile-market-shell .profile-verify-info p {
+    flex-wrap: wrap;
+  }
+
+  .mobile-market-shell .profile-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mobile-market-shell .profile-actions button {
+    min-height: 42px;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .address-panel {
+    margin-top: 14px;
+    padding: 16px;
+  }
+
+  .mobile-market-shell .address-panel > header {
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .mobile-market-shell .address-panel h2 {
+    font-size: 27px;
+  }
+
+  .mobile-market-shell .address-panel > header p {
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .mobile-market-shell .address-panel > header button {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 0 12px;
+    font-size: 16px;
+    white-space: nowrap;
+  }
+
+  .mobile-market-shell .address-card {
+    padding: 14px;
+  }
+
+  .mobile-market-shell .address-card h3 {
+    font-size: 21px;
+  }
+
+  .mobile-market-shell .address-card :is(header span, em) {
+    font-size: 14px;
+  }
+
+  .mobile-market-shell .address-card footer {
+    gap: 10px;
+  }
+
+  .mobile-market-shell .address-card button {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .settings-row {
+    gap: 12px;
+  }
+
+  .mobile-market-shell .setting-card {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .mobile-market-shell .setting-card h3 {
+    font-size: 20px;
+  }
+}

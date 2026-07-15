@@ -1,9 +1,9 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
   BookOpen,
   Box,
   BriefcaseBusiness,
-  Building2,
   Camera,
   CheckCircle2,
   ChevronDown,
@@ -27,9 +27,17 @@ import {
   Store,
   User,
 } from 'lucide-react'
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  createAddress as createAddressRequest,
+  deleteAddress as deleteAddressRequest,
+  listAddresses,
+  updateAddress as updateAddressRequest,
+} from '../../api/profile.api'
+import type { Address, UpsertAddressRequest } from '../../api/profile.api'
+import { queryKeys } from '../../api/queryKeys'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
 import profileVerifyCardImage from '../../assets/favorites/profile-verify-card.webp'
@@ -63,30 +71,14 @@ const userNav = [
   { label: '个人中心', icon: User, to: '/profile', active: true },
 ]
 
-interface Address {
-  id: number
-  title: string
-  detail: string
-  contact: string
-  mode: '自提' | '送货'
-  isDefault: boolean
-  icon: typeof MapPin
-}
-
-const initialAddresses: Address[] = [
-  { id: 1, title: '默认自提点', detail: '芙蓉园门口快递柜旁', contact: '陈同学  138****6721', mode: '自提', isDefault: true, icon: MapPin },
-  { id: 2, title: '宿舍收货地址', detail: '海韵学生公寓 3 号楼 502', contact: '陈同学  138****6721', mode: '送货', isDefault: false, icon: Building2 },
-  { id: 3, title: '教学楼自提点', detail: '嘉庚楼一楼大厅公告栏旁', contact: '陈同学  138****6721', mode: '自提', isDefault: false, icon: Building2 },
-  { id: 4, title: '图书馆门口', detail: '翔安校区图书馆南门', contact: '陈同学  138****6721', mode: '自提', isDefault: false, icon: BookOpen },
-]
-
 export function ProfilePage() {
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const identity = useCurrentUserIdentity()
   const unreadMessageCount = useUnreadMessageCount()
   useDocumentTitle('厦大闲置 - 个人中心')
   const avatarInputRef = useRef<HTMLInputElement>(null)
-  const [addresses, setAddresses] = useState(initialAddresses)
+  const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [studentNo, setStudentNo] = useState('2023****5123')
   const [phoneNumber, setPhoneNumber] = useState('138****6721')
@@ -98,6 +90,35 @@ export function ProfilePage() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const displayNickname = identity.currentUser?.nickname ?? identity.nickname
   const verificationLabel = verificationStatusLabel(identity.currentUser?.verificationStatus)
+
+  const addressesQuery = useQuery({
+    queryKey: queryKeys.profile.addresses,
+    queryFn: listAddresses,
+    enabled: identity.isAuthenticated,
+  })
+
+  const refreshAddresses = () => queryClient.invalidateQueries({ queryKey: queryKeys.profile.addresses })
+
+  const createAddressMutation = useMutation({
+    mutationFn: createAddressRequest,
+    onSuccess: () => {
+      setIsAddingAddress(false)
+      refreshAddresses()
+    },
+  })
+
+  const updateAddressMutation = useMutation({
+    mutationFn: ({ addressId, payload }: { addressId: number; payload: UpsertAddressRequest }) => updateAddressRequest(addressId, payload),
+    onSuccess: refreshAddresses,
+  })
+
+  const deleteAddressMutation = useMutation({
+    mutationFn: deleteAddressRequest,
+    onSuccess: refreshAddresses,
+  })
+
+  const addresses = addressesQuery.data?.data ?? []
+  const addressMutationError = createAddressMutation.error ?? updateAddressMutation.error ?? deleteAddressMutation.error
 
   useEffect(() => {
     if (!identity.currentUser) {
@@ -112,27 +133,20 @@ export function ProfilePage() {
     setDraftPhoneNumber(nextPhone)
   }, [identity.currentUser])
 
-  function setDefaultAddress(addressId: number) {
-    setAddresses((current) => current.map((item) => ({ ...item, isDefault: item.id === addressId })))
+  function setDefaultAddress(address: Address) {
+    updateAddressMutation.mutate({ addressId: address.id, payload: toAddressPayload(address, true) })
   }
 
   function deleteAddress(addressId: number) {
-    setAddresses((current) => current.filter((item) => item.id !== addressId))
+    deleteAddressMutation.mutate(addressId)
   }
 
-  function addAddress() {
-    setAddresses((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        title: '新的常用地址',
-        detail: '请编辑填写详细地点',
-        contact: '陈同学  138****6721',
-        mode: '自提',
-        isDefault: false,
-        icon: MapPin,
-      },
-    ])
+  function updateAddress(addressId: number, payload: UpsertAddressRequest) {
+    updateAddressMutation.mutate({ addressId, payload })
+  }
+
+  function createAddress(payload: UpsertAddressRequest) {
+    createAddressMutation.mutate(payload)
   }
 
   function startEditProfile() {
@@ -306,14 +320,39 @@ export function ProfilePage() {
                   <h2>常用地址</h2>
                   <p>可添加多个自提点或校内送货地址</p>
                 </div>
-                <button type="button" onClick={addAddress}>
+                <button type="button" disabled={isAddingAddress} onClick={() => setIsAddingAddress(true)}>
                   <PlusCircle size={20} />
                   新增地址
                 </button>
               </header>
               <div className="address-grid">
+                {addressesQuery.isLoading ? <p className="address-status">正在加载常用地址…</p> : null}
+                {addressesQuery.isError ? (
+                  <p className="address-status address-status-error">
+                    常用地址加载失败
+                    <button type="button" onClick={() => addressesQuery.refetch()}>重新加载</button>
+                  </p>
+                ) : null}
+                {addressMutationError ? <p className="address-status address-status-error">地址保存失败：{addressMutationError.message}</p> : null}
+                {isAddingAddress ? (
+                  <NewAddressCard
+                    isPending={createAddressMutation.isPending}
+                    onCancel={() => setIsAddingAddress(false)}
+                    onCreate={createAddress}
+                  />
+                ) : null}
+                {!addressesQuery.isLoading && !addressesQuery.isError && addresses.length === 0 && !isAddingAddress ? (
+                  <p className="address-status">还没有常用地址，点击“新增地址”添加第一条。</p>
+                ) : null}
                 {addresses.map((address) => (
-                  <AddressCard address={address} onDelete={deleteAddress} onSetDefault={setDefaultAddress} key={address.id} />
+                  <AddressCard
+                    address={address}
+                    isPending={updateAddressMutation.isPending || deleteAddressMutation.isPending}
+                    onDelete={deleteAddress}
+                    onSetDefault={setDefaultAddress}
+                    onUpdate={updateAddress}
+                    key={address.id}
+                  />
                 ))}
               </div>
             </section>
@@ -436,38 +475,190 @@ function verificationStatusLabel(status?: string) {
 
 function AddressCard({
   address,
+  isPending,
   onDelete,
   onSetDefault,
+  onUpdate,
 }: {
   address: Address
+  isPending: boolean
   onDelete: (addressId: number) => void
-  onSetDefault: (addressId: number) => void
+  onSetDefault: (address: Address) => void
+  onUpdate: (addressId: number, payload: UpsertAddressRequest) => void
 }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftCampusArea, setDraftCampusArea] = useState(address.campusArea)
+  const [draftDetail, setDraftDetail] = useState(address.detail)
+  const [draftReceiverName, setDraftReceiverName] = useState(address.receiverName)
+  const [draftReceiverPhone, setDraftReceiverPhone] = useState(address.receiverPhone)
+
+  function startEditing() {
+    setDraftCampusArea(address.campusArea)
+    setDraftDetail(address.detail)
+    setDraftReceiverName(address.receiverName)
+    setDraftReceiverPhone(address.receiverPhone)
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setIsEditing(false)
+  }
+
+  function saveAddress(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    onUpdate(address.id, {
+      campusArea: draftCampusArea.trim(),
+      detail: draftDetail.trim(),
+      receiverName: draftReceiverName.trim(),
+      receiverPhone: draftReceiverPhone.trim(),
+      isDefault: address.isDefault,
+    })
+    setIsEditing(false)
+  }
+
   return (
     <article className="address-card">
-      <header>
-        <div>
-          <address.icon size={28} />
-          <h3>{address.title}</h3>
-          {address.isDefault ? <span>默认</span> : null}
-        </div>
-        <em>{address.mode}</em>
-      </header>
-      <p>{address.detail}</p>
-      <p>联系人：{address.contact}</p>
-      <footer>
-        {!address.isDefault ? (
-          <button type="button" onClick={() => onSetDefault(address.id)}>
-            设为默认
+      <form onSubmit={saveAddress}>
+        <header>
+          <div>
+            <MapPin size={28} />
+            {isEditing ? (
+              <input
+                className="address-title-input"
+                aria-label="校区或区域"
+                maxLength={80}
+                required
+                value={draftCampusArea}
+                onChange={(event) => setDraftCampusArea(event.target.value)}
+                autoFocus
+              />
+            ) : (
+              <h3>{address.campusArea}</h3>
+            )}
+            {address.isDefault ? <span>默认</span> : null}
+          </div>
+        </header>
+        {isEditing ? (
+          <div className="address-edit-fields">
+            <label>
+              <span>详细地点</span>
+              <input maxLength={255} required value={draftDetail} onChange={(event) => setDraftDetail(event.target.value)} />
+            </label>
+            <label>
+              <span>收货人</span>
+              <input maxLength={40} required value={draftReceiverName} onChange={(event) => setDraftReceiverName(event.target.value)} />
+            </label>
+            <label>
+              <span>手机号</span>
+              <input inputMode="tel" pattern="1[0-9]{10}" required value={draftReceiverPhone} onChange={(event) => setDraftReceiverPhone(event.target.value)} />
+            </label>
+          </div>
+        ) : (
+          <>
+            <p>{address.detail}</p>
+            <p>联系人：{address.receiverName} {maskPhone(address.receiverPhone)}</p>
+          </>
+        )}
+        <footer>
+          {isEditing ? (
+            <>
+              <button type="submit">保存</button>
+              <button type="button" onClick={cancelEditing}>取消</button>
+            </>
+          ) : (
+            <>
+              {!address.isDefault ? (
+                <button type="button" disabled={isPending} onClick={() => onSetDefault(address)}>
+                  设为默认
+                </button>
+              ) : null}
+              <button type="button" disabled={isPending} onClick={startEditing}>编辑</button>
+            </>
+          )}
+          <button type="button" className="danger" disabled={isPending} onClick={() => onDelete(address.id)}>
+            删除
           </button>
-        ) : null}
-        <button type="button">编辑</button>
-        <button type="button" className="danger" onClick={() => onDelete(address.id)}>
-          删除
-        </button>
-      </footer>
+        </footer>
+      </form>
     </article>
   )
+}
+
+function NewAddressCard({
+  isPending,
+  onCancel,
+  onCreate,
+}: {
+  isPending: boolean
+  onCancel: () => void
+  onCreate: (payload: UpsertAddressRequest) => void
+}) {
+  const [campusArea, setCampusArea] = useState('')
+  const [detail, setDetail] = useState('')
+  const [receiverName, setReceiverName] = useState('')
+  const [receiverPhone, setReceiverPhone] = useState('')
+  const [isDefault, setIsDefault] = useState(false)
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    onCreate({
+      campusArea: campusArea.trim(),
+      detail: detail.trim(),
+      receiverName: receiverName.trim(),
+      receiverPhone: receiverPhone.trim(),
+      isDefault,
+    })
+  }
+
+  return (
+    <article className="address-card address-create-card">
+      <form onSubmit={submit}>
+        <header>
+          <div><MapPin size={28} /><h3>新增常用地址</h3></div>
+        </header>
+        <div className="address-edit-fields">
+          <label>
+            <span>校区区域</span>
+            <input maxLength={80} placeholder="例如：思明校区" required value={campusArea} onChange={(event) => setCampusArea(event.target.value)} />
+          </label>
+          <label>
+            <span>详细地点</span>
+            <input maxLength={255} placeholder="宿舍楼、门牌或自提点" required value={detail} onChange={(event) => setDetail(event.target.value)} />
+          </label>
+          <label>
+            <span>收货人</span>
+            <input maxLength={40} required value={receiverName} onChange={(event) => setReceiverName(event.target.value)} />
+          </label>
+          <label>
+            <span>手机号</span>
+            <input inputMode="tel" pattern="1[0-9]{10}" placeholder="11 位手机号" required value={receiverPhone} onChange={(event) => setReceiverPhone(event.target.value)} />
+          </label>
+          <label className="address-default-field">
+            <span>默认地址</span>
+            <input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} />
+          </label>
+        </div>
+        <footer>
+          <button type="submit" disabled={isPending}>{isPending ? '保存中…' : '保存地址'}</button>
+          <button type="button" disabled={isPending} onClick={onCancel}>取消</button>
+        </footer>
+      </form>
+    </article>
+  )
+}
+
+function toAddressPayload(address: Address, isDefault: boolean): UpsertAddressRequest {
+  return {
+    receiverName: address.receiverName,
+    receiverPhone: address.receiverPhone,
+    campusArea: address.campusArea,
+    detail: address.detail,
+    isDefault,
+  }
+}
+
+function maskPhone(value: string) {
+  return value.length === 11 ? `${value.slice(0, 3)}****${value.slice(-4)}` : value
 }
 
 function Toggle({ checked, onClick, label }: { checked: boolean; onClick: () => void; label: string }) {

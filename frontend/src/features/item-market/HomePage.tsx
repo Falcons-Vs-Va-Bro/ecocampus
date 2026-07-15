@@ -1,64 +1,48 @@
 import { useQuery } from '@tanstack/react-query'
 import {
-  BookOpen,
   BriefcaseBusiness,
-  Camera,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Dumbbell,
   Megaphone,
-  Package,
   ShoppingBasket,
-  Star,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { listCategories } from '../../api/category.api'
+import { listDemands } from '../../api/demand.api'
 import { listItems } from '../../api/item.api'
 import type { ItemSummary } from '../../api/item.api'
 import { queryKeys } from '../../api/queryKeys'
 import emptyFavoritesImage from '../../assets/favorites/empty-favorites.webp'
 import { MarketplaceItemCard, MarketplaceShell } from '../../components/marketplace'
+import { useMobileMarketplaceLayout } from '../../components/marketplace/useMobileMarketplaceLayout'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import {
+  deliveryModes,
+  displayCategoryName,
+  filterBySection,
+  formatDelivery,
+  formatPrice,
+  formatRelativeTime,
+  hotCategories,
+  pageSize,
+  priceRanges,
+  sectionTabs,
+  type DeliveryModeFilter,
+  type SectionTab,
+} from './homePageConfig'
+import { MobileHomePageContent } from './MobileHomePageContent'
 import './HomePage.css'
 
-const pageSize = 8
 const emptyItems: ItemSummary[] = []
-
-const sectionTabs = ['今日推荐', '最新上架', '教材专区', '数码好物', '宿舍补给'] as const
-const priceRanges = [
-  { label: '全部', min: 0, max: Number.POSITIVE_INFINITY },
-  { label: '0-50', min: 0, max: 5000 },
-  { label: '50-100', min: 5000, max: 10000 },
-  { label: '100-300', min: 10000, max: 30000 },
-  { label: '300以上', min: 30000, max: Number.POSITIVE_INFINITY },
-]
-const deliveryModes = ['全部', '可自提', '校内配送'] as const
-
-const demandHighlights = [
-  { title: '求购 高等数学（第七版）下册', meta: '学号 103****5123 · 5 分钟前' },
-  { title: '求购 iPad 或平板电脑', meta: '学号 105****3321 · 12 分钟前' },
-  { title: '求购 篮球鞋 42码左右', meta: '学号 104****7788 · 18 分钟前' },
-]
-
-const hotCategories = [
-  { label: '教材教辅', icon: BookOpen, to: '/items/textbook' },
-  { label: '数码电子', icon: Camera, to: '/items/digital' },
-  { label: '宿舍用品', icon: Package, to: '/items/dorm' },
-  { label: '生活日用', icon: ShoppingBasket, to: '/items/daily-goods' },
-  { label: '运动户外', icon: Dumbbell, to: '/items/outdoors' },
-  { label: '美妆个护', icon: Star, to: '/items/make-up' },
-]
-
-type SectionTab = (typeof sectionTabs)[number]
-type DeliveryModeFilter = (typeof deliveryModes)[number]
 
 export function HomePage() {
   useDocumentTitle('厦大闲置 - 商品首页')
 
   const shouldReduceMotion = useReducedMotion()
+  const isMobileLayout = useMobileMarketplaceLayout()
   const [keyword, setKeyword] = useState('')
   const [section, setSection] = useState<SectionTab>('今日推荐')
   const [category, setCategory] = useState('全部')
@@ -66,6 +50,7 @@ export function HomePage() {
   const [deliveryMode, setDeliveryMode] = useState<DeliveryModeFilter>('全部')
   const [page, setPage] = useState(1)
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(() => new Set([1002]))
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const itemsQuery = useQuery({
     queryKey: queryKeys.items.list('home'),
@@ -75,6 +60,11 @@ export function HomePage() {
   const categoriesQuery = useQuery({
     queryKey: queryKeys.categories.list,
     queryFn: listCategories,
+  })
+
+  const demandsQuery = useQuery({
+    queryKey: queryKeys.demands.list({ page: 1, size: 3 }),
+    queryFn: () => listDemands({ page: 1, size: 3 }),
   })
 
   const categoryFilters = useMemo(() => {
@@ -87,6 +77,7 @@ export function HomePage() {
   const hasInvalidItemsResponse = itemsQuery.isSuccess && !Array.isArray(itemPage?.items)
   const hasItemsError = itemsQuery.isError || hasInvalidItemsResponse
   const allItems = Array.isArray(itemPage?.items) ? itemPage.items : emptyItems
+  const demands = Array.isArray(demandsQuery.data?.data.items) ? demandsQuery.data.data.items : []
 
   const filteredItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -155,7 +146,40 @@ export function HomePage() {
       searchLabel="搜索商品"
       shellClassName="home-shell"
     >
-      <motion.section
+      {isMobileLayout ? (
+        <MobileHomePageContent
+          allItemsCount={allItems.length}
+          category={category}
+          categoryFilters={categoryFilters}
+          currentPage={currentPage}
+          deliveryMode={deliveryMode}
+          demands={demands}
+          favoriteIds={favoriteIds}
+          filteredCount={filteredItems.length}
+          hasInvalidItemsResponse={hasInvalidItemsResponse}
+          hasItemsError={hasItemsError}
+          isFiltersOpen={mobileFiltersOpen}
+          isDemandsError={demandsQuery.isError}
+          isDemandsLoading={demandsQuery.isLoading}
+          isLoading={itemsQuery.isLoading}
+          items={visibleItems}
+          onCategoryChange={(value) => resetPage(() => setCategory(value))}
+          onDeliveryModeChange={(value) => resetPage(() => setDeliveryMode(value))}
+          onDemandsRetry={() => demandsQuery.refetch()}
+          onFiltersToggle={() => setMobileFiltersOpen((current) => !current)}
+          onPageChange={setPage}
+          onPriceRangeChange={(value) => resetPage(() => setPriceRange(value))}
+          onRetry={() => itemsQuery.refetch()}
+          onSectionChange={(value) => resetPage(() => setSection(value))}
+          onToggleFavorite={toggleFavorite}
+          pageCount={pageCount}
+          priceRange={priceRange}
+          reduceMotion={shouldReduceMotion}
+          section={section}
+        />
+      ) : (
+        <>
+          <motion.section
         className="favorites-heading home-heading"
         initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -343,7 +367,7 @@ export function HomePage() {
                 <small>出售闲置物品</small>
               </span>
             </a>
-            <a href="/demands/new">
+            <a href="/orders/purchase/demand/new">
               <ShoppingBasket size={37} />
               <span>
                 <strong>发布求购</strong>
@@ -352,21 +376,24 @@ export function HomePage() {
             </a>
           </section>
 
-          <HomePanel title="求购动态" action="更多">
+          <HomePanel title="求购动态" action="更多" actionTo="/orders/purchase/demand">
             <div className="demand-list">
-              {demandHighlights.map((item) => (
-                <a href="/demands" key={item.title}>
+              {demandsQuery.isLoading ? <p>正在加载求购动态…</p> : null}
+              {demandsQuery.isError ? <p>求购动态加载失败</p> : null}
+              {!demandsQuery.isLoading && !demandsQuery.isError && demands.length === 0 ? <p>暂时还没有公开求购</p> : null}
+              {!demandsQuery.isLoading && !demandsQuery.isError ? demands.map((item) => (
+                <a href={`/orders/purchase/demand/${item.id}/detail`} key={item.id}>
                   <span className="student-avatar">求</span>
                   <span>
                     <strong>{item.title}</strong>
-                    <small>{item.meta}</small>
+                    <small>{item.categoryName} · {formatRelativeTime(item.createdAt)}</small>
                   </span>
                 </a>
-              ))}
+              )) : null}
             </div>
           </HomePanel>
 
-          <HomePanel title="热门类目" action="更多">
+          <HomePanel title="热门类目" action="更多" actionTo="/items">
             <div className="hot-category-grid">
               {hotCategories.map((item) => (
                 <a href={item.to} key={item.label}>
@@ -389,7 +416,9 @@ export function HomePage() {
             </a>
           </HomePanel>
         </aside>
-      </section>
+          </section>
+        </>
+      )}
     </MarketplaceShell>
   )
 }
@@ -411,16 +440,17 @@ function FilterRow({ label, children }: FilterRowProps) {
 interface HomePanelProps {
   title: string
   action?: string
+  actionTo?: string
   children: ReactNode
 }
 
-function HomePanel({ title, action, children }: HomePanelProps) {
+function HomePanel({ title, action, actionTo = '/items', children }: HomePanelProps) {
   return (
     <section className="home-panel">
       <header>
         <h2>{title}</h2>
         {action ? (
-          <a href="/demands">
+          <a href={actionTo}>
             {action}
             <ChevronRight size={16} />
           </a>
@@ -431,50 +461,4 @@ function HomePanel({ title, action, children }: HomePanelProps) {
       {children}
     </section>
   )
-}
-
-function filterBySection(item: ItemSummary, section: SectionTab) {
-  const categoryName = displayCategoryName(item.categoryName)
-
-  if (section === '教材专区') {
-    return categoryName === '教材教辅'
-  }
-
-  if (section === '数码好物') {
-    return categoryName === '数码电子'
-  }
-
-  if (section === '宿舍补给') {
-    return categoryName === '宿舍用品'
-  }
-
-  return true
-}
-
-function displayCategoryName(categoryName: string) {
-  const map: Record<string, string> = {
-    教材: '教材教辅',
-    数码: '数码电子',
-  }
-
-  return map[categoryName] ?? categoryName
-}
-
-function formatPrice(priceCent: number) {
-  return `¥${(priceCent / 100).toFixed(2)}`
-}
-
-function formatDelivery(deliveryModes: ItemSummary['deliveryModes']) {
-  const canPickup = deliveryModes.includes('SELF_PICKUP')
-  const canDeliver = deliveryModes.includes('DELIVER_TO_SCHOOL')
-
-  if (canPickup && canDeliver) {
-    return '可自提/校内配送'
-  }
-
-  if (canPickup) {
-    return '可自提'
-  }
-
-  return '校内配送'
 }

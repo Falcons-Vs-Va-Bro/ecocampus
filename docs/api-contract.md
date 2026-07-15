@@ -219,7 +219,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 
 ### 商品摘要类型
 
-公开列表与收藏列表当前共用以下真实响应，不包含 mock UI 中的卖家、配送和收藏展示元数据：
+公开商品列表返回卡片展示所需的卖家、配送和收藏元数据；未登录访问时 `favorited` 为 `false`。
 
 ```json
 {
@@ -229,7 +229,11 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
   "priceCent": 3200,
   "status": "ON_SALE",
   "coverImageUrl": "/uploads/item/1001.png",
-  "createdAt": "2026-07-03T15:00:00+08:00"
+  "createdAt": "2026-07-03T15:00:00+08:00",
+  "deliveryModes": ["SELF_PICKUP"],
+  "seller": { "id": 7, "nickname": "Eco User", "verificationStatus": "VERIFIED" },
+  "favorited": false,
+  "favoriteCount": 8
 }
 ```
 
@@ -256,7 +260,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
   "deliveryModes": ["SELF_PICKUP"],
   "status": "ON_SALE",
   "imageUrls": ["/uploads/item/1001.png"],
-  "seller": { "id": 7, "nickname": "Eco User" },
+  "seller": { "id": 7, "nickname": "Eco User", "verificationStatus": "VERIFIED" },
   "favorited": false,
   "favoriteCount": 8,
   "createdAt": "2026-07-03T15:00:00+08:00"
@@ -299,9 +303,19 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 
 - `POST /items/{itemId}/favorite`：要求 `VERIFIED`，不能收藏自己的商品或重复收藏；响应公开商品详情。
 - `DELETE /items/{itemId}/favorite`：删除自己的收藏。
-- `GET /users/me/favorites?page=1&size=20`：分页返回商品摘要。
+- `GET /users/me/favorites?page=1&size=20`：分页返回收藏商品卡片摘要，包含在售和失效收藏，但不返回已删除商品。
 
-当前收藏列表响应不含 `favoritedAt`、`invalidReason`、`seller`、`deliveryModes` 或 `favoriteCount`；这些字段目前只存在于部分前端 mock 类型/展示中。
+收藏列表在商品摘要字段基础上增加：
+
+```json
+{
+  "favorited": true,
+  "favoritedAt": "2026-07-03T16:00:00+08:00",
+  "invalidReason": null
+}
+```
+
+`invalidReason` 对 `OFF_SHELF/SOLD/REJECTED/VIOLATION_REMOVED/PENDING_REVIEW/DRAFT` 给出失效说明；`ON_SALE` 为 `null`。
 
 ## 6. 私信
 
@@ -383,11 +397,15 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
   "deliveryMode": "SELF_PICKUP",
   "status": "PENDING_COMMUNICATION",
   "remark": "想约图书馆门口自提",
-  "createdAt": "2026-07-03T15:00:00+08:00"
+  "createdAt": "2026-07-03T15:00:00+08:00",
+  "itemCoverImageUrl": "/uploads/item/1001.png",
+  "itemPriceCent": 3200,
+  "buyerNickname": "买家同学",
+  "sellerNickname": "Eco User"
 }
 ```
 
-不返回商品图片、价格或双方昵称；前端 mock 会补充展示元数据。
+订单卡片所需的商品图片、价格和双方昵称由真实订单响应提供；取货时间/地点仍暂用订单 `remark` 承载，没有独立履约地址字段。
 
 ### 状态变更
 
@@ -442,7 +460,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 ]
 ```
 
-当前没有 `GET /demands/{demandId}` 详情端点，也没有编辑求购端点。前端求购详情页使用本地数据。
+当前没有 `GET /demands/{demandId}` 详情端点，也没有编辑、删除或重开求购端点。前端求购详情页只能通过 `GET /demands` 公开列表兜底定位开放求购；我的求购页只暴露真实的关闭能力。
 
 ## 9. 后台管理
 

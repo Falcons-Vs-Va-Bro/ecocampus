@@ -17,11 +17,11 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 	Optional<Favorite> findByUserIdAndItemId(Long userId, Long itemId);
 
 	@Query("""
-			select item from Item item
-			join Favorite favorite on favorite.itemId = item.id
+			select favorite from Favorite favorite
+			join Item item on favorite.itemId = item.id
 			where favorite.userId = :userId
-			  and item.status = com.falconsvsvabro.ecocampus.item.ItemStatus.ON_SALE
+			  and item.status <> com.falconsvsvabro.ecocampus.item.ItemStatus.DELETED
 			order by favorite.createdAt desc
 			""")
-	Page<Item> findFavoriteItems(@Param("userId") Long userId, Pageable pageable);
+	Page<Favorite> findUserFavorites(@Param("userId") Long userId, Pageable pageable);
 }
