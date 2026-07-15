@@ -62,21 +62,21 @@ src/
 | 路由 | 页面状态 | 当前数据源/说明 |
 | --- | --- | --- |
 | `/login` | API-backed | 真实模式调用 `POST /auth/login`；mock 模式本地自动建档并生成 mock token |
-| `/` | API-backed | `GET /items`、`GET /categories`；真实商品列表 DTO 目前与卡片所需字段不一致 |
+| `/` | API-backed | `GET /items`、`GET /categories`；真实商品列表已返回卡片所需卖家、配送和收藏元数据 |
 | `/items` | API-backed | `GET /items`；客户端筛选和分页 |
 | `/items/textbook` 等 9 个分类路由 | Local mock | 共用 `ItemsPage`，分类专属商品集合和筛选主要来自组件内本地数据；仍会发起通用商品查询 |
 | `/items/:id` | API-backed | 商品详情、收藏、创建会话、下单；相关商品依赖列表 DTO |
-| `/favorites` | API-backed + Local mock | 商品收藏走 favorite API；“求购关注”存 `localStorage` |
+| `/favorites` | API-backed + Local mock | 商品收藏走 favorite API，失效商品收藏由真实状态与 `invalidReason` 支撑；“求购关注”存 `localStorage` |
 | `/messages` | API-backed | 会话列表 API；商品图/状态等使用 mock 展示元数据 |
-| `/messages/:conversationId` | API-backed | 会话和消息 API；当前消息归属判断仍使用 mock 当前用户 id |
-| `/orders/purchase` | API-backed | `GET /orders?role=BUYER` 与状态 mutation；图片/价格/昵称来自 mock 展示元数据 |
-| `/orders/sale` | API-backed | `GET /orders?role=SELLER` 与状态 mutation；展示元数据同上 |
+| `/messages/:conversationId` | API-backed | 会话和消息 API；消息归属使用真实 `/auth/me` 当前用户 id |
+| `/orders/purchase` | API-backed | `GET /orders?role=BUYER` 与状态 mutation；图片、价格和昵称来自真实订单响应 |
+| `/orders/sale` | API-backed | `GET /orders?role=SELLER` 与状态 mutation；图片、价格和昵称来自真实订单响应 |
 | `/orders` | Redirect | 跳转 `/orders/purchase` |
 | `/orders/sales` | Redirect | 跳转 `/orders/sale` |
-| `/orders/purchase/demand` | Local mock | 求购广场使用 `features/orders/demandData.ts` |
-| `/orders/purchase/demand/:id/detail` | Local mock | 本地求购详情和关注状态；未调用 demand API |
-| `/orders/purchase/demand/new` | Local mock | 表单演示，不调用 `POST /demands` |
-| `/orders/purchase/demand/mine` | Local mock | 我的求购/匹配展示，不调用 demand API |
+| `/orders/purchase/demand` | API-backed + Local favorite | 求购广场调用 `GET /demands` 与 `GET /categories`；求购关注仍存 `localStorage` |
+| `/orders/purchase/demand/:id/detail` | API-backed limited | 后端没有单条详情端点，页面通过 `GET /demands` 的公开列表兜底定位开放求购，找不到时提示接口限制 |
+| `/orders/purchase/demand/new` | API-backed | 发布调用 `POST /demands`；分类来自 `GET /categories`；草稿/编辑不是后端能力 |
+| `/orders/purchase/demand/mine` | API-backed | 我的求购调用 `GET /users/me/demands`，匹配调用 `GET /demands/{demandId}/matches`，关闭调用 `POST /demands/{demandId}/close` |
 | `/publish` | Local mock | 草稿和发布商品写入 `localStorage`，未调用上传/类目/商品 API |
 | `/items/mine` | Local mock | `myItems.mock.ts` + `localStorage`，未调用我的商品 API |
 | `/items/:id/edit` | Local mock | 编辑本地发布数据，未调用商品详情/更新 API |
@@ -132,7 +132,7 @@ src/
 - demand API。
 - dashboard overview/summary。
 
-页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如求购四个页面即使开启或关闭 `VITE_USE_MOCKS` 都使用本地数据。
+页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如发布/我的商品、资料和核验页面即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。
 
 ## 6. 当前 DTO 对齐风险
 
@@ -140,11 +140,10 @@ src/
 
 | 前端期望 | 后端真实响应 | 影响 |
 | --- | --- | --- |
-| `ItemSummary` 含 `deliveryModes/seller/favorited/favoriteCount` | `GET /items` 仅返回基础商品摘要 | 首页和通用商品页真实模式可能在筛选或渲染时访问不存在字段 |
-| 商品详情 seller 含 `verificationStatus` | 详情 seller 只有 `id/nickname` | 核验文案依赖未定义字段 |
-| 收藏项含 `favoritedAt/invalidReason` 和完整 `ItemSummary` | 收藏列表仍是基础商品摘要 | 真实收藏页的配送、卖家与失效面板数据不足 |
 | 后台审核/治理复用或扩展 `ItemSummary` | 后台商品摘要只有治理基础字段 | 真实模式缺图片、描述、举报/审核展示元数据 |
 | 校园核验、收藏、上下架、关闭求购、审核/违规下架等 wrappers 中部分声明 `void` | 后端实际返回当前用户、商品/求购详情或后台摘要 | 当前页面多半忽略响应，但类型不准确 |
+
+2026-07-15 已对齐：`GET /items`、商品详情 seller、商品收藏列表、购买/出售订单卡片字段、私信详情当前用户判断，以及求购广场/发布/我的求购/匹配结果的主要 demand API 接线。
 
 市场公共壳的游客入口当前文案仍是“登录 / 注册”，但只链接 `/login`，后端没有独立注册端点；真实行为是登录时自动建档。
 

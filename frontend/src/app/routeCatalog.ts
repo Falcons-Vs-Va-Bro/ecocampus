@@ -230,7 +230,7 @@ export const routeCatalog = [
     description: '查看单条求购的预算、成色、交易地点、发布者与匹配建议。',
     guard: 'verified',
     module: 'user',
-    endpoints: ['GET /demands/{demandId}', 'GET /demands/{demandId}/matches', 'GET /conversations'],
+    endpoints: ['GET /demands', 'GET /conversations'],
   },
   {
     path: '/orders/purchase/demand/new',

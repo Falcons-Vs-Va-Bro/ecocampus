@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   CheckCircle2,
   ClipboardList,
@@ -12,9 +13,9 @@ import {
 import { motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import airpodsImage from '../../assets/favorites/items/airpods.webp'
-import mathBooksImage from '../../assets/favorites/items/math-books.webp'
-import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.webp'
+import { listCategories } from '../../api/category.api'
+import { createDemand } from '../../api/demand.api'
+import { queryKeys } from '../../api/queryKeys'
 import messageHelperImage from '../../assets/messages/message-helper.webp'
 import { MarketplaceShell } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -27,7 +28,6 @@ const purchaseNav = [
   { label: '我的求购 / 匹配结果', to: '/orders/purchase/demand/mine' },
 ]
 
-const categories = ['教材教辅', '数码电子', '宿舍用品', '运动户外', '生活日用', '美妆个护', '乐器文具', '票务转让', '其他']
 const conditions = ['全部', '全新', '九成新', '八成新', '可小刀']
 const deliveryModes = [
   { label: '可自提', icon: MapPin },
@@ -36,78 +36,78 @@ const deliveryModes = [
 ]
 const pickupSpots = ['芙蓉园门口', '翔安一期食堂', '思明校门口', '图书馆附近', '宿舍楼下']
 
-const matchPreview = [
-  { title: '教材', price: '¥25-35', meta: '九成新 · 可自提', image: mathBooksImage },
-  { title: 'AirPods', price: '¥380-450', meta: '九成新 · 可自提', image: airpodsImage },
-  { title: '机械键盘', price: '¥120-180', meta: '八成新 · 可自提', image: mechanicalKeyboardImage },
-]
-
-const editableDemands: Record<string, {
-  category: string
-  deliveryMode: string
-  description: string
-  maxBudget: string
-  minBudget: string
-  pickupSpot: string
-  title: string
-}> = {
-  '1': {
-    title: '想收高等数学第七版教材',
-    category: '教材教辅',
-    minBudget: '20',
-    maxBudget: '40',
-    deliveryMode: '可自提',
-    pickupSpot: '芙蓉园门口',
-    description: '希望上下册齐全，笔记少一点，期末复习前能自取。',
-  },
-  '2': {
-    title: '求 AirPods 二代或三代',
-    category: '数码电子',
-    minBudget: '200',
-    maxBudget: '450',
-    deliveryMode: '可自提',
-    pickupSpot: '图书馆附近',
-    description: '希望电池健康还可以，外壳无明显磕碰，能当面试用。',
-  },
-}
-
 export function PurchaseDemandNewPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const editId = searchParams.get('edit') ?? ''
-  const editingDemand = editableDemands[editId]
-  useDocumentTitle(editingDemand ? '厦大闲置 - 编辑求购' : '厦大闲置 - 发布求购')
+  const isEditMode = Boolean(editId)
+  useDocumentTitle(isEditMode ? '厦大闲置 - 编辑求购' : '厦大闲置 - 发布求购')
   const shouldReduceMotion = useReducedMotion() ?? false
   const [keyword, setKeyword] = useState('')
-  const [title, setTitle] = useState(editingDemand?.title ?? '')
-  const [category, setCategory] = useState(editingDemand?.category ?? '教材教辅')
+  const [title, setTitle] = useState('')
+  const [categoryId, setCategoryId] = useState<number | null>(null)
   const [condition, setCondition] = useState('全部')
-  const [minBudget, setMinBudget] = useState(editingDemand?.minBudget ?? '')
-  const [maxBudget, setMaxBudget] = useState(editingDemand?.maxBudget ?? '')
-  const [deliveryMode, setDeliveryMode] = useState(editingDemand?.deliveryMode ?? '可自提')
-  const [pickupSpot, setPickupSpot] = useState(editingDemand?.pickupSpot ?? '')
-  const [description, setDescription] = useState(editingDemand?.description ?? '')
+  const [minBudget, setMinBudget] = useState('')
+  const [maxBudget, setMaxBudget] = useState('')
+  const [deliveryMode, setDeliveryMode] = useState('可自提')
+  const [pickupSpot, setPickupSpot] = useState('')
+  const [description, setDescription] = useState('')
   const [privateContact, setPrivateContact] = useState(true)
   const [draftSaved, setDraftSaved] = useState(false)
-  const [published, setPublished] = useState(false)
+  const [notice, setNotice] = useState('')
 
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.categories.list,
+    queryFn: listCategories,
+  })
+  const categories = categoriesQuery.data?.data ?? []
+  const selectedCategoryId = categoryId ?? categories[0]?.id ?? null
+  const selectedCategory = categories.find((item) => item.id === selectedCategoryId)
   const descriptionCount = description.length
-  const isPublishReady = useMemo(() => title.trim().length > 0 && description.trim().length > 0, [description, title])
+  const isPublishReady = useMemo(
+    () => title.trim().length > 0 && description.trim().length > 0 && selectedCategoryId !== null,
+    [description, selectedCategoryId, title],
+  )
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      createDemand({
+        title: title.trim(),
+        description: buildDescription({ condition, deliveryMode, description, pickupSpot }),
+        categoryId: selectedCategoryId ?? 0,
+        budgetMinCent: yuanToCent(minBudget),
+        budgetMaxCent: yuanToCent(maxBudget),
+        keywords: buildKeywords(title, selectedCategory?.name, condition, description),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demands'] })
+      navigate('/orders/purchase/demand/mine?created=1')
+    },
+    onError: (error) => {
+      setNotice(error instanceof Error ? error.message : '发布失败，请稍后再试')
+    },
+  })
 
   function saveDraft() {
     setDraftSaved(true)
-    setPublished(false)
+    setNotice('草稿只保存在当前页面状态，后端暂未提供求购草稿接口')
   }
 
   function publishDemand() {
-    if (!isPublishReady) {
+    if (isEditMode) {
+      setNotice('后端暂未提供求购编辑接口，不能保存修改')
       return
     }
-    setPublished(true)
-    setDraftSaved(false)
-    if (editingDemand) {
-      navigate(`/orders/purchase/demand/mine?updated=${editId}`)
+
+    if (!isPublishReady || createMutation.isPending) {
+      setNotice('请填写标题、分类和详细描述')
+      return
     }
+
+    setDraftSaved(false)
+    setNotice('')
+    createMutation.mutate()
   }
 
   return (
@@ -126,8 +126,8 @@ export function PurchaseDemandNewPage() {
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.36, delay: 0.18 }}
       >
-        <h1>{editingDemand ? '编辑求购' : '发布求购'}</h1>
-        <p>{editingDemand ? '修改求购信息后保存，系统会重新计算匹配结果' : '填写想要的物品，系统会帮你匹配可能商品'}</p>
+        <h1>{isEditMode ? '编辑求购' : '发布求购'}</h1>
+        <p>{isEditMode ? '后端暂未开放求购编辑，当前只支持发布新求购和关闭求购' : '填写想要的物品，系统会帮你匹配可能商品'}</p>
       </motion.section>
 
       <section className="orders-layout">
@@ -146,7 +146,11 @@ export function PurchaseDemandNewPage() {
             </FormRow>
 
             <FormRow index={2} label="期望分类">
-              <Segmented options={categories} value={category} onChange={setCategory} />
+              <CategorySegments
+                options={categories.map((item) => ({ label: item.name, value: item.id }))}
+                value={selectedCategoryId}
+                onChange={setCategoryId}
+              />
             </FormRow>
 
             <FormRow index={3} label="期望成色">
@@ -216,8 +220,8 @@ export function PurchaseDemandNewPage() {
             </FormRow>
 
             <div className="demand-form-actions">
-              <button type="button" className="primary" onClick={publishDemand}>
-                {editingDemand ? '保存修改' : '发布求购'}
+              <button type="button" className="primary" disabled={createMutation.isPending || isEditMode} onClick={publishDemand}>
+                {isEditMode ? '暂不支持编辑' : createMutation.isPending ? '发布中' : '发布求购'}
               </button>
               <button type="button" onClick={saveDraft}>
                 保存草稿
@@ -225,7 +229,7 @@ export function PurchaseDemandNewPage() {
             </div>
 
             {draftSaved ? <p className="demand-form-toast">草稿已保存</p> : null}
-            {published ? <p className="demand-form-toast">求购已发布，系统正在为你匹配</p> : null}
+            {notice ? <p className="demand-form-toast" role="status">{notice}</p> : null}
 
             <div className="demand-form-flow" aria-label="发布流程">
               <FlowIcon icon={<ClipboardList size={52} />} title="发布求购" text="填写需求信息" />
@@ -246,46 +250,26 @@ export function PurchaseDemandNewPage() {
               <img src={messageHelperImage} alt="" />
             </span>
             <ul>
-              <li>
-                <CheckCircle2 size={19} />
-                标题写清型号
-              </li>
-              <li>
-                <CheckCircle2 size={19} />
-                成色要求越明确越好
-              </li>
-              <li>
-                <CheckCircle2 size={19} />
-                预算范围越清楚越容易匹配
-              </li>
-              <li>
-                <CheckCircle2 size={19} />
-                写明自提地点方便同学联系
-              </li>
-              <li>
-                <CheckCircle2 size={19} />
-                联系方式默认隐藏
-              </li>
-              <li>
-                <CheckCircle2 size={19} />
-                通过私信沟通更安全
-              </li>
+              <li><CheckCircle2 size={19} />标题写清型号</li>
+              <li><CheckCircle2 size={19} />成色要求越明确越好</li>
+              <li><CheckCircle2 size={19} />预算范围越清楚越容易匹配</li>
+              <li><CheckCircle2 size={19} />写明自提地点方便同学联系</li>
+              <li><CheckCircle2 size={19} />联系方式默认隐藏</li>
+              <li><CheckCircle2 size={19} />通过私信沟通更安全</li>
             </ul>
           </section>
 
           <section className="order-flow-panel demand-preview-panel">
-            <h2>可能匹配预览</h2>
+            <h2>发布后匹配</h2>
             <div className="match-preview-list">
-              {matchPreview.map((item) => (
-                <article key={item.title}>
-                  <img src={item.image} alt="" />
-                  <div>
-                    <h3>{item.title}</h3>
-                    <strong>{item.price}</strong>
-                    <p>{item.meta}</p>
-                  </div>
-                </article>
-              ))}
+              <article>
+                <img src={messageHelperImage} alt="" />
+                <div>
+                  <h3>真实商品匹配</h3>
+                  <strong>按分类、预算、关键词计算</strong>
+                  <p>发布成功后可在“我的求购 / 匹配结果”查看后端返回的匹配商品</p>
+                </div>
+              </article>
             </div>
             <a href="/orders/purchase/demand">查看更多匹配商品</a>
           </section>
@@ -302,6 +286,30 @@ function FormRow({ children, index, label }: { children: React.ReactNode; index:
         {index}. {label}
       </label>
       <div>{children}</div>
+    </div>
+  )
+}
+
+function CategorySegments({
+  onChange,
+  options,
+  value,
+}: {
+  onChange: (value: number) => void
+  options: Array<{ label: string; value: number }>
+  value: number | null
+}) {
+  if (options.length === 0) {
+    return <p className="demand-form-toast">暂无可用分类，请确认后端类目接口</p>
+  }
+
+  return (
+    <div className="demand-segments">
+      {options.map((item) => (
+        <button type="button" className={value === item.value ? 'active' : undefined} onClick={() => onChange(item.value)} key={item.value}>
+          {item.label}
+        </button>
+      ))}
     </div>
   )
 }
@@ -326,4 +334,40 @@ function FlowIcon({ icon, text, title }: { icon: React.ReactNode; text: string; 
       <small>{text}</small>
     </span>
   )
+}
+
+function yuanToCent(value: string) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 100) : undefined
+}
+
+function buildDescription({
+  condition,
+  deliveryMode,
+  description,
+  pickupSpot,
+}: {
+  condition: string
+  deliveryMode: string
+  description: string
+  pickupSpot: string
+}) {
+  const details = [
+    description.trim(),
+    condition === '全部' ? '' : `期望成色：${condition}`,
+    `取货方式：${deliveryMode}`,
+    pickupSpot ? `自提地点：${pickupSpot}` : '',
+  ].filter(Boolean)
+
+  return details.join('\n')
+}
+
+function buildKeywords(title: string, category?: string, condition?: string, description?: string) {
+  const tokens = `${title} ${category ?? ''} ${condition ?? ''} ${description ?? ''}`
+    .replace(/[，。！？、,.!?]/g, ' ')
+    .split(/\s+/)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 2)
+
+  return Array.from(new Set(tokens)).slice(0, 8)
 }
