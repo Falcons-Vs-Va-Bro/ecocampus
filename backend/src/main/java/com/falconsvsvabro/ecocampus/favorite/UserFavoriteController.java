@@ -3,7 +3,7 @@ package com.falconsvsvabro.ecocampus.favorite;
 import com.falconsvsvabro.ecocampus.auth.AuthenticatedUser;
 import com.falconsvsvabro.ecocampus.common.api.ApiResponse;
 import com.falconsvsvabro.ecocampus.common.api.PageResponse;
-import com.falconsvsvabro.ecocampus.item.dto.PublicItemListResponse;
+import com.falconsvsvabro.ecocampus.favorite.dto.FavoriteItemResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,7 +23,7 @@ public class UserFavoriteController {
 	}
 
 	@GetMapping
-	ApiResponse<PageResponse<PublicItemListResponse>> listMyFavorites(
+	ApiResponse<PageResponse<FavoriteItemResponse>> listMyFavorites(
 			@AuthenticationPrincipal AuthenticatedUser currentUser, @RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
 		return ApiResponse.ok(favoriteService.listMyFavorites(currentUser.id(), page, size), traceId(request));

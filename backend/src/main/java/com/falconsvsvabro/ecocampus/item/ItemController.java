@@ -35,13 +35,15 @@ public class ItemController {
 	}
 
 	@GetMapping
-	ApiResponse<PageResponse<PublicItemListResponse>> listItems(@RequestParam(required = false) String keyword,
+	ApiResponse<PageResponse<PublicItemListResponse>> listItems(@AuthenticationPrincipal AuthenticatedUser currentUser,
+			@RequestParam(required = false) String keyword,
 			@RequestParam(required = false) Long categoryId, @RequestParam(required = false) Long minPriceCent,
 			@RequestParam(required = false) Long maxPriceCent, @RequestParam(required = false) DeliveryMode deliveryMode,
 			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size,
 			HttpServletRequest request) {
+		Long viewerUserId = currentUser == null ? null : currentUser.id();
 		return ApiResponse.ok(itemService.searchPublicItems(keyword, categoryId, minPriceCent, maxPriceCent,
-				deliveryMode, page, size), traceId(request));
+				deliveryMode, viewerUserId, page, size), traceId(request));
 	}
 
 	@GetMapping("/{itemId}")

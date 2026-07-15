@@ -60,8 +60,9 @@ API 模块：
 
 页面数据源摘要：
 
-- API-backed：`/login`、`/`、`/items`、`/items/:id`、商品收藏、私信、购买/出售订单、后台看板、后台商品/用户/类目。
-- Local mock：九个分类页的专属商品集合；求购四页；发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；资料表单与核验表单；收藏里的求购关注。
+- API-backed：`/login`、`/`、`/items`、`/items/:id`、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、后台看板、后台商品/用户/类目。商品卡片、收藏失效、订单卡片、私信详情当前用户判断和求购主要链路已使用真实 API 字段。
+- API-backed limited：求购详情页通过公开 `GET /demands` 列表兜底定位开放求购；后端没有单条求购详情接口，关闭/非公开求购无法直接展示。
+- Local mock：九个分类页的专属商品集合；发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；资料表单与核验表单；收藏里的求购关注。
 - Placeholder：`/demands`、`/demands/new`、`/demands/mine`。
 - Redirect：`/orders -> /orders/purchase`，`/orders/sales -> /orders/sale`。
 
@@ -81,24 +82,21 @@ mock 与守卫：
 
 ## 已知实现对齐问题
 
-1. `GET /items` 真实摘要缺少前端 `ItemSummary` 要求的 `deliveryModes/seller/favorited/favoriteCount`，首页和通用列表真实模式存在渲染风险。
-2. 商品详情 seller 后端只有 `id/nickname`，前端类型还要求 `verificationStatus`。
-3. 收藏真实列表仍是基础商品摘要；前端收藏类型额外要求 `favoritedAt/invalidReason` 和完整商品展示字段。
-4. 后台商品真实摘要缺少审核/治理页面 mock 中的图片、描述、举报数、审核标记等元数据；前端 wrapper 类型过宽。
-5. 校园核验、收藏、上下架、关闭求购、审核/违规下架等若干 mutation wrapper 声明 `void`，后端实际返回当前用户、商品/求购详情或后台商品摘要。
-6. `routeCatalog.ts` 为求购详情列出 `GET /demands/{demandId}`，但后端没有该端点，当前详情页也未调用 API。
-7. 订单/私信页面使用 mock 元数据补图片、价格或状态；私信详情的“是否本人消息”仍使用 mock 当前用户 id。
-8. 前端分类 mock 有 9 个一级类目，自动 Flyway seed 只有 4 个；手动 MySQL demo seed 有 9 个。
-9. 类目数据库是扁平一级模型；后台树层级、启停、商品数是本地展示状态。
-10. 过期黑名单不会自动恢复 `verificationStatus`；过期后交易请求从 423 变为 403，仍需管理员移出。
-11. 没有前端组件/路由自动化测试；前端验证目前只有 lint/build 和人工页面检查记录。
-12. GitHub Pages 深层 URL 依靠 `404.html` 启动 SPA，内容可用但 HTTP 状态仍为 404，不是真正的服务端 rewrite。
-13. `/uploads/**` 未加入 Spring Security 公开白名单，普通图片标签无法携带 Bearer token；真实上传图片的公开展示链路尚未闭合。
-14. `application-local.example.yml` 的 `FILE_STORAGE_TYPE` 和 Redis 配置没有对应运行时实现/依赖。
-15. Vite 没有 `/api` dev proxy；本地联调必须显式设置 `VITE_API_BASE_URL=http://localhost:8080/api/v1`。
-16. 商品 `off-shelf` 只阻止 `SOLD/DELETED`，卖家可把 `VIOLATION_REMOVED` 改为 `OFF_SHELF` 后重新申请审核，违规下架存在绕过路径。
-17. 市场公共壳仍显示“登录 / 注册”，但没有注册路由/端点，点击只进入自动建档登录页。
-18. 后台用户页的总量、今日新增、注册日期、发布数，以及类目页的层级/启停/商品数，部分仍是硬编码或本地展示值。
+1. 后台商品真实摘要缺少审核/治理页面 mock 中的图片、描述、举报数、审核标记等元数据；前端 wrapper 类型过宽。
+2. 校园核验、收藏、上下架、关闭求购、审核/违规下架等若干 mutation wrapper 声明 `void`，后端实际返回当前用户、商品/求购详情或后台商品摘要。
+3. 后端没有 `GET /demands/{demandId}`、求购编辑、删除或重开端点；前端求购详情只能通过公开列表兜底，发布页编辑模式明确不可用。
+4. 求购关注仍为 `localStorage` 本地能力，后端没有对应收藏表/API。
+5. 前端分类 mock 有 9 个一级类目，自动 Flyway seed 只有 4 个；手动 MySQL demo seed 有 9 个。
+6. 类目数据库是扁平一级模型；后台树层级、启停、商品数是本地展示状态。
+7. 过期黑名单不会自动恢复 `verificationStatus`；过期后交易请求从 423 变为 403，仍需管理员移出。
+8. 没有前端组件/路由自动化测试；前端验证目前只有 lint/build 和人工页面检查记录。
+9. GitHub Pages 深层 URL 依靠 `404.html` 启动 SPA，内容可用但 HTTP 状态仍为 404，不是真正的服务端 rewrite。
+10. `/uploads/**` 未加入 Spring Security 公开白名单，普通图片标签无法携带 Bearer token；真实上传图片的公开展示链路尚未闭合。
+11. `application-local.example.yml` 的 `FILE_STORAGE_TYPE` 和 Redis 配置没有对应运行时实现/依赖。
+12. Vite 没有 `/api` dev proxy；本地联调必须显式设置 `VITE_API_BASE_URL=http://localhost:8080/api/v1`。
+13. 商品 `off-shelf` 只阻止 `SOLD/DELETED`，卖家可把 `VIOLATION_REMOVED` 改为 `OFF_SHELF` 后重新申请审核，违规下架存在绕过路径。
+14. 市场公共壳仍显示“登录 / 注册”，但没有注册路由/端点，点击只进入自动建档登录页。
+15. 后台用户页的总量、今日新增、注册日期、发布数，以及类目页的层级/启停/商品数，部分仍是硬编码或本地展示值。
 
 ## 部署状态
 
@@ -145,6 +143,8 @@ GitHub Pages frontend
 
 - 2026-07-15：补齐 `/profile` 常用地址卡片交互，支持编辑地址名称、详细地点、联系人和配送方式并保存或取消，同时保留每张卡片的即时删除能力。
 - 2026-07-15：将分类商品页静态“最新发布”按钮改为真实排序菜单，支持 4 种客户端排序方式和键盘操作。
+- 2026-07-15：第二组真实接线完成：求购广场调用 `GET /demands`/类目 API，发布求购调用 `POST /demands`，我的求购调用 `GET /users/me/demands`、匹配 API 和关闭 API；移除编辑/删除/重开等后端不存在的假操作。
+- 2026-07-15：第一组真实接线完成：商品列表/详情补齐卖家、配送、收藏元数据；收藏列表返回失效原因和收藏时间；订单响应补图片、价格和双方昵称；私信详情改用真实当前用户 id 判断消息归属。
 - 2026-07-15：修复 Local mock 发布/编辑商品时上传图片始终显示固定台灯素材的问题；选择的图片会压缩为 WebP 数据，真实用于预览、草稿和新发布商品封面。
 - 2026-07-15：恢复 Mac mini 的 Tailscale 节点在线状态，新增仅限 Tailscale 来源和本机 MySQL 3306 转发的运维公钥入口，并创建数据库级独立运维账号；未开放 Shell、MySQL 网络监听或公网端口。
 - 2026-07-14：在 Mac mini 注册仓库级专用 self-hosted Runner，新增后端 `main` 自动测试、构建、原子部署、健康检查与失败回滚链路；构建不再经过 GitHub 托管 Runner。

@@ -110,13 +110,13 @@ public class ItemService {
 
 	@Transactional(readOnly = true)
 	public PageResponse<PublicItemListResponse> searchPublicItems(String keyword, Long categoryId, Long minPriceCent,
-			Long maxPriceCent, DeliveryMode deliveryMode, int page, int size) {
+			Long maxPriceCent, DeliveryMode deliveryMode, Long viewerUserId, int page, int size) {
 		Pageable pageable = PageRequest.of(normalizePage(page) - 1, normalizeSize(size));
 		var itemPage = itemRepository.searchPublicItems(normalizeKeyword(keyword), categoryId, minPriceCent,
 				maxPriceCent, deliveryMode, pageable);
 		List<PublicItemListResponse> items = itemPage.getContent()
 			.stream()
-			.map(item -> PublicItemListResponse.from(item, getCategory(item.getCategoryId()).getName()))
+			.map(item -> toPublicItemListResponse(item, viewerUserId))
 			.toList();
 		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), itemPage.getTotalElements());
 	}
@@ -189,6 +189,13 @@ public class ItemService {
 
 	private AdminItemResponse toAdminItemResponse(Item item) {
 		return AdminItemResponse.from(item, getUser(item.getSellerId()), getCategory(item.getCategoryId()).getName());
+	}
+
+	private PublicItemListResponse toPublicItemListResponse(Item item, Long viewerUserId) {
+		boolean favorited = viewerUserId != null && favoriteRepository.existsByUserIdAndItemId(viewerUserId,
+				item.getId());
+		return PublicItemListResponse.from(item, getCategory(item.getCategoryId()).getName(), getUser(item.getSellerId()),
+				favorited, favoriteRepository.countByItemId(item.getId()));
 	}
 
 	private Item getOwnedItem(Long sellerId, Long itemId) {

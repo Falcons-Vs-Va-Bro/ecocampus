@@ -12,7 +12,6 @@ import {
 import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
-import { getMockOrderMeta } from '../../api/mock/orders.mock'
 import type { OrderListParams, OrderRole, OrderSummary } from '../../api/order.api'
 import { listOrders, updateOrderStatus } from '../../api/order.api'
 import { queryKeys } from '../../api/queryKeys'
@@ -73,18 +72,13 @@ export function OrdersPage({ role = 'BUYER' }: { role?: OrderRole }) {
 
   const orders = ordersQuery.data?.data.items ?? emptyOrders
   const displayStats = useMemo(
-    () => isSale ? {
-      PENDING_COMMUNICATION: 4,
-      WAITING_PICKUP: 2,
-      COMPLETED: 16,
-      CANCELLED: 3,
-    } : {
+    () => ({
       PENDING_COMMUNICATION: orders.filter((order) => order.status === 'PENDING_COMMUNICATION').length,
       WAITING_PICKUP: orders.filter((order) => order.status === 'WAITING_PICKUP').length,
       COMPLETED: orders.filter((order) => order.status === 'COMPLETED').length,
       CANCELLED: orders.filter((order) => order.status === 'CANCELLED').length,
-    },
-    [isSale, orders],
+    }),
+    [orders],
   )
   const visibleOrders = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -96,8 +90,7 @@ export function OrdersPage({ role = 'BUYER' }: { role?: OrderRole }) {
           return true
         }
 
-        const meta = getMockOrderMeta(order.id)
-        return `${order.itemTitle} ${isSale ? meta?.buyerName ?? '' : meta?.sellerName ?? ''} ${meta?.pickupSpot ?? ''}`
+        return `${order.itemTitle} ${isSale ? order.buyerNickname ?? '' : order.sellerNickname ?? ''} ${order.remark ?? ''}`
           .toLowerCase()
           .includes(normalizedKeyword)
       })
@@ -278,12 +271,11 @@ interface OrderCardProps {
 }
 
 function OrderCard({ index, isMutating, onStatusChange, order, reduceMotion, role }: OrderCardProps) {
-  const meta = getMockOrderMeta(order.id)
   const status = statusCopy[order.status]
   const pickupText =
     order.deliveryMode === 'SELF_PICKUP'
-      ? `取货：${meta?.pickupSpot ?? '线下自提'}`
-      : `取货：${meta?.pickupSpot ?? '校内配送'}`
+      ? `取货：${order.remark ?? '线下自提'}`
+      : `配送：${order.remark ?? '校内配送'}`
 
   return (
     <motion.article
@@ -294,24 +286,24 @@ function OrderCard({ index, isMutating, onStatusChange, order, reduceMotion, rol
       whileHover={reduceMotion ? undefined : { y: -3, rotate: index % 2 === 0 ? -0.15 : 0.15 }}
     >
       <a className="order-image" href={`/items/${order.itemId}`} aria-label={`查看 ${order.itemTitle}`}>
-        {meta?.coverImageUrl ? <img src={meta.coverImageUrl} alt={order.itemTitle} loading="lazy" /> : <span>待同步</span>}
+        {order.itemCoverImageUrl ? <img src={order.itemCoverImageUrl} alt={order.itemTitle} loading="lazy" /> : <span>暂无图片</span>}
       </a>
 
       <div className="order-card-body">
         <header>
           <div>
             <h2>{order.itemTitle}</h2>
-            <strong>{meta ? formatPrice(meta.priceCent) : '价格待同步'}</strong>
+            <strong>{typeof order.itemPriceCent === 'number' ? formatPrice(order.itemPriceCent) : '价格待同步'}</strong>
           </div>
           <span className={`order-status-badge order-status-badge--${status.tone}`}>
             {role === 'SELLER' && order.status === 'WAITING_PICKUP' ? '待买家自提' : status.label}
           </span>
         </header>
 
-        <p>{role === 'SELLER' ? `买家：${meta?.buyerName ?? `用户 #${order.buyerId}`}` : `卖家：${meta?.sellerName ?? `用户 #${order.sellerId}`}`}</p>
-        {role === 'SELLER' ? <p>约定时间：{meta?.appointmentText ?? '待约定'}</p> : null}
-        <p>{role === 'SELLER' ? `取货地点：${meta?.pickupSpot ?? '待确认'}` : pickupText}</p>
-        {role === 'SELLER' ? <p>最新消息：{meta?.latestMessage ?? meta?.timelineText ?? order.remark ?? '暂无新消息'}</p> : null}
+        <p>{role === 'SELLER' ? `买家：${order.buyerNickname ?? `用户 #${order.buyerId}`}` : `卖家：${order.sellerNickname ?? `用户 #${order.sellerId}`}`}</p>
+        {role === 'SELLER' ? <p>交易备注：{order.remark ?? '待沟通确认'}</p> : null}
+        <p>{role === 'SELLER' ? `履约方式：${formatDelivery(order.deliveryMode)}` : pickupText}</p>
+        {role === 'SELLER' ? <p>最新状态：{order.remark ?? status.label}</p> : null}
 
         <footer>{renderOrderActions(order, isMutating, onStatusChange, role)}</footer>
       </div>
@@ -499,6 +491,10 @@ function FlowStep({ label, side, tone }: FlowStepProps) {
 
 function formatPrice(priceCent: number) {
   return `¥${(priceCent / 100).toFixed(2)}`
+}
+
+function formatDelivery(deliveryMode: OrderSummary['deliveryMode']) {
+  return deliveryMode === 'SELF_PICKUP' ? '线下自提' : '校内配送'
 }
 
 function classNames(...values: Array<string | false | null | undefined>) {
