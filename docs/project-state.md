@@ -36,7 +36,7 @@
 - Flyway 当前为 V1–V4：核心表、4 个初始类目、账号密码哈希列、会话双方已读时间。
 - `db/seed/mysql-demo-seed.sql` 是 Flyway 后手动导入的完整演示数据，不会自动运行。
 - Maven 已移除 Redis 依赖和业务使用；`application-local.example.yml` 中 Redis 段只是未生效的遗留占位。
-- 图片仅实现本地 JPEG/PNG/GIF 存储；`FILE_STORAGE_TYPE` 没有实现选择器。MVC 已注册 `/uploads/**`，但安全配置未公开该路径。
+- 图片仅实现本地 JPEG/PNG/GIF 存储；`FILE_STORAGE_TYPE` 没有实现选择器。`GET /uploads/**` 已公开并返回一年期 `public, immutable` 缓存头，生产上传响应默认使用 API 域名完整 URL，可由 Cloudflare和浏览器缓存。
 
 API 模块：
 
@@ -104,7 +104,7 @@ mock 与守卫：
 7. 过期黑名单不会自动恢复 `verificationStatus`；过期后交易请求从 423 变为 403，仍需管理员移出。
 8. 没有前端组件/路由自动化测试；前端验证目前只有 lint/build 和人工页面检查记录。
 9. GitHub Pages 深层 URL 依靠 `404.html` 启动 SPA，内容可用但 HTTP 状态仍为 404，不是真正的服务端 rewrite。
-10. `/uploads/**` 未加入 Spring Security 公开白名单，普通图片标签无法携带 Bearer token；真实上传图片的公开展示链路尚未闭合。
+10. `/uploads/**` 匿名读取和缓存头已闭合，但发布页仍是 Local mock，尚未调用上传/商品发布 API；演示数据库中现有 79 条 `/src/assets/**` 图片路径也仍需迁移为真实上传 URL。
 11. `application-local.example.yml` 的 `FILE_STORAGE_TYPE` 和 Redis 配置没有对应运行时实现/依赖。
 12. Vite 支持通过 `VITE_API_PROXY_TARGET` 为 `/api` 开启可选同源代理；未设置时保持原有无代理行为。
 13. 商品 `off-shelf` 只阻止 `SOLD/DELETED`，卖家可把 `VIOLATION_REMOVED` 改为 `OFF_SHELF` 后重新申请审核，违规下架存在绕过路径。
@@ -132,7 +132,7 @@ GitHub Pages frontend
 
 本轮文档审计与最新远端性能变更组合后（2026-07-14）已验证：
 
-- `cd backend && ./mvnw test`：32 tests 通过，0 failures、0 errors、0 skipped。
+- `cd backend && ./mvnw test`：33 tests 通过，0 failures、0 errors、0 skipped；包含上传图片匿名读取和一年期缓存头测试。
 - `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.33 kB（gzip 205.52 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-14 管理员路由域隔离已由 GitHub Pages 发布；真实管理员登录返回 `ADMIN/VERIFIED`，后台 summary API 返回 200，线上产物确认登录默认目标、全局管理员重定向和退出登录逻辑均已包含。
@@ -159,6 +159,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-16：配置完整图片缓存链路：匿名开放 `GET /uploads/**`，添加一年期 `public, immutable` 缓存头，并让生产上传响应默认返回 API 域名完整 URL；Cloudflare 已启用仅匹配 `ecocampus-api.teamdsb.online/uploads/*` 的一年期 Edge/Browser Cache Rule，未匹配 `/api/*` 或启用 Cache Reserve。
 - 2026-07-15：移除主页求购摘要、九个分类页和个人地址区的页面硬编码业务数据；分别接入 demand、item 与 profile address API，并增加可选的 Vite `/api` 联调代理。
 - 2026-07-15：分别重构分类、发布和消息页的移动端信息密度；分类筛选默认折叠并展示双列商品，发布表单改为无溢出的单列结构，消息统计与会话列表改为紧凑首屏布局，桌面端保持原状。
 - 2026-07-15：调整 `/profile` 移动端页面比例，固定“个人中心”为单行标题，缩小头像与资料字号，并将资料操作、地址区和设置区改为更紧凑的手机布局；桌面端不受影响。

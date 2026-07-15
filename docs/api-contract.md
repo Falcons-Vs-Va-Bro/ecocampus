@@ -213,7 +213,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 { "url": "/uploads/ITEM/uuid.jpg", "width": 1200, "height": 900 }
 ```
 
-当前实现只有本地文件存储，不包含对象存储实现。虽然 MVC 注册了 `/uploads/**` 静态资源处理器，但 Spring Security 当前没有将该路径设为公开，读取会要求有效 Bearer token；普通 `<img src>` 无法自动附带该 header，这是尚未解决的真实展示问题。
+当前实现只有本地文件存储，不包含对象存储实现。`GET /uploads/**` 允许匿名读取，并返回 `Cache-Control: public, max-age=31536000, immutable`，使浏览器和 Cloudflare 可缓存 UUID 命名的不可变图片。生产环境默认把上传响应 URL 前缀设为 `https://ecocampus-api.teamdsb.online/uploads`；可以通过 `FILE_STORAGE_PUBLIC_URL_PREFIX` 覆盖。
 
 ## 5. 商品
 

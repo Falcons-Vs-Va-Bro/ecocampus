@@ -1,9 +1,12 @@
 package com.falconsvsvabro.ecocampus.file;
 
 import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,6 +46,25 @@ class FileControllerTests {
 			.andExpect(jsonPath("$.data.url", startsWith("/uploads/ITEM/")))
 			.andExpect(jsonPath("$.data.width").value(2))
 			.andExpect(jsonPath("$.data.height").value(3));
+	}
+
+	@Test
+	void uploadedImageIsPublicAndCacheable() throws Exception {
+		String accessToken = loginAndVerify("229202400073", "2026000073");
+		MockMultipartFile file = new MockMultipartFile("file", "item.png", "image/png", pngBytes(2, 3));
+		MvcResult upload = mockMvc.perform(multipart("/api/v1/files/images")
+			.file(file)
+			.param("scene", "ITEM")
+			.header("Authorization", "Bearer " + accessToken))
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String imageUrl = read(upload, "/data/url").asText();
+		mockMvc.perform(get(imageUrl))
+			.andExpect(status().isOk())
+			.andExpect(header().string("Cache-Control", containsString("max-age=31536000")))
+			.andExpect(header().string("Cache-Control", containsString("public")))
+			.andExpect(header().string("Cache-Control", containsString("immutable")));
 	}
 
 	@Test

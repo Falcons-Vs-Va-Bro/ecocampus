@@ -30,6 +30,7 @@ public class SecurityConfig {
 			.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint)
 				.accessDeniedHandler(accessDeniedHandler))
 			.authorizeHttpRequests(authorize -> authorize
+				.requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/v1/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/v1/items", "/api/v1/items/*").permitAll()
