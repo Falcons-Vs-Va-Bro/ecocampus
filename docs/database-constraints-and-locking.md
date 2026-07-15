@@ -13,7 +13,7 @@
 - `db/seed/R__mysql_demo_seed.sql` 是默认环境自动执行的 repeatable Flyway 演示 seed，补齐贴近前端 mock 的用户、类目、商品、订单、会话、求购和审计数据。
 - `db/seed/R__mysql_catalog_seed.sql` 是独立的 repeatable 商品目录 seed，使用预留 ID `50001`–`50072`，为九个一级类目各补 8 件符合校园二手场景的商品及图片、配送方式关联。
 - 两份 seed 的商品图片统一引用前端 `public/catalog/` 下的 `/catalog/*.webp`，避免生产构建无法访问 `/src/assets`；图片记录与静态文件按商品 ID、排序号稳定对应。
-- `application-prod.yml` 显式覆盖 Flyway locations 为 `classpath:db/migration`，生产环境不会自动导入演示 seed；真实库已经登记过 repeatable demo/catalog seed，因此生产仅忽略 `repeatable:missing`，版本化迁移仍严格校验。
+- `application-prod.yml` 同时扫描 `classpath:db/migration` 和 `classpath:db/seed`，确保真实库已登记的 repeatable seed 始终可解析；校验和不变时不会重复执行，脚本变化时按 Flyway repeatable 语义自动重跑。
 - `backend/src/test/resources/application.yml` 使用独立的 `ecocampus_test` MySQL，只加载 `db/migration`，并在测试上下文启动时自动清库、迁移，不导入完整演示数据。
 
 ## 生产数据库配置

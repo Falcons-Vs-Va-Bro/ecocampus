@@ -21,8 +21,7 @@ spring:
       mode: never
   flyway:
     enabled: true
-    locations: classpath:db/migration
-    ignore-migration-patterns: repeatable:missing
+    locations: classpath:db/migration,classpath:db/seed
   jpa:
     hibernate:
       ddl-auto: validate

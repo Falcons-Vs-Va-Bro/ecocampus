@@ -69,7 +69,7 @@ checkout main
 
 本机固定部署器从仓库 `deploy/macos/ecocampus-deploy-backend` 手动安装到 `~/.local/bin/`，工作流不在每次运行时覆盖它。数据库/JWT 等密钥继续只存在 `~/.config/ecocampus/backend.env`，不进入 GitHub Actions secrets 或仓库。
 
-`backend.env` 会被 zsh 直接 `source`。包含 `&`、`?` 或其他 shell 特殊字符的 JDBC URL 必须使用单引号包住完整值，例如 `DB_URL='jdbc:mysql://...?...&...'`；否则启动器会在加载环境文件时发生解析错误。生产 Flyway 仍只扫描 `db/migration`，并仅忽略 `repeatable:missing`，从而允许已人工导入的 demo/catalog repeatable seed 不随生产 JAR 自动执行，同时继续严格校验版本化迁移。
+`backend.env` 会被 zsh 直接 `source`。包含 `&`、`?` 或其他 shell 特殊字符的 JDBC URL 必须使用单引号包住完整值，例如 `DB_URL='jdbc:mysql://...?...&...'`；否则启动器会在加载环境文件时发生解析错误。生产 Flyway 同时扫描 `db/migration` 与 `db/seed`，确保真实库已登记的 repeatable seed 始终可解析；校验和不变时不会重复执行。
 
 如果部署失败，工作流会上传保留 3 天的脱敏诊断工件，记录 LaunchAgent 状态、后端 Java 进程、8080 监听和本机健康响应，不输出 LaunchAgent 环境变量或数据库凭据。
 
@@ -128,7 +128,7 @@ Mac mini 使用 macOS GUI/系统扩展版 Tailscale，因此不启用 Tailscale 
 
 2026-07-14 基线结果：商品列表 600 请求、60 并发时失败数 0、吞吐 439.30 req/s、P95 269 ms；MySQL 连接峰值 10/151，慢查询 0。
 
-2026-07-15 经运维明确授权，通过受限 SSH 隧道将 `R__mysql_demo_seed.sql` 导入真实 `ecocampus`。Flyway repeatable migration 执行成功，JDBC 核对结果为 9 类目、36 用户、27 商品、14 收藏、9 订单、5 会话、11 消息、4 求购和 4 审计记录。生产 profile 仍只加载结构 migration，后续生产启动不会自动重跑 demo seed。
+2026-07-15 经运维明确授权，通过受限 SSH 隧道将 `R__mysql_demo_seed.sql` 导入真实 `ecocampus`。Flyway repeatable migration 执行成功，JDBC 核对结果为 9 类目、36 用户、27 商品、14 收藏、9 订单、5 会话、11 消息、4 求购和 4 审计记录。生产 profile 同时扫描 `db/migration` 与 `db/seed`，确保已登记的 repeatable migration 始终可解析；脚本校验和不变时不会重复执行。
 
 同日继续导入 `R__mysql_catalog_seed.sql`，新增 72 件校园二手商品，九类目各 8 件，并写入 72 张图片关联和 82 条配送方式。真实库商品总数增至 99，其中新增数据为 63 件在售、5 件已售、4 件下架；Flyway history 中 `mysql catalog seed` 执行成功。
 
