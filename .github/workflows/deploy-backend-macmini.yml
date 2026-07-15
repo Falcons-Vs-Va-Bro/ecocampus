@@ -60,22 +60,22 @@ jobs:
 
       - name: Collect deployment diagnostics
         if: failure()
-        shell: zsh
+        shell: bash
         run: |
           set +e
           service_label="${ECOCAMPUS_SERVICE_LABEL:-com.falconsvsvabro.ecocampus.backend}"
           health_url="${ECOCAMPUS_HEALTH_URL:-http://127.0.0.1:8080/api/v1/health}"
           output="$RUNNER_TEMP/backend-deployment-diagnostics.txt"
           {
-            print 'launchctl:'
+            printf '%s\n' 'launchctl:'
             launchctl print "gui/$(id -u)/$service_label" 2>&1 \
               | grep -E 'state =|pid =|last exit code =|program =|stdout path =|stderr path =' \
               || true
-            print '\njava processes:'
+            printf '\n%s\n' 'java processes:'
             pgrep -lf 'java.*ecocampus' || true
-            print '\nport 8080:'
+            printf '\n%s\n' 'port 8080:'
             lsof -nP -iTCP:8080 -sTCP:LISTEN || true
-            print '\nlocal health:'
+            printf '\n%s\n' 'local health:'
             curl -i -sS --max-time 5 "$health_url" || true
           } > "$output" 2>&1
           exit 0
