@@ -1,0 +1,49 @@
+name: Diagnose backend on Mac mini
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    name: Collect redacted backend diagnostics
+    runs-on: [self-hosted, macOS, ARM64, ecocampus-deploy]
+    timeout-minutes: 5
+    steps:
+      - name: Collect service state and redacted logs
+        shell: bash
+        run: |
+          set +e
+          service_label="${ECOCAMPUS_SERVICE_LABEL:-com.falconsvsvabro.ecocampus.backend}"
+          state_dir="${ECOCAMPUS_STATE_DIR:-$HOME/.local/state/ecocampus}"
+          output="$RUNNER_TEMP/backend-runtime-diagnostics.txt"
+          redact() {
+            sed -E 's/((password|secret|token)[^=: ]*[=:][[:space:]]*)[^ ,;]+/\1[REDACTED]/Ig'
+          }
+          {
+            printf '%s\n' 'launchctl:'
+            launchctl print "gui/$(id -u)/$service_label" 2>&1 \
+              | grep -E 'state =|pid =|last exit code =|program =|stdout path =|stderr path =' \
+              || true
+            printf '\n%s\n' 'java processes:'
+            pgrep -lf 'java.*ecocampus' || true
+            printf '\n%s\n' 'port 8080:'
+            lsof -nP -iTCP:8080 -sTCP:LISTEN || true
+            printf '\n%s\n' 'local health:'
+            curl -i -sS --max-time 5 'http://127.0.0.1:8080/api/v1/health' || true
+            for log_file in "$state_dir/backend-error.log" "$state_dir/backend.log"; do
+              printf '\n--- %s (last 160 lines) ---\n' "$log_file"
+              tail -n 160 "$log_file" 2>/dev/null | redact || true
+            done
+          } > "$output" 2>&1
+          exit 0
+
+      - name: Upload runtime diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-runtime-diagnostics
+          path: ${{ runner.temp }}/backend-runtime-diagnostics.txt
+          if-no-files-found: error
+          retention-days: 1

@@ -71,6 +71,8 @@ checkout main
 
 如果部署失败，工作流会上传保留 3 天的脱敏诊断工件，记录 LaunchAgent 状态、后端 Java 进程、8080 监听和本机健康响应，不输出 LaunchAgent 环境变量或数据库凭据。
 
+需要查看启动日志时，可手动运行 `.github/workflows/diagnose-backend-macmini.yml`。它只读取服务状态以及 `backend.log`、`backend-error.log` 的末尾内容，对常见密码、令牌和 secret 形式做替换后上传保留 1 天的诊断工件，不提供交互式 Shell。
+
 安全边界：该仓库为公开仓库且 `main` 当前未启用分支保护；拥有 `main` 写权限的人可以修改 workflow 并由 self-hosted Runner 执行。Runner 不响应 `pull_request`，但仍建议启用 `main` 必须经 PR、状态检查和审核后合并。
 
 2026-07-14 首次自动部署基线：Runner 2.335.1 安装目录约 433 MB，空闲 `Runner.Listener` RSS 约 97 MB；工作流 48 秒完成 32 项测试、构建与部署，JAR 替换后约 19 秒恢复健康，公网 health 为 `UP`。
