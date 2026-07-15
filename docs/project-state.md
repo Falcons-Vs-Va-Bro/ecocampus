@@ -143,6 +143,7 @@ GitHub Pages frontend
 - 2026-07-15 商品图片生产路径修复后，`cd frontend && pnpm lint`、`pnpm build` 通过；本地预览首页与 `/catalog/50001.webp` 均返回 200，图片响应类型为 `image/webp`。
 - 2026-07-15 用户端共享顶栏交互变更后，`cd frontend && pnpm lint && pnpm build` 通过；入口包为 628.25 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-16 上传图片匿名读取和一年期缓存头变更在合并前的远端基线上通过 33 项测试；合并 MySQL 专用测试配置后，本机因无法连接 `ecocampus_test` 未能重新执行完整套件，`./mvnw -DskipTests package` 通过。
+- 2026-07-16 Mac mini Runner 工作流增加幂等的 `ecocampus_test` 建库和测试账号授权步骤，避免移除 H2 后因 Runner 缺少专用测试库而阻断部署；测试清库仍受 `_test` 库名保护。
 - `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.33 kB（gzip 205.52 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-14 管理员路由域隔离已由 GitHub Pages 发布；真实管理员登录返回 `ADMIN/VERIFIED`，后台 summary API 返回 200，线上产物确认登录默认目标、全局管理员重定向和退出登录逻辑均已包含。
@@ -169,6 +170,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-16：后端 self-hosted 部署工作流在测试前自动准备隔离的本机 MySQL 测试库和权限，不写入生产数据库凭据，也不清理生产 schema。
 - 2026-07-16：配置完整图片缓存链路：匿名开放 `GET /uploads/**`，添加一年期 `public, immutable` 缓存头，并让生产上传响应默认返回 API 域名完整 URL；Cloudflare 已启用仅匹配 `ecocampus-api.teamdsb.online/uploads/*` 的一年期 Edge/Browser Cache Rule，未匹配 `/api/*` 或启用 Cache Reserve。
 - 2026-07-15：修复真实 API 首页商品图片不显示：将 seed 图片从不可发布的 `/src/assets` 迁移到 `frontend/public/catalog/`，同步真实 MySQL，并验证 112 个静态图片进入生产构建。
 - 2026-07-15：参考公开商品目录的名称和价格区间，新增经校园二手场景重写的 `R__mysql_catalog_seed.sql`；未采集用户身份、商家描述或第三方图片，真实库商品总数从 27 增至 99。

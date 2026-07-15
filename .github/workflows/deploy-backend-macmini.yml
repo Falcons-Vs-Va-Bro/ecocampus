@@ -31,6 +31,19 @@ jobs:
       - name: Verify Java runtime
         run: java -version
 
+      - name: Prepare isolated MySQL test database
+        run: |
+          mysql --protocol=socket -uroot <<'SQL'
+          CREATE DATABASE IF NOT EXISTS ecocampus_test
+            CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          CREATE USER IF NOT EXISTS 'ecocampus_local'@'localhost'
+            IDENTIFIED BY 'ecocampus_local_password';
+          ALTER USER 'ecocampus_local'@'localhost'
+            IDENTIFIED BY 'ecocampus_local_password';
+          GRANT ALL PRIVILEGES ON ecocampus_test.*
+            TO 'ecocampus_local'@'localhost';
+          SQL
+
       - name: Test backend
         working-directory: backend
         run: ./mvnw --batch-mode test
