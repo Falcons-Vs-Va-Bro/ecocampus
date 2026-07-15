@@ -488,6 +488,30 @@
   gap: 14px 18px;
 }
 
+.address-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed rgba(75, 120, 162, 0.34);
+  border-radius: 8px;
+  color: #625a53;
+  background: rgba(255, 252, 246, 0.58);
+  font-size: 16px;
+  text-align: center;
+}
+
+.address-status-error {
+  color: #b83a31;
+}
+
+.address-status button {
+  margin-left: 10px;
+  border: 0;
+  color: #2f78bf;
+  background: transparent;
+  font-weight: 900;
+}
+
 .address-card {
   padding: 16px 18px 14px;
   border: 1px solid rgba(112, 133, 149, 0.44);
@@ -577,6 +601,19 @@
 .address-edit-fields input {
   width: 100%;
   padding: 8px 10px;
+}
+
+.address-default-field input {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  accent-color: #2f78bf;
+}
+
+.address-card button:disabled,
+.address-panel > header button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .address-card footer {

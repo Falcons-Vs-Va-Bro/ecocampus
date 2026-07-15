@@ -12,14 +12,15 @@ import {
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import type { DemandSummary } from '../../api/demand.api'
 import type { ItemSummary } from '../../api/item.api'
 import emptyFavoritesImage from '../../assets/favorites/empty-favorites.webp'
 import {
   deliveryModes,
-  demandHighlights,
   displayCategoryName,
   formatDelivery,
   formatPrice,
+  formatRelativeTime,
   hotCategories,
   priceRanges,
   sectionTabs,
@@ -35,15 +36,19 @@ interface MobileHomePageContentProps {
   categoryFilters: string[]
   currentPage: number
   deliveryMode: DeliveryModeFilter
+  demands: DemandSummary[]
   favoriteIds: Set<number>
   filteredCount: number
   hasInvalidItemsResponse: boolean
   hasItemsError: boolean
   isFiltersOpen: boolean
+  isDemandsError: boolean
+  isDemandsLoading: boolean
   isLoading: boolean
   items: ItemSummary[]
   onCategoryChange: (value: string) => void
   onDeliveryModeChange: (value: DeliveryModeFilter) => void
+  onDemandsRetry: () => void
   onFiltersToggle: () => void
   onPageChange: (value: number) => void
   onPriceRangeChange: (value: PriceRange) => void
@@ -62,15 +67,19 @@ export function MobileHomePageContent({
   categoryFilters,
   currentPage,
   deliveryMode,
+  demands,
   favoriteIds,
   filteredCount,
   hasInvalidItemsResponse,
   hasItemsError,
   isFiltersOpen,
+  isDemandsError,
+  isDemandsLoading,
   isLoading,
   items,
   onCategoryChange,
   onDeliveryModeChange,
+  onDemandsRetry,
   onFiltersToggle,
   onPageChange,
   onPriceRangeChange,
@@ -227,13 +236,23 @@ export function MobileHomePageContent({
           <Link to="/orders/purchase/demand">更多</Link>
         </header>
         <div className="mobile-home-demand-list">
-          {demandHighlights.map((item) => (
-            <Link to="/orders/purchase/demand" key={item.title}>
+          {isDemandsLoading ? <p className="mobile-home-demand-state">正在加载求购动态…</p> : null}
+          {isDemandsError ? (
+            <p className="mobile-home-demand-state">
+              求购动态加载失败
+              <button type="button" onClick={onDemandsRetry}>重试</button>
+            </p>
+          ) : null}
+          {!isDemandsLoading && !isDemandsError && demands.length === 0 ? (
+            <p className="mobile-home-demand-state">暂时还没有公开求购</p>
+          ) : null}
+          {!isDemandsLoading && !isDemandsError ? demands.map((item) => (
+            <Link to={`/orders/purchase/demand/${item.id}/detail`} key={item.id}>
               <span>求</span>
-              <div><strong>{item.title}</strong><small>{item.meta}</small></div>
+              <div><strong>{item.title}</strong><small>{item.categoryName} · {formatRelativeTime(item.createdAt)}</small></div>
               <ChevronRight size={16} />
             </Link>
-          ))}
+          )) : null}
         </div>
       </section>
 

@@ -445,6 +445,23 @@
   gap: 7px;
 }
 
+.mobile-home-demand-state {
+  margin: 0;
+  padding: 10px 4px;
+  color: #746b63;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.mobile-home-demand-state button {
+  margin-left: 8px;
+  border: 0;
+  color: #2f78bf;
+  background: transparent;
+  font-weight: 900;
+}
+
 .mobile-home-demand-list > a {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr) 16px;

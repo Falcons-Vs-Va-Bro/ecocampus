@@ -60,9 +60,9 @@ API 模块：
 
 页面数据源摘要：
 
-- API-backed：`/login`、`/`、`/items`、`/items/:id`、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、后台看板、后台商品/用户/类目。商品卡片、收藏失效、订单卡片、私信详情当前用户判断和求购主要链路已使用真实 API 字段。
+- API-backed：`/login`、`/`、`/items`、九个 `/items/*` 分类页、`/items/:id`、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、个人常用地址、后台看板、后台商品/用户/类目。主页求购摘要、分类商品、商品卡片、收藏失效、订单卡片、私信详情当前用户判断和求购主要链路已使用真实 API 字段。
 - API-backed limited：求购详情页通过公开 `GET /demands` 列表兜底定位开放求购；后端没有单条求购详情接口，关闭/非公开求购无法直接展示。
-- Local mock：九个分类页的专属商品集合；发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；资料表单与核验表单；收藏里的求购关注。
+- Local mock：发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；头像与基本资料编辑、核验表单；收藏里的求购关注。
 - Placeholder：`/demands`、`/demands/new`、`/demands/mine`。
 - Redirect：`/orders -> /orders/purchase`，`/orders/sales -> /orders/sale`。
 
@@ -71,7 +71,7 @@ API 模块：
 - 宽度不超过 `720px` 时，用户端共享市场壳切换为独立移动结构：紧凑品牌/搜索/横向分类区与固定五项底部导航；`721px` 起继续使用原桌面顶部栏和左侧导航。
 - `/` 移动首页使用独立信息流：快捷发布、横向分区、折叠筛选、双列紧凑商品卡、分页、求购动态、热门类目和折叠安全提示；桌面首页结构未改。
 - `/items` 移动端默认折叠筛选并使用双列紧凑商品卡；`/publish` 改为宽度安全的单列手机表单并移除桌面辅助面板；`/messages` 使用横向紧凑统计和短会话卡，避免辅助组件占据首屏。
-- 移动首页求购入口已对齐 `/orders/purchase/demand*`；桌面首页仍保留 `/demands*` 占位入口，等待后续统一。
+- 移动和桌面首页的求购摘要均调用 `GET /demands`，入口已统一到 `/orders/purchase/demand*`。
 
 登录视觉：
 
@@ -99,14 +99,14 @@ mock 与守卫：
 2. 校园核验、收藏、上下架、关闭求购、审核/违规下架等若干 mutation wrapper 声明 `void`，后端实际返回当前用户、商品/求购详情或后台商品摘要。
 3. 后端没有 `GET /demands/{demandId}`、求购编辑、删除或重开端点；前端求购详情只能通过公开列表兜底，发布页编辑模式明确不可用。
 4. 求购关注仍为 `localStorage` 本地能力，后端没有对应收藏表/API。
-5. 前端分类 mock 有 9 个一级类目，自动 Flyway seed 只有 4 个；手动 MySQL demo seed 有 9 个。
+5. 九个分类页面已改用真实商品列表，但当前先取前 80 件后按 `categoryName` 做客户端筛选；数据量超过 80 时应改为先解析真实类目 id，再用后端 `categoryId` 分页查询。
 6. 类目数据库是扁平一级模型；后台树层级、启停、商品数是本地展示状态。
 7. 过期黑名单不会自动恢复 `verificationStatus`；过期后交易请求从 423 变为 403，仍需管理员移出。
 8. 没有前端组件/路由自动化测试；前端验证目前只有 lint/build 和人工页面检查记录。
 9. GitHub Pages 深层 URL 依靠 `404.html` 启动 SPA，内容可用但 HTTP 状态仍为 404，不是真正的服务端 rewrite。
 10. `/uploads/**` 未加入 Spring Security 公开白名单，普通图片标签无法携带 Bearer token；真实上传图片的公开展示链路尚未闭合。
 11. `application-local.example.yml` 的 `FILE_STORAGE_TYPE` 和 Redis 配置没有对应运行时实现/依赖。
-12. Vite 没有 `/api` dev proxy；本地联调必须显式设置 `VITE_API_BASE_URL=http://localhost:8080/api/v1`。
+12. Vite 支持通过 `VITE_API_PROXY_TARGET` 为 `/api` 开启可选同源代理；未设置时保持原有无代理行为。
 13. 商品 `off-shelf` 只阻止 `SOLD/DELETED`，卖家可把 `VIOLATION_REMOVED` 改为 `OFF_SHELF` 后重新申请审核，违规下架存在绕过路径。
 14. 市场公共壳仍显示“登录 / 注册”，但没有注册路由/端点，点击只进入自动建档登录页。
 15. 后台用户页的总量、今日新增、注册日期、发布数，以及类目页的层级/启停/商品数，部分仍是硬编码或本地展示值。
@@ -133,7 +133,7 @@ GitHub Pages frontend
 本轮文档审计与最新远端性能变更组合后（2026-07-14）已验证：
 
 - `cd backend && ./mvnw test`：32 tests 通过，0 failures、0 errors、0 skipped。
-- `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.14 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
+- `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.33 kB（gzip 205.52 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-14 管理员路由域隔离已由 GitHub Pages 发布；真实管理员登录返回 `ADMIN/VERIFIED`，后台 summary API 返回 200，线上产物确认登录默认目标、全局管理员重定向和退出登录逻辑均已包含。
 - 2026-07-14 self-hosted 后端 CD 首次运行成功：Mac mini Runner 在 48 秒内完成 32 项测试、JAR 构建、原子部署和健康检查；部署 SHA 与 `main` 一致，公网 health 为 `UP`，Runner 空闲 RSS 约 97 MB。
@@ -146,6 +146,7 @@ GitHub Pages frontend
 - 2026-07-15 `/profile` 常用地址编辑与删除交互补齐后运行 `cd frontend && pnpm lint && pnpm build` 通过；人工确认地址可编辑保存，删除后对应卡片从本地列表消失。
 - 2026-07-15 `/profile` 移动端比例调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器验证 390×844 与 430×932 下“个人中心”保持单行、无横向溢出，430px 下资料卡高度由约 452px 收紧至 339px，控制台 0 error。
 - 2026-07-15 分类、发布、消息页移动端密度调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器在 430×932 下验证三页无横向溢出、控制台 0 error。分类页筛选默认折叠且可展开/收起，商品首卡位于 `y≈287`；发布页不再被固定最小宽度裁切；消息统计区由约 357px 降至 81px，首条会话由 `y≈771` 提前至 `y≈344`。
+- 2026-07-15 主页求购摘要、九个分类商品页和 `/profile` 常用地址切换真实 API 后，`cd frontend && pnpm lint && pnpm build` 通过；内置浏览器经可选 Vite API 代理验证主页返回 3 条真实求购、教材页返回后端当前 8 件商品，未登录访问 `/profile` 正确跳转 `/login?returnTo=%2Fprofile`。地址写操作未在无登录凭据下执行。
 
 ## 文档维护规则
 
@@ -158,6 +159,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-15：移除主页求购摘要、九个分类页和个人地址区的页面硬编码业务数据；分别接入 demand、item 与 profile address API，并增加可选的 Vite `/api` 联调代理。
 - 2026-07-15：分别重构分类、发布和消息页的移动端信息密度；分类筛选默认折叠并展示双列商品，发布表单改为无溢出的单列结构，消息统计与会话列表改为紧凑首屏布局，桌面端保持原状。
 - 2026-07-15：调整 `/profile` 移动端页面比例，固定“个人中心”为单行标题，缩小头像与资料字号，并将资料操作、地址区和设置区改为更紧凑的手机布局；桌面端不受影响。
 - 2026-07-15：新增独立市场移动壳与首页移动信息流，使用紧凑搜索/分类、双列商品卡、折叠筛选和固定底部导航；桌面结构保持原状。

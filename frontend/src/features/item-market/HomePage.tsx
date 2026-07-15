@@ -11,6 +11,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { listCategories } from '../../api/category.api'
+import { listDemands } from '../../api/demand.api'
 import { listItems } from '../../api/item.api'
 import type { ItemSummary } from '../../api/item.api'
 import { queryKeys } from '../../api/queryKeys'
@@ -20,11 +21,11 @@ import { useMobileMarketplaceLayout } from '../../components/marketplace/useMobi
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   deliveryModes,
-  demandHighlights,
   displayCategoryName,
   filterBySection,
   formatDelivery,
   formatPrice,
+  formatRelativeTime,
   hotCategories,
   pageSize,
   priceRanges,
@@ -61,6 +62,11 @@ export function HomePage() {
     queryFn: listCategories,
   })
 
+  const demandsQuery = useQuery({
+    queryKey: queryKeys.demands.list({ page: 1, size: 3 }),
+    queryFn: () => listDemands({ page: 1, size: 3 }),
+  })
+
   const categoryFilters = useMemo(() => {
     const categories = categoriesQuery.data?.data
     const names = Array.isArray(categories) ? categories.map((item) => displayCategoryName(item.name)) : []
@@ -71,6 +77,7 @@ export function HomePage() {
   const hasInvalidItemsResponse = itemsQuery.isSuccess && !Array.isArray(itemPage?.items)
   const hasItemsError = itemsQuery.isError || hasInvalidItemsResponse
   const allItems = Array.isArray(itemPage?.items) ? itemPage.items : emptyItems
+  const demands = Array.isArray(demandsQuery.data?.data.items) ? demandsQuery.data.data.items : []
 
   const filteredItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
@@ -146,15 +153,19 @@ export function HomePage() {
           categoryFilters={categoryFilters}
           currentPage={currentPage}
           deliveryMode={deliveryMode}
+          demands={demands}
           favoriteIds={favoriteIds}
           filteredCount={filteredItems.length}
           hasInvalidItemsResponse={hasInvalidItemsResponse}
           hasItemsError={hasItemsError}
           isFiltersOpen={mobileFiltersOpen}
+          isDemandsError={demandsQuery.isError}
+          isDemandsLoading={demandsQuery.isLoading}
           isLoading={itemsQuery.isLoading}
           items={visibleItems}
           onCategoryChange={(value) => resetPage(() => setCategory(value))}
           onDeliveryModeChange={(value) => resetPage(() => setDeliveryMode(value))}
+          onDemandsRetry={() => demandsQuery.refetch()}
           onFiltersToggle={() => setMobileFiltersOpen((current) => !current)}
           onPageChange={setPage}
           onPriceRangeChange={(value) => resetPage(() => setPriceRange(value))}
@@ -356,7 +367,7 @@ export function HomePage() {
                 <small>出售闲置物品</small>
               </span>
             </a>
-            <a href="/demands/new">
+            <a href="/orders/purchase/demand/new">
               <ShoppingBasket size={37} />
               <span>
                 <strong>发布求购</strong>
@@ -365,21 +376,24 @@ export function HomePage() {
             </a>
           </section>
 
-          <HomePanel title="求购动态" action="更多">
+          <HomePanel title="求购动态" action="更多" actionTo="/orders/purchase/demand">
             <div className="demand-list">
-              {demandHighlights.map((item) => (
-                <a href="/demands" key={item.title}>
+              {demandsQuery.isLoading ? <p>正在加载求购动态…</p> : null}
+              {demandsQuery.isError ? <p>求购动态加载失败</p> : null}
+              {!demandsQuery.isLoading && !demandsQuery.isError && demands.length === 0 ? <p>暂时还没有公开求购</p> : null}
+              {!demandsQuery.isLoading && !demandsQuery.isError ? demands.map((item) => (
+                <a href={`/orders/purchase/demand/${item.id}/detail`} key={item.id}>
                   <span className="student-avatar">求</span>
                   <span>
                     <strong>{item.title}</strong>
-                    <small>{item.meta}</small>
+                    <small>{item.categoryName} · {formatRelativeTime(item.createdAt)}</small>
                   </span>
                 </a>
-              ))}
+              )) : null}
             </div>
           </HomePanel>
 
-          <HomePanel title="热门类目" action="更多">
+          <HomePanel title="热门类目" action="更多" actionTo="/items">
             <div className="hot-category-grid">
               {hotCategories.map((item) => (
                 <a href={item.to} key={item.label}>
@@ -426,16 +440,17 @@ function FilterRow({ label, children }: FilterRowProps) {
 interface HomePanelProps {
   title: string
   action?: string
+  actionTo?: string
   children: ReactNode
 }
 
-function HomePanel({ title, action, children }: HomePanelProps) {
+function HomePanel({ title, action, actionTo = '/items', children }: HomePanelProps) {
   return (
     <section className="home-panel">
       <header>
         <h2>{title}</h2>
         {action ? (
-          <a href="/demands">
+          <a href={actionTo}>
             {action}
             <ChevronRight size={16} />
           </a>

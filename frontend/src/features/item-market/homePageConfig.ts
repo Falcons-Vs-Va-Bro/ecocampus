@@ -22,12 +22,6 @@ export const priceRanges = [
 
 export const deliveryModes = ['全部', '可自提', '校内配送'] as const
 
-export const demandHighlights = [
-  { title: '求购 高等数学（第七版）下册', meta: '学号 103****5123 · 5 分钟前' },
-  { title: '求购 iPad 或平板电脑', meta: '学号 105****3321 · 12 分钟前' },
-  { title: '求购 篮球鞋 42码左右', meta: '学号 104****7788 · 18 分钟前' },
-]
-
 export const hotCategories = [
   { label: '教材教辅', icon: BookOpen, to: '/items/textbook' },
   { label: '数码电子', icon: Camera, to: '/items/digital' },
@@ -70,6 +64,31 @@ export function displayCategoryName(categoryName: string) {
 
 export function formatPrice(priceCent: number) {
   return `¥${(priceCent / 100).toFixed(2)}`
+}
+
+export function formatRelativeTime(value: string) {
+  const timestamp = new Date(value).getTime()
+
+  if (!Number.isFinite(timestamp)) {
+    return '时间未知'
+  }
+
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000))
+
+  if (elapsedMinutes < 1) {
+    return '刚刚'
+  }
+
+  if (elapsedMinutes < 60) {
+    return `${elapsedMinutes} 分钟前`
+  }
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60)
+  if (elapsedHours < 24) {
+    return `${elapsedHours} 小时前`
+  }
+
+  return `${Math.floor(elapsedHours / 24)} 天前`
 }
 
 export function formatDelivery(deliveryModesValue: ItemSummary['deliveryModes']) {

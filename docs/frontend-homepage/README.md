@@ -79,7 +79,7 @@ Recommended homepage sections:
 - `教材专区`: seasonal textbooks and course materials.
 - `数码好物`: laptops, earphones, calculators, keyboards, and accessories.
 - `宿舍补给`: lamps, storage, suitcase, bedding, and small appliances.
-- `求购动态`: demand cards; when linked to the current implemented flow they should use `/orders/purchase/demand`, while `/demands` remains a placeholder.
+- `求购动态`: demand cards loaded from `GET /demands`; “更多” uses `/orders/purchase/demand`, and each card links to `/orders/purchase/demand/:id/detail`. `/demands` remains only a legacy placeholder route.
 
 Use compact section labels. Avoid long explanatory copy inside the application surface.
 
@@ -126,6 +126,7 @@ Frontend business UI should be able to run without the backend service.
 - Mock DTOs should match `docs/api-contract.md`, including `priceCent`, enum values and pagination shape. The existing item/favorite mocks currently contain extra card display fields; this known debt is documented in `docs/project-state.md`.
 - Do not add further mock-only fields to DTOs used by API modules. If the UI needs seller nickname, delivery modes, or favorite state in a real list card, update the backend response and `docs/api-contract.md` before treating them as contract fields.
 - API modules should remain the boundary for backend calls. Components should consume hooks or API abstractions, not hardcoded mock objects directly.
+- Homepage demand highlights and category-specific product pages must use their API wrappers in real mode; do not restore page-local arrays that can diverge from backend data.
 - Use an explicit local switch such as `VITE_USE_MOCKS=true` if mock and live API modes coexist.
 - Mock images should be stable local assets or deterministic remote-safe placeholders only when no local asset exists.
 - Do not block frontend implementation on missing backend endpoints if the API contract already defines the response shape.
