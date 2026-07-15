@@ -69,6 +69,8 @@ checkout main
 
 本机固定部署器从仓库 `deploy/macos/ecocampus-deploy-backend` 手动安装到 `~/.local/bin/`，工作流不在每次运行时覆盖它。数据库/JWT 等密钥继续只存在 `~/.config/ecocampus/backend.env`，不进入 GitHub Actions secrets 或仓库。
 
+`backend.env` 会被 zsh 直接 `source`。包含 `&`、`?` 或其他 shell 特殊字符的 JDBC URL 必须使用单引号包住完整值，例如 `DB_URL='jdbc:mysql://...?...&...'`；否则启动器会在加载环境文件时发生解析错误。生产 Flyway 仍只扫描 `db/migration`，并仅忽略 `repeatable:missing`，从而允许已人工导入的 demo/catalog repeatable seed 不随生产 JAR 自动执行，同时继续严格校验版本化迁移。
+
 如果部署失败，工作流会上传保留 3 天的脱敏诊断工件，记录 LaunchAgent 状态、后端 Java 进程、8080 监听和本机健康响应，不输出 LaunchAgent 环境变量或数据库凭据。
 
 需要查看启动日志时，可手动运行 `.github/workflows/diagnose-backend-macmini.yml`。它只读取服务状态以及 `backend.log`、`backend-error.log` 的末尾内容，对常见密码、令牌和 secret 形式做替换后上传保留 1 天的诊断工件，不提供交互式 Shell。
