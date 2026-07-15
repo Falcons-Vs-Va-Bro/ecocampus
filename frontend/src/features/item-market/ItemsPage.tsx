@@ -21,6 +21,7 @@ import {
   Pencil,
   Search,
   ShoppingBasket,
+  SlidersHorizontal,
   Sparkles,
   Star,
   Store,
@@ -338,6 +339,7 @@ export function ItemsPage() {
   const [ticketPickup, setTicketPickup] = useState('')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('newest')
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
 
   const itemsQuery = useQuery({
@@ -599,11 +601,27 @@ export function ItemsPage() {
         <main className="items-main">
           <section className="items-content">
             <div className="items-column">
-              <header className="items-heading">
-                <h1>{pageTitle}</h1>
-              </header>
+              <div className="items-heading-row">
+                <header className="items-heading">
+                  <h1>{pageTitle}</h1>
+                </header>
+                <button
+                  type="button"
+                  className="items-mobile-filter-toggle"
+                  aria-controls="items-filter-panel"
+                  aria-expanded={filtersOpen}
+                  onClick={() => setFiltersOpen((current) => !current)}
+                >
+                  <SlidersHorizontal size={17} />
+                  {filtersOpen ? '收起筛选' : '筛选'}
+                </button>
+              </div>
 
-              <section className="items-filter-panel" aria-label="商品筛选">
+              <section
+                id="items-filter-panel"
+                className={filtersOpen ? 'items-filter-panel mobile-open' : 'items-filter-panel'}
+                aria-label="商品筛选"
+              >
                 <FilterRow label="分类">
                   {categoryOptions.map((item) => (
                     <button type="button" className={category === item ? 'selected' : undefined} onClick={() => resetPage(() => setCategory(item))} key={item}>

@@ -808,3 +808,157 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 720px) {
+  .mobile-market-shell .publish-main {
+    min-width: 0;
+  }
+
+  .mobile-market-shell .publish-form-card {
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .mobile-market-shell .publish-heading {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .mobile-market-shell .publish-heading h1 {
+    font-size: 30px;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .mobile-market-shell .publish-heading p {
+    margin-top: 5px;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .mobile-market-shell .publish-field {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .publish-field-upload {
+    margin-top: 0;
+  }
+
+  .mobile-market-shell .publish-field-upload > label {
+    margin-bottom: 7px;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .upload-row {
+    gap: 10px;
+  }
+
+  .mobile-market-shell :is(.preview-image, .add-image-button) {
+    width: 66px;
+    height: 80px;
+  }
+
+  .mobile-market-shell .upload-hint {
+    flex: 1 1 160px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .mobile-market-shell :is(.publish-input, .price-input, .category-select > button) {
+    min-height: 42px;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .category-select,
+  .mobile-market-shell .category-menu {
+    width: 100%;
+  }
+
+  .mobile-market-shell .category-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .mobile-market-shell .category-menu button {
+    font-size: 15px;
+  }
+
+  .mobile-market-shell .publish-form-grid {
+    gap: 0;
+  }
+
+  .mobile-market-shell .price-input input {
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .segmented-control {
+    display: flex;
+    width: 100%;
+  }
+
+  .mobile-market-shell .segmented-control button {
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 0 10px;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .pickup-field > button {
+    width: 100%;
+    justify-content: center;
+    font-size: 15px;
+  }
+
+  .mobile-market-shell .place-chips {
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .mobile-market-shell .place-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-market-shell .place-chips button {
+    flex: 0 0 auto;
+    padding: 0 12px;
+    font-size: 15px;
+  }
+
+  .mobile-market-shell .custom-pickup-input {
+    min-height: 42px;
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .description-box {
+    min-height: 96px;
+  }
+
+  .mobile-market-shell .description-box textarea {
+    font-size: 16px;
+  }
+
+  .mobile-market-shell .publish-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .mobile-market-shell .publish-actions button {
+    min-width: 0;
+    min-height: 46px;
+    font-size: 18px;
+  }
+
+  .mobile-market-shell .publish-side-panels {
+    display: none;
+  }
+}

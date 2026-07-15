@@ -64,6 +64,14 @@ Mobile/H5 is an independent composition rather than a compressed desktop grid. A
 
 The shared mobile shell belongs in `components/marketplace/`; homepage-specific ordering and compact item cards belong in `features/item-market/`. Desktop keeps the existing top bar, left rail, three-column content area, and full filter panel.
 
+Supporting marketplace pages must follow the same mobile information-density rule instead of stacking desktop-sized panels vertically. The current implementation applies these page-specific boundaries at widths up to `720px`:
+
+- `/items` keeps filters collapsed by default behind an explicit toggle, uses horizontally scrollable filter choices when expanded, and shows the result toolbar plus a compact two-column item grid before secondary helpers;
+- `/publish` uses a width-safe single-column form with compact image upload, full-width controls and two-column submit actions; desktop-only notice, review-flow and success helper panels are omitted from the mobile flow;
+- `/messages` compresses the three statistics into one horizontal summary row, reuses the shared shell search instead of repeating the inner search, presents compact conversation rows, and omits the desktop helper panel.
+
+These changes are responsive composition rules only. They do not change route protection, page data sources, API contracts or desktop layouts.
+
 Recommended homepage sections:
 
 - `今日推荐`: mixed high-quality on-sale items.
