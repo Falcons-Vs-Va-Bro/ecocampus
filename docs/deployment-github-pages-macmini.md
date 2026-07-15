@@ -79,6 +79,8 @@ checkout main
 
 2026-07-14 首次自动部署基线：Runner 2.335.1 安装目录约 433 MB，空闲 `Runner.Listener` RSS 约 97 MB；工作流 48 秒完成 32 项测试、构建与部署，JAR 替换后约 19 秒恢复健康，公网 health 为 `UP`。
 
+2026-07-16 数据库与商品图片变更部署：Runner 自动准备隔离 MySQL 测试库，33 项测试、生产 JAR 构建、LaunchAgent 部署和健康检查全部成功；部署 SHA `1c4588a` 与当前 `main` 的后端树一致，公网 API health 和 `/catalog` 商品图片均返回 200。
+
 GitHub Pages 不提供可配置的服务端 rewrite。当前自定义 `404.html` 能让浏览器在深层 URL 启动同一 React 应用，但 HTTP 状态仍是 404；这对普通课堂演示可用，对严格要求深层路由 200、SEO 或探测器的场景不等价于真正的 SPA rewrite。
 
 ## 域名与 CORS

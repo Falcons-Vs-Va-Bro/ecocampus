@@ -147,6 +147,7 @@ GitHub Pages frontend
 - 2026-07-16 Runner 已通过 MySQL 测试库准备、33 项测试和生产 JAR 构建，但 LaunchAgent 部署健康检查失败；工作流已增加不输出环境变量的服务状态、PID、8080 和本机 health 诊断工件用于恢复诊断。
 - 2026-07-16 首份诊断显示 LaunchAgent/Java 进程处于 running，但 8080 无监听且本机 health 连接被拒绝；新增仅手动触发的脱敏启动日志诊断工作流继续定位端口绑定前的失败原因。
 - 2026-07-16 启动日志确认两项原因：`backend.env` 中未引用的 JDBC URL 被 zsh 按 `&` 解析，以及生产 Flyway 未解析真实库已登记的 repeatable seed。环境文件修正后服务已恢复；生产配置改为同时扫描结构与 seed 目录，校验和不变时不会重跑 repeatable seed。
+- 2026-07-16 后端工作流运行 `29433474508` 完整通过：隔离 MySQL 测试库准备、33 项测试、生产 JAR 构建、LaunchAgent 部署和健康检查均成功；部署 SHA `1c4588a` 与当前 `main` 后端树一致，公网 health 返回 200。
 - `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.33 kB（gzip 205.52 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-14 管理员路由域隔离已由 GitHub Pages 发布；真实管理员登录返回 `ADMIN/VERIFIED`，后台 summary API 返回 200，线上产物确认登录默认目标、全局管理员重定向和退出登录逻辑均已包含。
