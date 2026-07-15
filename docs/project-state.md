@@ -39,7 +39,7 @@
 - 2026-07-15 已按运维授权通过 SSH 隧道将两份 repeatable seed 导入真实 `ecocampus`：9 类目、36 用户、99 商品、14 收藏、9 订单、5 会话、11 消息、4 求购、4 审计记录；扩展商品九类目各 8 件，Flyway history 均标记执行成功。
 - 112 条 seed 商品图片记录已统一改为 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；真实库旧 `/src/assets` 图片地址为 0，Vite 生产构建已确认复制全部 112 个文件。
 - Maven 已移除 Redis 依赖和业务使用；`application-local.example.yml` 中 Redis 段只是未生效的遗留占位。
-- 图片仅实现本地 JPEG/PNG/GIF 存储；`FILE_STORAGE_TYPE` 没有实现选择器。MVC 已注册 `/uploads/**`，但安全配置未公开该路径。
+- 图片仅实现本地 JPEG/PNG/GIF 存储；`FILE_STORAGE_TYPE` 没有实现选择器。`GET /uploads/**` 已公开并返回一年期 `public, immutable` 缓存头，生产上传响应默认使用 API 域名完整 URL，可由 Cloudflare和浏览器缓存。
 
 API 模块：
 
@@ -108,7 +108,7 @@ mock 与守卫：
 8. 过期黑名单不会自动恢复 `verificationStatus`；过期后交易请求从 423 变为 403，仍需管理员移出。
 9. 没有前端组件/路由自动化测试；前端验证目前只有 lint/build 和人工页面检查记录。
 10. GitHub Pages 深层 URL 依靠 `404.html` 启动 SPA，内容可用但 HTTP 状态仍为 404，不是真正的服务端 rewrite。
-11. `/uploads/**` 未加入 Spring Security 公开白名单，普通图片标签无法携带 Bearer token；真实上传图片的公开展示链路尚未闭合。
+11. `/uploads/**` 匿名读取和缓存头已闭合，但发布页仍是 Local mock，尚未调用上传/商品发布 API；seed 商品图片使用随前端发布的 `/catalog/*.webp`，不属于真实上传链路。
 12. `application-local.example.yml` 的 `FILE_STORAGE_TYPE` 和 Redis 配置没有对应运行时实现/依赖。
 13. Vite 支持通过 `VITE_API_PROXY_TARGET` 为 `/api` 开启可选同源代理；未设置时保持原有无代理行为。
 14. 商品 `off-shelf` 只阻止 `SOLD/DELETED`，卖家可把 `VIOLATION_REMOVED` 改为 `OFF_SHELF` 后重新申请审核，违规下架存在绕过路径。
@@ -142,6 +142,7 @@ GitHub Pages frontend
 - 2026-07-15 扩展 catalog seed 导入成功：新增 72 商品、72 图片关联和 82 配送方式；新增商品状态为 63 在售、5 已售、4 下架。
 - 2026-07-15 商品图片生产路径修复后，`cd frontend && pnpm lint`、`pnpm build` 通过；本地预览首页与 `/catalog/50001.webp` 均返回 200，图片响应类型为 `image/webp`。
 - 2026-07-15 用户端共享顶栏交互变更后，`cd frontend && pnpm lint && pnpm build` 通过；入口包为 628.25 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
+- 2026-07-16 上传图片匿名读取和一年期缓存头变更在合并前的远端基线上通过 33 项测试；合并 MySQL 专用测试配置后，本机因无法连接 `ecocampus_test` 未能重新执行完整套件，`./mvnw -DskipTests package` 通过。
 - `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.33 kB（gzip 205.52 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-14 管理员路由域隔离已由 GitHub Pages 发布；真实管理员登录返回 `ADMIN/VERIFIED`，后台 summary API 返回 200，线上产物确认登录默认目标、全局管理员重定向和退出登录逻辑均已包含。
@@ -168,6 +169,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-16：配置完整图片缓存链路：匿名开放 `GET /uploads/**`，添加一年期 `public, immutable` 缓存头，并让生产上传响应默认返回 API 域名完整 URL；Cloudflare 已启用仅匹配 `ecocampus-api.teamdsb.online/uploads/*` 的一年期 Edge/Browser Cache Rule，未匹配 `/api/*` 或启用 Cache Reserve。
 - 2026-07-15：修复真实 API 首页商品图片不显示：将 seed 图片从不可发布的 `/src/assets` 迁移到 `frontend/public/catalog/`，同步真实 MySQL，并验证 112 个静态图片进入生产构建。
 - 2026-07-15：参考公开商品目录的名称和价格区间，新增经校园二手场景重写的 `R__mysql_catalog_seed.sql`；未采集用户身份、商家描述或第三方图片，真实库商品总数从 27 增至 99。
 - 2026-07-15：经运维明确授权，将 `R__mysql_demo_seed.sql` 导入 Mac mini 真实 `ecocampus` 并通过 JDBC 核对各业务表数量；生产 profile 仍保持默认不自动执行 demo seed。

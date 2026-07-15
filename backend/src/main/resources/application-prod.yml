@@ -50,6 +50,9 @@ springdoc:
 ecocampus:
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:}
+  file-storage:
+    local-dir: ${FILE_STORAGE_LOCAL_DIR:./storage/uploads}
+    public-url-prefix: ${FILE_STORAGE_PUBLIC_URL_PREFIX:https://ecocampus-api.teamdsb.online/uploads}
   security:
     jwt-secret: ${JWT_SECRET:}
   swagger-ui:

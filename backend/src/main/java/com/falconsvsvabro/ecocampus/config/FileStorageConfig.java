@@ -1,7 +1,9 @@
 package com.falconsvsvabro.ecocampus.config;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.CacheControl;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -21,6 +23,8 @@ public class FileStorageConfig implements WebMvcConfigurer {
 		if (!location.endsWith("/")) {
 			location = location + "/";
 		}
-		registry.addResourceHandler("/uploads/**").addResourceLocations(location);
+		registry.addResourceHandler("/uploads/**")
+			.addResourceLocations(location)
+			.setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable());
 	}
 }

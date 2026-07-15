@@ -28,6 +28,8 @@ ssh -i <私钥路径> -N \
 
 不要改连 `100.110.98.120:22`：该地址对应另一台 `mac-mini` 设备，本轮验证未能完成 SSH banner 握手。应用在目标 Mac mini 本机运行时仍直接连接 `127.0.0.1:3306`，无需绕 SSH 隧道。
 
+Cloudflare Zone `teamdsb.online` 已配置 Cache Rule `EcoCampus uploaded image cache`：仅匹配 `ecocampus-api.teamdsb.online/uploads/*`，强制允许缓存，Edge TTL 与 Browser TTL 均为 31,536,000 秒。该规则不匹配 `/api/*`，未启用付费 Cache Reserve。源站同时为上传图片返回 `public, max-age=31536000, immutable`，UUID 图片地址不得覆盖写入。
+
 ## 自动发布
 
 `.github/workflows/deploy-pages.yml` 在 `main` 分支的 `frontend/**` 或工作流自身发生变化时自动构建并发布，也支持在 GitHub Actions 页面手动触发。
