@@ -255,6 +255,7 @@ export function FavoritesPage() {
                   coverImageUrl={item.coverImageUrl}
                   deliveryText={formatDelivery(item.deliveryModes)}
                   favoriteLabel="已收藏"
+                  onFavoriteClick={() => unfavoriteMutation.mutate(item.id)}
                   motionIndex={index}
                   priceLabel={formatPrice(item.priceCent)}
                   reduceMotion={shouldReduceMotion}

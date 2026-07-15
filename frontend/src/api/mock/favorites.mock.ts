@@ -8,8 +8,10 @@ import macbookAirImage from '../../assets/favorites/items/macbook-air.webp'
 import mathBooksImage from '../../assets/favorites/items/math-books.webp'
 import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.webp'
 import suitcaseImage from '../../assets/favorites/items/suitcase.webp'
+import { getMockItemSummary } from './items.mock'
 
 const mockLatencyMs = 180
+const favoriteStorageKey = 'ecocampus:mock-favorite-items'
 
 let favoriteItems: FavoriteItemSummary[] = [
   {
@@ -184,6 +186,8 @@ let favoriteItems: FavoriteItemSummary[] = [
   },
 ]
 
+favoriteItems = loadStoredFavorites(favoriteItems)
+
 export async function listMockFavorites(params?: FavoriteListParams): Promise<ApiResponse<PageResult<FavoriteItemSummary>>> {
   await delay(mockLatencyMs)
 
@@ -201,16 +205,57 @@ export async function listMockFavorites(params?: FavoriteListParams): Promise<Ap
 
 export async function favoriteMockItem(itemId: string | number): Promise<ApiResponse<void>> {
   await delay(mockLatencyMs)
-  favoriteItems = favoriteItems.map((item) =>
-    item.id === Number(itemId) ? { ...item, favorited: true } : item,
-  )
+  const normalizedItemId = Number(itemId)
+  const existingItem = favoriteItems.find((item) => item.id === normalizedItemId)
+
+  if (existingItem) {
+    favoriteItems = favoriteItems.map((item) =>
+      item.id === normalizedItemId ? { ...item, favorited: true } : item,
+    )
+  } else {
+    const item = getMockItemSummary(normalizedItemId)
+
+    if (!item) {
+      throw new Error('mock item not found')
+    }
+
+    favoriteItems = [
+      {
+        ...item,
+        favorited: true,
+        favoritedAt: new Date().toISOString(),
+      },
+      ...favoriteItems,
+    ]
+  }
+
+  persistFavorites()
   return mockResponse(undefined)
 }
 
 export async function unfavoriteMockItem(itemId: string | number): Promise<ApiResponse<void>> {
   await delay(mockLatencyMs)
   favoriteItems = favoriteItems.filter((item) => item.id !== Number(itemId))
+  persistFavorites()
   return mockResponse(undefined)
+}
+
+function loadStoredFavorites(fallback: FavoriteItemSummary[]) {
+  try {
+    const storedValue = window.localStorage.getItem(favoriteStorageKey)
+    if (!storedValue) {
+      return fallback
+    }
+
+    const parsedValue = JSON.parse(storedValue) as FavoriteItemSummary[]
+    return Array.isArray(parsedValue) ? parsedValue : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function persistFavorites() {
+  window.localStorage.setItem(favoriteStorageKey, JSON.stringify(favoriteItems))
 }
 
 function mockResponse<T>(data: T): ApiResponse<T> {

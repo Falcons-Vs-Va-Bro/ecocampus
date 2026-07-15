@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
   BookOpen,
@@ -29,6 +29,7 @@ import {
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { favoriteItem, listMyFavorites, unfavoriteItem } from '../../api/favorite.api'
 import { listItems } from '../../api/item.api'
 import type { ItemSummary } from '../../api/item.api'
 import { queryKeys } from '../../api/queryKeys'
@@ -283,6 +284,7 @@ type PriceRange = { label: string; min: number; max: number }
 type PickupMode = (typeof pickupModes)[number]
 
 export function ItemsPage() {
+  const queryClient = useQueryClient()
   const unreadMessageCount = useUnreadMessageCount()
   const location = useLocation()
   const routeCategory = categoryRoutes.find((item) => item.to === location.pathname)?.label ?? '全部'
@@ -328,11 +330,28 @@ export function ItemsPage() {
   const [ticketPickup, setTicketPickup] = useState('')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [page, setPage] = useState(1)
-  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(() => new Set([1002]))
 
   const itemsQuery = useQuery({
     queryKey: queryKeys.items.list('items'),
     queryFn: () => listItems({ page: 1, size: 80 }),
+  })
+
+  const favoritesQuery = useQuery({
+    queryKey: queryKeys.favorites.mine,
+    queryFn: () => listMyFavorites({ page: 1, size: 200 }),
+  })
+
+  const favoriteIds = useMemo(
+    () => new Set((favoritesQuery.data?.data.items ?? []).map((item) => item.id)),
+    [favoritesQuery.data?.data.items],
+  )
+
+  const favoriteMutation = useMutation({
+    mutationFn: ({ itemId, favorited }: { itemId: number; favorited: boolean }) =>
+      favorited ? unfavoriteItem(itemId) : favoriteItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.mine })
+    },
   })
 
   const allItems = itemsQuery.data?.data.items ?? emptyItems
@@ -487,15 +506,7 @@ export function ItemsPage() {
   }
 
   function toggleFavorite(itemId: number) {
-    setFavoriteIds((current) => {
-      const next = new Set(current)
-      if (next.has(itemId)) {
-        next.delete(itemId)
-      } else {
-        next.add(itemId)
-      }
-      return next
-    })
+    favoriteMutation.mutate({ itemId, favorited: favoriteIds.has(itemId) })
   }
 
   return (
@@ -685,7 +696,7 @@ export function ItemsPage() {
                   {visibleItems.map((item) => (
                     <ProductCard
                       item={item}
-                      favorited={favoriteIds.has(item.id) || item.favorited}
+                      favorited={favoriteIds.has(item.id)}
                       onToggleFavorite={() => toggleFavorite(item.id)}
                       key={item.id}
                     />
