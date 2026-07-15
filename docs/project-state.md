@@ -113,6 +113,8 @@ GitHub Pages frontend
 
 后端使用仓库级 self-hosted Runner `ecocampus-macmini` 在 Mac mini 本机构建和部署；`deploy-backend-macmini.yml` 仅由 `main` 的后端/部署文件变化或手动触发。固定部署器执行原子 JAR 替换、最长 45 秒健康检查和失败回滚，成功 SHA 写入本机状态文件。Runner 不需要公网入站端口，也不经过 `dmit-la`。公开仓库的 `main` 当前没有分支保护，拥有直接写权限的协作者可以修改 workflow，这是现存的 Runner 安全边界。
 
+数据库运维通过 Mac mini 系统 OpenSSH + Tailscale 内网隧道接入；运维公钥只能从 Tailscale 地址段转发到本机 MySQL 3306，不能获取 Shell 或访问其他端口。MySQL 使用独立的本地 `ecocampus_ops` 数据库级账号，3306 仍仅监听 loopback。
+
 2026-07-14 已记录的课堂负载基线：真实商品列表 600 请求、60 并发，0 失败、439.30 req/s、P95 269 ms、最长 477 ms；MySQL 连接峰值 10/151，慢查询 0。
 
 ## 验证基线
@@ -142,6 +144,7 @@ GitHub Pages frontend
 
 - 2026-07-15：将分类商品页静态“最新发布”按钮改为真实排序菜单，支持 4 种客户端排序方式和键盘操作。
 - 2026-07-15：修复 Local mock 发布/编辑商品时上传图片始终显示固定台灯素材的问题；选择的图片会压缩为 WebP 数据，真实用于预览、草稿和新发布商品封面。
+- 2026-07-15：恢复 Mac mini 的 Tailscale 节点在线状态，新增仅限 Tailscale 来源和本机 MySQL 3306 转发的运维公钥入口，并创建数据库级独立运维账号；未开放 Shell、MySQL 网络监听或公网端口。
 - 2026-07-14：在 Mac mini 注册仓库级专用 self-hosted Runner，新增后端 `main` 自动测试、构建、原子部署、健康检查与失败回滚链路；构建不再经过 GitHub 托管 Runner。
 - 2026-07-14：修正管理员登录被送往公共首页的问题；管理员默认进入 `/admin` 并被限制在后台路由树，后台未实现入口改为禁用，同时补充后台退出登录。
 - 2026-07-14：完成全仓库文档/实现对照审计，按代码重写入口 README、API、RBAC、前端数据源和项目状态，显式记录真实 DTO 与 mock UI 差异。
