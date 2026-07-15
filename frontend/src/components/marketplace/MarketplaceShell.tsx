@@ -3,6 +3,7 @@ import {
   BookOpen,
   Box,
   Camera,
+  ChevronDown,
   ClipboardList,
   Dumbbell,
   Grid3X3,
@@ -17,8 +18,10 @@ import {
   Star,
   Store,
   User,
+  UserCheck,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCurrentUserIdentity } from '../../hooks/useCurrentUserIdentity'
@@ -80,6 +83,30 @@ export function MarketplaceShell({
   const identity = useCurrentUserIdentity()
   const unreadMessageCount = useUnreadMessageCount()
   const notificationCount = 0
+  const [openMenu, setOpenMenu] = useState<'notifications' | 'profile' | null>(null)
+  const userbarRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function closeOnOutsideClick(event: PointerEvent) {
+      if (!userbarRef.current?.contains(event.target as Node)) {
+        setOpenMenu(null)
+      }
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpenMenu(null)
+      }
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [])
 
   return (
     <div className={classNames('favorites-shell', shellClassName)}>
@@ -125,38 +152,75 @@ export function MarketplaceShell({
           <button type="submit">搜索</button>
         </form>
 
-        <div className="favorites-userbar" aria-label="用户快捷入口">
+        <div className="favorites-userbar" aria-label="用户快捷入口" ref={userbarRef}>
           {identity.isAuthenticated ? (
             <>
-              <button type="button" className="icon-button" aria-label="通知">
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="查看通知"
+                aria-expanded={openMenu === 'notifications'}
+                aria-controls="marketplace-notification-panel"
+                onClick={() => setOpenMenu((current) => current === 'notifications' ? null : 'notifications')}
+              >
                 <Bell size={25} />
                 {notificationCount > 0 ? <span>{notificationCount}</span> : null}
               </button>
-              <Link className="icon-button" aria-label="站内信" to="/messages">
+              <Link className="icon-button" aria-label="进入消息中心" to="/messages" onClick={() => setOpenMenu(null)}>
                 <Mail size={26} />
                 {unreadMessageCount > 0 ? <span>{unreadMessageCount}</span> : null}
               </Link>
-              <Link className="student-profile" to="/profile" aria-label="当前登录用户">
+              <button
+                type="button"
+                className="student-profile student-profile--button"
+                aria-label="打开用户菜单"
+                aria-expanded={openMenu === 'profile'}
+                aria-controls="marketplace-profile-menu"
+                onClick={() => setOpenMenu((current) => current === 'profile' ? null : 'profile')}
+              >
                 <span className="student-avatar">{identity.avatarText}</span>
                 <strong>{identity.nickname}</strong>
                 <em>{identity.roleLabel}</em>
-              </Link>
-              <button
-                type="button"
-                className="student-logout"
-                onClick={() => {
-                  identity.logout()
-                  navigate('/')
-                }}
-              >
-                <LogOut size={17} />
-                退出
+                <ChevronDown className="student-profile-chevron" size={17} />
               </button>
+
+              {openMenu === 'notifications' ? (
+                <div className="marketplace-user-popover notification-popover" id="marketplace-notification-panel" role="status">
+                  <strong>通知</strong>
+                  <p>暂无新的系统通知</p>
+                  <Link to="/messages" onClick={() => setOpenMenu(null)}>查看私信消息</Link>
+                </div>
+              ) : null}
+
+              {openMenu === 'profile' ? (
+                <div className="marketplace-user-popover profile-popover" id="marketplace-profile-menu" role="menu">
+                  <Link to="/profile" role="menuitem" onClick={() => setOpenMenu(null)}>
+                    <User size={18} />
+                    个人中心
+                  </Link>
+                  <Link to="/verify" role="menuitem" onClick={() => setOpenMenu(null)}>
+                    <UserCheck size={18} />
+                    校园核验
+                  </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenMenu(null)
+                      identity.logout()
+                      navigate('/')
+                    }}
+                  >
+                    <LogOut size={18} />
+                    退出登录
+                  </button>
+                </div>
+              ) : null}
             </>
           ) : (
             <Link className="student-profile student-profile--guest" to="/login">
               <span className="student-avatar"><LogIn size={20} /></span>
-              <strong>登录 / 注册</strong>
+              <strong>登录</strong>
             </Link>
           )}
         </div>

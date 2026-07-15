@@ -97,8 +97,7 @@ mock 与守卫：
 14. `application-local.example.yml` 的 `FILE_STORAGE_TYPE` 和 Redis 配置没有对应运行时实现/依赖。
 15. Vite 没有 `/api` dev proxy；本地联调必须显式设置 `VITE_API_BASE_URL=http://localhost:8080/api/v1`。
 16. 商品 `off-shelf` 只阻止 `SOLD/DELETED`，卖家可把 `VIOLATION_REMOVED` 改为 `OFF_SHELF` 后重新申请审核，违规下架存在绕过路径。
-17. 市场公共壳仍显示“登录 / 注册”，但没有注册路由/端点，点击只进入自动建档登录页。
-18. 后台用户页的总量、今日新增、注册日期、发布数，以及类目页的层级/启停/商品数，部分仍是硬编码或本地展示值。
+17. 后台用户页的总量、今日新增、注册日期、发布数，以及类目页的层级/启停/商品数，部分仍是硬编码或本地展示值。
 
 ## 部署状态
 

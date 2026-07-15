@@ -231,6 +231,7 @@
 }
 
 .favorites-userbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -292,6 +293,27 @@ a.icon-button {
   text-decoration: none;
 }
 
+.student-profile--button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.student-profile--button:hover,
+.student-profile--button[aria-expanded="true"] {
+  color: #2d77bd;
+}
+
+.student-profile-chevron {
+  flex: 0 0 auto;
+  transition: transform 160ms ease;
+}
+
+.student-profile--button[aria-expanded="true"] .student-profile-chevron {
+  transform: rotate(180deg);
+}
+
 .student-profile--guest {
   min-height: 48px;
   padding: 0 14px 0 4px;
@@ -299,28 +321,6 @@ a.icon-button {
   border-radius: 9px;
   color: #256aa9;
   background: rgba(238, 246, 255, 0.78);
-}
-
-.student-logout {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 5px;
-  padding: 0 9px;
-  border: 1px solid rgba(72, 105, 139, 0.34);
-  border-radius: 7px;
-  color: #5d5147;
-  background: rgba(255, 255, 255, 0.62);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.student-logout:hover {
-  border-color: #c95d54;
-  color: #b8433b;
-  background: #fff4f1;
 }
 
 .student-profile strong {
@@ -356,6 +356,93 @@ a.icon-button {
     #d8ecff;
   font-size: 15px;
   font-weight: 900;
+}
+
+.marketplace-user-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 230px;
+  padding: 12px;
+  border: 2px solid rgba(70, 107, 146, 0.42);
+  border-radius: 9px;
+  background: rgba(255, 252, 246, 0.98);
+  box-shadow: 0 14px 34px rgba(48, 73, 99, 0.18);
+}
+
+.marketplace-user-popover::before {
+  position: absolute;
+  top: -7px;
+  right: 28px;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid rgba(70, 107, 146, 0.42);
+  border-left: 2px solid rgba(70, 107, 146, 0.42);
+  background: #fffaf2;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.notification-popover strong,
+.notification-popover p {
+  margin: 0;
+}
+
+.notification-popover strong {
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.notification-popover p {
+  margin-top: 8px;
+  color: #706860;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.notification-popover a {
+  display: inline-flex;
+  margin-top: 12px;
+  color: #2d77bd;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.profile-popover {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-popover a,
+.profile-popover button {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #39332d;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 850;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.profile-popover a:hover,
+.profile-popover button:hover {
+  color: #2d77bd;
+  background: rgba(231, 243, 255, 0.78);
+}
+
+.profile-popover button:last-child {
+  border-top: 1px solid rgba(78, 112, 150, 0.2);
+  border-radius: 0 0 6px 6px;
+  color: #b8433b;
 }
 
 .favorites-workspace {
@@ -1562,6 +1649,16 @@ a.icon-button {
 
   .favorites-userbar {
     gap: 10px;
+  }
+
+  .marketplace-user-popover {
+    right: auto;
+    left: 0;
+  }
+
+  .marketplace-user-popover::before {
+    right: auto;
+    left: 28px;
   }
 
   .student-profile strong {
