@@ -1,17 +1,16 @@
 -- EcoCampus MySQL demo seed.
 --
--- 用途：
--- 1. 先执行 Flyway migration，确保表结构已经存在。
--- 2. 再手动导入本文件，为本地/演示 MySQL 环境补齐一批贴近前端 mock 的测试数据。
+-- This repeatable Flyway migration is loaded by the default local MySQL config
+-- through classpath:db/seed. The prod profile overrides Flyway locations to
+-- classpath:db/migration, so production will not import demo rows.
 --
--- 示例：
--- mysql -u ecocampus -p ecocampus < backend/src/main/resources/db/seed/mysql-demo-seed.sql
---
--- 说明：
--- - 本脚本不会作为 Flyway migration 自动运行，避免测试或生产环境误加载演示数据。
--- - 数据 ID 使用固定区间，便于反复导入；如本地库已有同 ID 或同手机号/学号数据，请先确认是否冲突。
--- - 演示账号使用 users.phone 兼容列承载，账号为 2292024...，统一密码为 demo-password。
--- - image_url 使用 Vite 本地开发可访问的 /src/assets 路径，生产或纯后端环境可替换为真实上传后的 /uploads 路径。
+-- Notes:
+-- - The script is idempotent for repeated local imports by using fixed ID ranges
+--   plus upsert/delete-before-insert blocks where needed.
+-- - Demo accounts use users.phone-compatible account names starting with
+--   2292024 and share the password: demo-password.
+-- - Demo image_url values point at frontend public/catalog assets so local,
+--   GitHub Pages, and the custom domain can serve the same stable paths.
 
 start transaction;
 
@@ -182,46 +181,46 @@ where item_id in (
 
 insert into item_images (item_id, sort_order, image_url)
 values
-	(1001, 0, '/src/assets/favorites/items/math-books.jpg'),
-	(1002, 0, '/src/assets/favorites/items/macbook-air.jpg'),
-	(1003, 0, '/src/assets/item-detail/lamp-main.jpg'),
-	(1003, 1, '/src/assets/item-detail/lamp-thumb-2.png'),
-	(1003, 2, '/src/assets/item-detail/lamp-thumb-3.png'),
-	(1003, 3, '/src/assets/item-detail/lamp-thumb-4.png'),
-	(1004, 0, '/src/assets/favorites/items/basketball.jpg'),
-	(1005, 0, '/src/assets/favorites/items/mechanical-keyboard.jpg'),
-	(1006, 0, '/src/assets/favorites/items/suitcase.jpg'),
-	(1007, 0, '/src/assets/favorites/items/airpods.jpg'),
-	(1008, 0, '/src/assets/favorites/items/calculator.jpg'),
-	(1009, 0, '/src/assets/favorites/items/suitcase.jpg'),
-	(1010, 0, '/src/assets/favorites/items/basketball.jpg'),
-	(1011, 0, '/src/assets/favorites/items/math-books.jpg'),
-	(1012, 0, '/src/assets/favorites/items/macbook-air.jpg'),
-	(1013, 0, '/src/assets/favorites/items/desk-lamp.jpg'),
-	(1014, 0, '/src/assets/favorites/items/calculator.jpg'),
-	(1015, 0, '/src/assets/favorites/items/mechanical-keyboard.jpg'),
-	(1016, 0, '/src/assets/favorites/items/basketball.jpg'),
-	(1017, 0, '/src/assets/favorites/items/tickets-concert.png'),
-	(1018, 0, '/src/assets/favorites/items/airpods.jpg'),
-	(1019, 0, '/src/assets/favorites/items/airpods.jpg'),
-	(2001, 0, '/src/assets/favorites/items/calculator.jpg'),
-	(2002, 0, '/src/assets/favorites/items/suitcase.jpg'),
-	(2003, 0, '/src/assets/favorites/items/basketball.jpg'),
-	(9001, 0, '/src/assets/favorites/items/macbook-air.jpg'),
-	(9001, 1, '/src/assets/favorites/items/mechanical-keyboard.jpg'),
-	(9001, 2, '/src/assets/favorites/items/calculator.jpg'),
-	(9002, 0, '/src/assets/favorites/items/math-books.jpg'),
-	(9002, 1, '/src/assets/favorites/items/calculator.jpg'),
-	(9002, 2, '/src/assets/favorites/items/desk-lamp.jpg'),
-	(9003, 0, '/src/assets/favorites/items/desk-lamp.jpg'),
-	(9003, 1, '/src/assets/item-detail/lamp-thumb-2.png'),
-	(9003, 2, '/src/assets/item-detail/lamp-thumb-3.png'),
-	(9004, 0, '/src/assets/favorites/items/mechanical-keyboard.jpg'),
-	(9004, 1, '/src/assets/favorites/items/calculator.jpg'),
-	(9004, 2, '/src/assets/favorites/items/airpods.jpg'),
-	(9005, 0, '/src/assets/favorites/items/suitcase.jpg'),
-	(9005, 1, '/src/assets/favorites/items/instruments-folder.png'),
-	(9005, 2, '/src/assets/favorites/items/daily-thermos.png');
+	(1001, 0, '/catalog/1001.webp'),
+	(1002, 0, '/catalog/1002.webp'),
+	(1003, 0, '/catalog/1003.webp'),
+	(1003, 1, '/catalog/1003-1.webp'),
+	(1003, 2, '/catalog/1003-2.webp'),
+	(1003, 3, '/catalog/1003-3.webp'),
+	(1004, 0, '/catalog/1004.webp'),
+	(1005, 0, '/catalog/1005.webp'),
+	(1006, 0, '/catalog/1006.webp'),
+	(1007, 0, '/catalog/1007.webp'),
+	(1008, 0, '/catalog/1008.webp'),
+	(1009, 0, '/catalog/1009.webp'),
+	(1010, 0, '/catalog/1010.webp'),
+	(1011, 0, '/catalog/1011.webp'),
+	(1012, 0, '/catalog/1012.webp'),
+	(1013, 0, '/catalog/1013.webp'),
+	(1014, 0, '/catalog/1014.webp'),
+	(1015, 0, '/catalog/1015.webp'),
+	(1016, 0, '/catalog/1016.webp'),
+	(1017, 0, '/catalog/1017.webp'),
+	(1018, 0, '/catalog/1018.webp'),
+	(1019, 0, '/catalog/1019.webp'),
+	(2001, 0, '/catalog/2001.webp'),
+	(2002, 0, '/catalog/2002.webp'),
+	(2003, 0, '/catalog/2003.webp'),
+	(9001, 0, '/catalog/9001.webp'),
+	(9001, 1, '/catalog/9001-1.webp'),
+	(9001, 2, '/catalog/9001-2.webp'),
+	(9002, 0, '/catalog/9002.webp'),
+	(9002, 1, '/catalog/9002-1.webp'),
+	(9002, 2, '/catalog/9002-2.webp'),
+	(9003, 0, '/catalog/9003.webp'),
+	(9003, 1, '/catalog/9003-1.webp'),
+	(9003, 2, '/catalog/9003-2.webp'),
+	(9004, 0, '/catalog/9004.webp'),
+	(9004, 1, '/catalog/9004-1.webp'),
+	(9004, 2, '/catalog/9004-2.webp'),
+	(9005, 0, '/catalog/9005.webp'),
+	(9005, 1, '/catalog/9005-1.webp'),
+	(9005, 2, '/catalog/9005-2.webp');
 
 insert into favorites (id, user_id, item_id, created_at)
 values

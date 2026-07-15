@@ -53,4 +53,4 @@ cd ../backend
 
 `nginx.conf` 会代理 `/uploads/`，但当前 Spring Security 未公开后端 `/uploads/**`。在修复安全策略前，代理存在不代表 `<img>` 可匿名读取上传图片。
 
-数据库结构只通过 Flyway 迁移，生产 profile 会拒绝 H2、空数据库凭据、关闭 Flyway或不安全的 Hibernate DDL 配置。本方案尚未由当前仓库自动化工作流部署；执行前应按实际主机、域名和 tailnet 策略复核模板。
+数据库结构只通过 Flyway 迁移，生产 profile 会拒绝非 MySQL URL、空数据库凭据、关闭 Flyway或不安全的 Hibernate DDL 配置。本方案尚未由当前仓库自动化工作流部署；执行前应按实际主机、域名和 tailnet 策略复核模板。

@@ -2,14 +2,19 @@
 
 本文记录 EcoCampus 后端当前数据库约束、索引和锁的设计意图。数据库结构以 `backend/src/main/resources/db/migration/` 下的 Flyway migration 为准。
 
-最近一次按 V1–V4 migration、JPA entity 和 repository 复核：2026-07-14。
+最近一次按 V1–V4 migration、默认 MySQL 配置和自动 seed 复核：2026-07-15。
 
 ## 初始化方式
 
 - 使用 Flyway 管理表结构和种子数据，避免开发、测试和真实 MySQL 环境使用不同建表脚本。
 - `application.yml` 已关闭旧的 `schema.sql` / `data.sql` 自动初始化，防止重复建表或重复写入种子数据。
 - V1 创建核心表、约束和索引；V2 自动插入 4 个初始类目；V3 为 `users` 增加可空的 `password_hash`；V4 为会话增加双方已读时间。
-- `db/seed/mysql-demo-seed.sql` 是 Flyway 后手动导入的演示数据，不属于 migration，不会随应用启动自动执行。
+- 默认 `application.yml` 使用本地 MySQL，并将 `classpath:db/migration` 和 `classpath:db/seed` 都纳入 Flyway locations。
+- `db/seed/R__mysql_demo_seed.sql` 是默认环境自动执行的 repeatable Flyway 演示 seed，补齐贴近前端 mock 的用户、类目、商品、订单、会话、求购和审计数据。
+- `db/seed/R__mysql_catalog_seed.sql` 是独立的 repeatable 商品目录 seed，使用预留 ID `50001`–`50072`，为九个一级类目各补 8 件符合校园二手场景的商品及图片、配送方式关联。
+- 两份 seed 的商品图片统一引用前端 `public/catalog/` 下的 `/catalog/*.webp`，避免生产构建无法访问 `/src/assets`；图片记录与静态文件按商品 ID、排序号稳定对应。
+- `application-prod.yml` 显式覆盖 Flyway locations 为 `classpath:db/migration`，生产环境不会自动导入演示 seed。
+- `backend/src/test/resources/application.yml` 使用独立的 `ecocampus_test` MySQL，只加载 `db/migration`，并在测试上下文启动时自动清库、迁移，不导入完整演示数据。
 
 ## 生产数据库配置
 

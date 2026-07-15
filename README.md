@@ -27,7 +27,7 @@ ecocampus/
 - 类目、图片上传、商品发布/审核/上下架/公开查询。
 - 收藏、商品私信、未读数、订单状态流转和求购匹配。
 - 管理员商品审核与治理、用户黑名单、一级类目 CRUD 和数据看板。
-- Flyway 数据库迁移、H2 默认开发库、MySQL 生产配置和生产启动防呆。
+- Flyway 数据库迁移、MySQL 本地/测试/生产配置和生产启动防呆。
 
 前端已实现：
 
@@ -40,7 +40,7 @@ ecocampus/
 
 ## 技术栈
 
-后端：Java 21、Spring Boot 3.5.3、Spring Web/Security/Validation/Data JPA、Flyway、H2、MySQL、Actuator 和 Springdoc OpenAPI。
+后端：Java 21、Spring Boot 3.5.3、Spring Web/Security/Validation/Data JPA、Flyway、MySQL、Actuator 和 Springdoc OpenAPI。
 
 前端：React 19、TypeScript、Vite 8、React Router 7、TanStack Query、Zustand、Axios、Tailwind CSS、Ant Design、lucide-react、Motion、React Hook Form 和 Zod。
 
@@ -50,12 +50,16 @@ ecocampus/
 
 ### 后端
 
-默认配置使用 H2 内存数据库和 Flyway，无需先安装 MySQL：
+默认配置使用本地 MySQL 和 Flyway，启动前需要先准备 `ecocampus` 数据库及账号：
 
 ```bash
 cd backend
+mysql -uroot -p -e "create database if not exists ecocampus character set utf8mb4 collate utf8mb4_unicode_ci; create database if not exists ecocampus_test character set utf8mb4 collate utf8mb4_unicode_ci;"
+mysql -uroot -p -e "create user if not exists 'ecocampus_local'@'localhost' identified by 'ecocampus_local_password'; grant all privileges on ecocampus.* to 'ecocampus_local'@'localhost'; grant all privileges on ecocampus_test.* to 'ecocampus_local'@'localhost';"
 ./mvnw spring-boot:run
 ```
+
+默认连接为 `jdbc:mysql://localhost:3306/ecocampus`，账号密码为 `ecocampus_local` / `ecocampus_local_password`。也可以用 `DB_HOST`、`DB_PORT`、`DB_NAME`、`DB_USERNAME`、`DB_PASSWORD` 覆盖。
 
 常用入口：
 
@@ -97,10 +101,12 @@ pnpm build
 
 ## 配置与数据
 
-- 默认 `backend/src/main/resources/application.yml`：H2 MySQL mode。
+- 默认 `backend/src/main/resources/application.yml`：本地 MySQL、Flyway migration 和自动演示 seed。
+- 测试配置：`backend/src/test/resources/application.yml` 使用独立的 `ecocampus_test` MySQL，并在测试上下文启动时自动清库、迁移；可用 `TEST_DB_URL`、`TEST_DB_USERNAME`、`TEST_DB_PASSWORD` 覆盖。
 - MySQL 本地示例：`backend/src/main/resources/application-local.example.yml`。
 - 生产配置：`backend/src/main/resources/application-prod.yml`，必须显式提供 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 和安全的 `JWT_SECRET`。
-- 手动 MySQL 演示数据：`backend/src/main/resources/db/seed/mysql-demo-seed.sql`，应在 Flyway migration 后导入，不会随应用自动执行。
+- 自动 MySQL 演示数据：`backend/src/main/resources/db/seed/R__mysql_demo_seed.sql` 提供账号、交易与基础商品，`R__mysql_catalog_seed.sql` 额外提供九类目各 8 件的校园二手商品；默认环境随 Flyway 自动执行，`prod` profile 只加载结构 migration。
+- Seed 商品图片位于 `frontend/public/catalog/`，数据库统一保存 `/catalog/*.webp`；Vite 构建会原样复制这些静态资源，真实 API 首页不再依赖仅开发期可用的 `/src/assets` 路径。
 - 图片默认写入 `./storage/uploads`，并注册 `/uploads/**` 静态处理；当前 Spring Security 未将该路径设为公开，读取仍要求认证，这是已知接线问题。
 
 `application-local.example.yml` 仍保留 Redis 参数占位，但当前 Maven 依赖和业务代码均未使用 Redis，无需启动 Redis。

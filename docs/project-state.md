@@ -1,6 +1,6 @@
 # EcoCampus 项目状态
 
-最近一次全项目文档/实现复核：2026-07-14。
+最近一次数据库配置与 seed 复核：2026-07-15。
 
 本文件是协作与交接入口，只保留当前摘要、已知问题和验证基线。长期契约以对应源文档为准；若文档与实现冲突，以后端 Controller/DTO/Flyway、前端路由映射/API wrapper/页面数据源和构建配置为准。
 
@@ -26,15 +26,18 @@
 
 ## 后端当前状态
 
-技术：Java 21、Spring Boot 3.5.3、Spring Web/Security/Validation/Data JPA、Flyway、H2、MySQL、Actuator、Springdoc。
+技术：Java 21、Spring Boot 3.5.3、Spring Web/Security/Validation/Data JPA、Flyway、MySQL、Actuator、Springdoc。
 
 运行与数据：
 
-- 默认 `application.yml` 使用 H2 MySQL mode、Flyway、`ddl-auto=none`。
+- 默认 `application.yml` 使用本地 MySQL、Flyway、`ddl-auto=validate`，并自动加载 `db/migration` 与 `db/seed`。
 - `application-prod.yml` 要求显式 MySQL 凭据，使用 `ddl-auto=validate`，并由启动期防呆阻止不安全生产配置。
+- H2 依赖与配置已移除；测试使用独立的 `ecocampus_test` MySQL，只加载 `db/migration`，并在测试上下文启动时自动清库、迁移。
 - 课堂单实例默认基线：Hikari 最大 12/最小空闲 3、连接等待 10 秒；Tomcat 最大线程 100、最小空闲 8、最大连接 300、等待队列 100。
 - Flyway 当前为 V1–V4：核心表、4 个初始类目、账号密码哈希列、会话双方已读时间。
-- `db/seed/mysql-demo-seed.sql` 是 Flyway 后手动导入的完整演示数据，不会自动运行。
+- `db/seed/R__mysql_demo_seed.sql` 和 `R__mysql_catalog_seed.sql` 是默认环境自动执行的 repeatable Flyway 演示 seed；后者使用预留 ID `50001`–`50072` 为九类目各补 8 件商品。`prod` profile 只加载结构 migration，不自动导入演示数据。
+- 2026-07-15 已按运维授权通过 SSH 隧道将两份 repeatable seed 导入真实 `ecocampus`：9 类目、36 用户、99 商品、14 收藏、9 订单、5 会话、11 消息、4 求购、4 审计记录；扩展商品九类目各 8 件，Flyway history 均标记执行成功。
+- 112 条 seed 商品图片记录已统一改为 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；真实库旧 `/src/assets` 图片地址为 0，Vite 生产构建已确认复制全部 112 个文件。
 - Maven 已移除 Redis 依赖和业务使用；`application-local.example.yml` 中 Redis 段只是未生效的遗留占位。
 - 图片仅实现本地 JPEG/PNG/GIF 存储；`FILE_STORAGE_TYPE` 没有实现选择器。MVC 已注册 `/uploads/**`，但安全配置未公开该路径。
 
@@ -88,7 +91,7 @@ mock 与守卫：
 5. 校园核验、收藏、上下架、关闭求购、审核/违规下架等若干 mutation wrapper 声明 `void`，后端实际返回当前用户、商品/求购详情或后台商品摘要。
 6. `routeCatalog.ts` 为求购详情列出 `GET /demands/{demandId}`，但后端没有该端点，当前详情页也未调用 API。
 7. 订单/私信页面使用 mock 元数据补图片、价格或状态；私信详情的“是否本人消息”仍使用 mock 当前用户 id。
-8. 前端分类 mock 有 9 个一级类目，自动 Flyway seed 只有 4 个；手动 MySQL demo seed 有 9 个。
+8. 默认 MySQL 环境的自动 demo seed 有 9 个一级类目；后端测试库只执行结构 migration，因此只有 V2 的 4 个基础类目。
 9. 类目数据库是扁平一级模型；后台树层级、启停、商品数是本地展示状态。
 10. 过期黑名单不会自动恢复 `verificationStatus`；过期后交易请求从 423 变为 403，仍需管理员移出。
 11. 没有前端组件/路由自动化测试；前端验证目前只有 lint/build 和人工页面检查记录。
@@ -119,7 +122,12 @@ GitHub Pages frontend
 本轮文档审计与最新远端性能变更组合后（2026-07-14）已验证：
 
 - `cd backend && ./mvnw test`：32 tests 通过，0 failures、0 errors、0 skipped。
-- `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.14 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
+- 2026-07-15 默认 MySQL 与自动 demo seed 变更后，H2 已完整移除；测试改为要求独立的 `ecocampus_test` MySQL，当前 Windows 环境因 MySQL57 服务停止而未执行完整测试套件。
+- 2026-07-15 经 `lifuyue@100.80.234.31` 受限 SSH 隧道已成功认证 Mac mini 真实 MySQL；Flyway 校验 V1–V4 全部通过，线上 schema 为 V4 且无待执行迁移，临时 prod 实例和数据库型 API 均验证成功。首次校验发现 V1 migration 注释变更造成 checksum mismatch，已恢复已发布 V1 原文，未对线上执行 Flyway repair。
+- 2026-07-15 真实库 demo seed 导入成功；MySQL 9.6 对 seed 使用的 `VALUES(col)` upsert 语法给出弃用警告，但本次事务和 Flyway repeatable migration 均成功提交。
+- 2026-07-15 扩展 catalog seed 导入成功：新增 72 商品、72 图片关联和 82 配送方式；新增商品状态为 63 在售、5 已售、4 下架。
+- 2026-07-15 商品图片生产路径修复后，`cd frontend && pnpm lint`、`pnpm build` 通过；本地预览首页与 `/catalog/50001.webp` 均返回 200，图片响应类型为 `image/webp`。
+- 2026-07-15 用户端共享顶栏交互变更后，`cd frontend && pnpm lint && pnpm build` 通过；入口包为 628.25 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-14 管理员路由域隔离变更后 `cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-14 管理员路由域隔离已由 GitHub Pages 发布；真实管理员登录返回 `ADMIN/VERIFIED`，后台 summary API 返回 200，线上产物确认登录默认目标、全局管理员重定向和退出登录逻辑均已包含。
 - 2026-07-14 self-hosted 后端 CD 首次运行成功：Mac mini Runner 在 48 秒内完成 32 项测试、JAR 构建、原子部署和健康检查；部署 SHA 与 `main` 一致，公网 health 为 `UP`，Runner 空闲 RSS 约 97 MB。
@@ -137,6 +145,12 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-15：修复真实 API 首页商品图片不显示：将 seed 图片从不可发布的 `/src/assets` 迁移到 `frontend/public/catalog/`，同步真实 MySQL，并验证 112 个静态图片进入生产构建。
+- 2026-07-15：参考公开商品目录的名称和价格区间，新增经校园二手场景重写的 `R__mysql_catalog_seed.sql`；未采集用户身份、商家描述或第三方图片，真实库商品总数从 27 增至 99。
+- 2026-07-15：经运维明确授权，将 `R__mysql_demo_seed.sql` 导入 Mac mini 真实 `ecocampus` 并通过 JDBC 核对各业务表数量；生产 profile 仍保持默认不自动执行 demo seed。
+- 2026-07-15：确认内网数据库运维入口为 Shadowrocket 节点 `100.80.234.31:22`，受限 SSH 隧道转发本地 `13306` 至目标 MySQL；真实库认证、Flyway V1–V4、JPA 和数据库型 API 验证通过。
+- 2026-07-15：补齐用户端共享顶栏交互：通知按钮展示状态面板，私信入口跳转消息中心，用户区提供个人中心、校园核验和退出登录菜单；公共入口移除不存在的“注册”文案。
+- 2026-07-15：默认后端、测试和生产数据源统一为 MySQL，完整移除 H2；MySQL demo seed 改为默认环境自动执行的 Flyway repeatable migration，生产 profile 继续排除演示 seed。
 - 2026-07-14：在 Mac mini 注册仓库级专用 self-hosted Runner，新增后端 `main` 自动测试、构建、原子部署、健康检查与失败回滚链路；构建不再经过 GitHub 托管 Runner。
 - 2026-07-14：修正管理员登录被送往公共首页的问题；管理员默认进入 `/admin` 并被限制在后台路由树，后台未实现入口改为禁用，同时补充后台退出登录。
 - 2026-07-14：完成全仓库文档/实现对照审计，按代码重写入口 README、API、RBAC、前端数据源和项目状态，显式记录真实 DTO 与 mock UI 差异。

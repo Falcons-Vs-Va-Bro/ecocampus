@@ -15,7 +15,7 @@ class ProdDatabaseSafetyEnvironmentPostProcessorTests {
 	@Test
 	void skipsValidationOutsideProdProfile() {
 		MockEnvironment environment = new MockEnvironment()
-			.withProperty("spring.datasource.url", "jdbc:h2:mem:ecocampus");
+			.withProperty("spring.datasource.url", "jdbc:postgresql://localhost/ecocampus");
 
 		assertThatCode(() -> postProcessor.postProcessEnvironment(environment, application())).doesNotThrowAnyException();
 	}
@@ -28,9 +28,9 @@ class ProdDatabaseSafetyEnvironmentPostProcessorTests {
 	}
 
 	@Test
-	void rejectsH2UrlInProdProfile() {
+	void rejectsNonMysqlUrlInProdProfile() {
 		MockEnvironment environment = validProdEnvironment()
-			.withProperty("spring.datasource.url", "jdbc:h2:mem:ecocampus");
+			.withProperty("spring.datasource.url", "jdbc:postgresql://localhost/ecocampus");
 
 		assertThatThrownBy(() -> postProcessor.postProcessEnvironment(environment, application()))
 			.isInstanceOf(IllegalStateException.class)
