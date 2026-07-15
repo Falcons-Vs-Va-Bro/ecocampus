@@ -58,15 +58,15 @@ jobs:
             "$GITHUB_WORKSPACE/backend/target/ecocampus-0.0.1-SNAPSHOT.jar" \
             "$GITHUB_SHA"
 
-      - name: Record deployment diagnostics
+      - name: Collect deployment diagnostics
         if: failure()
         shell: zsh
         run: |
+          set +e
           service_label="${ECOCAMPUS_SERVICE_LABEL:-com.falconsvsvabro.ecocampus.backend}"
           health_url="${ECOCAMPUS_HEALTH_URL:-http://127.0.0.1:8080/api/v1/health}"
+          output="$RUNNER_TEMP/backend-deployment-diagnostics.txt"
           {
-            print '### Backend deployment diagnostics'
-            print '```text'
             print 'launchctl:'
             launchctl print "gui/$(id -u)/$service_label" 2>&1 \
               | grep -E 'state =|pid =|last exit code =|program =|stdout path =|stderr path =' \
@@ -77,5 +77,14 @@ jobs:
             lsof -nP -iTCP:8080 -sTCP:LISTEN || true
             print '\nlocal health:'
             curl -i -sS --max-time 5 "$health_url" || true
-            print '\n```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } > "$output" 2>&1
+          exit 0
+
+      - name: Upload deployment diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-deployment-diagnostics
+          path: ${{ runner.temp }}/backend-deployment-diagnostics.txt
+          if-no-files-found: error
+          retention-days: 3
