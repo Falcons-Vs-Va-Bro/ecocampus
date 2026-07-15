@@ -29,6 +29,32 @@ VITE_API_BASE_URL=https://ecocampus-api.teamdsb.online/api/v1
 
 Vite 的 `base` 和 React Router 的 `basename` 从 Pages 环境自动获取。构建产物额外生成与 `index.html` 相同的 `404.html`，用于 GitHub Pages 上的 SPA 深层路由回落。
 
+## 后端 self-hosted CD
+
+仓库级 GitHub Actions Runner `ecocampus-macmini` 作为当前 Mac mini 用户的 LaunchAgent 常驻，使用标签 `self-hosted`、`macOS`、`ARM64`、`ecocampus-deploy`。`.github/workflows/deploy-backend-macmini.yml` 在 `main` 的 `backend/**`、`deploy/macos/**` 或工作流自身变化时触发，也支持手动运行。
+
+Runner 在本机完成以下步骤，因此 Maven 依赖缓存和构建流量留在 Mac mini：
+
+```text
+checkout main
+  -> Java 21 检查
+  -> ./mvnw test
+  -> ./mvnw -DskipTests package
+  -> ~/.local/bin/ecocampus-deploy-backend
+  -> 原子替换 JAR
+  -> 重启 LaunchAgent
+  -> 最长 45 秒健康检查
+  -> 失败时恢复 ecocampus.jar.previous
+```
+
+部署并发组 `ecocampus-backend-production` 不允许取消正在进行的部署，避免连续推送在 JAR 替换阶段中断。部署成功的 commit SHA 写入 `~/.local/state/ecocampus/deployed-commit`，重复任务不会重启健康的同版本。
+
+本机固定部署器从仓库 `deploy/macos/ecocampus-deploy-backend` 手动安装到 `~/.local/bin/`，工作流不在每次运行时覆盖它。数据库/JWT 等密钥继续只存在 `~/.config/ecocampus/backend.env`，不进入 GitHub Actions secrets 或仓库。
+
+安全边界：该仓库为公开仓库且 `main` 当前未启用分支保护；拥有 `main` 写权限的人可以修改 workflow 并由 self-hosted Runner 执行。Runner 不响应 `pull_request`，但仍建议启用 `main` 必须经 PR、状态检查和审核后合并。
+
+2026-07-14 首次自动部署基线：Runner 2.335.1 安装目录约 433 MB，空闲 `Runner.Listener` RSS 约 97 MB；工作流 48 秒完成 32 项测试、构建与部署，JAR 替换后约 19 秒恢复健康，公网 health 为 `UP`。
+
 GitHub Pages 不提供可配置的服务端 rewrite。当前自定义 `404.html` 能让浏览器在深层 URL 启动同一 React 应用，但 HTTP 状态仍是 404；这对普通课堂演示可用，对严格要求深层路由 200、SEO 或探测器的场景不等价于真正的 SPA rewrite。
 
 ## 域名与 CORS
@@ -60,6 +86,12 @@ MySQL 默认 `max_connections=151`，单实例应用池上限 12 不会挤占数
 Mac mini 的 LaunchAgent 环境文件 `~/.config/ecocampus/backend.env` 使用同名环境变量覆盖这些默认值；该文件含密钥，不进入仓库。
 
 前端通过路由级动态导入限制首页 JavaScript，仓库图片统一为 WebP；首屏商品图最多 4 张主动加载，其余商品图和装饰插画懒加载。
+
+## Tailscale 数据库运维入口
+
+Mac mini 使用 macOS GUI/系统扩展版 Tailscale，因此不启用 Tailscale 自带 SSH 服务端；运维入口采用系统 OpenSSH 叠加 Tailscale 网络。MySQL 继续只监听 `127.0.0.1:3306`，不向局域网或公网开放。
+
+运维公钥在 `authorized_keys` 中限制为仅接受 Tailscale `100.64.0.0/10` 来源、仅允许转发到 `127.0.0.1:3306`，禁止 Shell、PTY、代理转发和其他目标端口。运维端必须先加入同一 tailnet，再用 `ssh -N -L <本地端口>:127.0.0.1:3306 <用户>@<MagicDNS>` 建立隧道。数据库使用独立的 `ecocampus_ops@localhost` 账号，仅授权 `ecocampus.*`，不复用应用账号或 MySQL root；公钥、数据库密码和 tailnet 身份均不进入仓库。
 
 ## 验证
 

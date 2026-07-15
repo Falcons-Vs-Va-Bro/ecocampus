@@ -73,6 +73,7 @@ export function LoginPage() {
     }
 
     setIsSubmitting(true)
+    let loggedInRole: 'USER' | 'ADMIN' = 'USER'
 
     try {
       if (import.meta.env.VITE_USE_MOCKS === 'true') {
@@ -84,6 +85,7 @@ export function LoginPage() {
         })
       } else {
         const response = await login({ account: normalizedAccount, password: normalizedPassword })
+        loggedInRole = response.data.user.role
         setSession({
           accessToken: response.data.accessToken,
           role: response.data.user.role,
@@ -94,7 +96,7 @@ export function LoginPage() {
       setNotice(t.mockNotice)
       setLoginError('')
       const returnTo = searchParams.get('returnTo')
-      navigate(returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/')
+      navigate(resolvePostLoginPath(loggedInRole, returnTo))
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : '登录失败')
       setNotice('')
@@ -130,6 +132,18 @@ export function LoginPage() {
       onModeChange={switchMode}
     />
   )
+}
+
+function resolvePostLoginPath(role: 'USER' | 'ADMIN', returnTo: string | null) {
+  const safeReturnTo = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : undefined
+
+  if (role === 'ADMIN') {
+    return safeReturnTo === '/admin' || safeReturnTo?.startsWith('/admin/') ? safeReturnTo : '/admin'
+  }
+
+  return safeReturnTo && safeReturnTo !== '/admin' && !safeReturnTo.startsWith('/admin/')
+    ? safeReturnTo
+    : '/'
 }
 
 function provisionMockAccount(account: string) {

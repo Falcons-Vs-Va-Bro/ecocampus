@@ -36,6 +36,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './EditItemPage.css'
 import '../../styles/marketplace-consistency.css'
+import { createLocalImages } from './localImage'
 import { mineItems, statusLabels } from './myItems.mock'
 
 const categoryNav = [
@@ -84,8 +85,19 @@ export function EditItemPage() {
   const [deliveryMode, setDeliveryMode] = useState<(typeof deliveryModes)[number]>(item.deliveryMode)
   const [pickupPlace, setPickupPlace] = useState(item.pickupPlace)
   const [description, setDescription] = useState(item.description)
+  const [imageError, setImageError] = useState('')
   const priceValue = item.price.replace('¥', '')
   const originalPriceValue = item.originalPrice.replace('¥', '')
+
+  async function addImages(files: File[]) {
+    try {
+      const nextImages = await createLocalImages(files, 9 - images.length, 'edited')
+      setImages((current) => [...current, ...nextImages].slice(0, 9))
+      setImageError('')
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : '图片读取失败，请重新选择')
+    }
+  }
 
   return (
     <UnifiedMarketplacePage activeUserLabel="我的发布">
@@ -178,14 +190,7 @@ export function EditItemPage() {
                   multiple
                   className="edit-file-input"
                   onChange={(event) => {
-                    const fileCount = event.currentTarget.files?.length ?? 0
-                    setImages((current) => [
-                      ...current,
-                      ...Array.from({ length: Math.max(0, Math.min(fileCount, 9 - current.length)) }, (_, index) => ({
-                        id: `upload-${Date.now()}-${index}`,
-                        src: item.image,
-                      })),
-                    ])
+                    void addImages(Array.from(event.currentTarget.files ?? []))
                     event.currentTarget.value = ''
                   }}
                 />
@@ -199,6 +204,7 @@ export function EditItemPage() {
                     继续添加
                   </button>
                   <p>最多 9 张，拖动可调整顺序</p>
+                  {imageError ? <p className="edit-image-error" role="alert">{imageError}</p> : null}
                 </div>
               </div>
             </EditRow>

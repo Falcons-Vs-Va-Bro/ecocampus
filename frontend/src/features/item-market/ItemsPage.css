@@ -132,6 +132,39 @@
   font-size: 17px;
 }
 
+.items-sort-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.items-sort-control select {
+  min-width: 156px;
+  height: 36px;
+  appearance: none;
+  padding: 0 38px 0 14px;
+  border: 1px solid rgba(78, 92, 104, 0.55);
+  border-radius: 8px;
+  outline: none;
+  color: #2f2a25;
+  background: rgba(255, 250, 239, 0.8);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.items-sort-control select:focus-visible {
+  border-color: #2f78bf;
+  box-shadow: 0 0 0 3px rgba(47, 120, 191, 0.16);
+}
+
+.items-sort-control svg {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+}
+
 .items-toolbar a {
   color: #fff;
   background:

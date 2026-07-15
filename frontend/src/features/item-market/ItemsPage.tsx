@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
   BookOpen,
@@ -29,6 +29,7 @@ import {
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { favoriteItem, listMyFavorites, unfavoriteItem } from '../../api/favorite.api'
 import { listItems } from '../../api/item.api'
 import type { ItemSummary } from '../../api/item.api'
 import { queryKeys } from '../../api/queryKeys'
@@ -80,6 +81,14 @@ import './ItemsPage.css'
 
 const pageSize = 8
 const emptyItems: ItemSummary[] = []
+const sortOptions = [
+  { value: 'newest', label: '最新发布' },
+  { value: 'price-low', label: '价格从低到高' },
+  { value: 'price-high', label: '价格从高到低' },
+  { value: 'popular', label: '关注度最高' },
+] as const
+
+type SortMode = (typeof sortOptions)[number]['value']
 
 const categoryRoutes = [
   { label: '全部', sidebarLabel: '全部分类', icon: Grid3X3, to: '/items' },
@@ -283,6 +292,7 @@ type PriceRange = { label: string; min: number; max: number }
 type PickupMode = (typeof pickupModes)[number]
 
 export function ItemsPage() {
+  const queryClient = useQueryClient()
   const unreadMessageCount = useUnreadMessageCount()
   const location = useLocation()
   const routeCategory = categoryRoutes.find((item) => item.to === location.pathname)?.label ?? '全部'
@@ -327,12 +337,30 @@ export function ItemsPage() {
   const [ticketTime, setTicketTime] = useState('')
   const [ticketPickup, setTicketPickup] = useState('')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
+  const [sortMode, setSortMode] = useState<SortMode>('newest')
   const [page, setPage] = useState(1)
-  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(() => new Set([1002]))
 
   const itemsQuery = useQuery({
     queryKey: queryKeys.items.list('items'),
     queryFn: () => listItems({ page: 1, size: 80 }),
+  })
+
+  const favoritesQuery = useQuery({
+    queryKey: queryKeys.favorites.mine,
+    queryFn: () => listMyFavorites({ page: 1, size: 200 }),
+  })
+
+  const favoriteIds = useMemo(
+    () => new Set((favoritesQuery.data?.data.items ?? []).map((item) => item.id)),
+    [favoritesQuery.data?.data.items],
+  )
+
+  const favoriteMutation = useMutation({
+    mutationFn: ({ itemId, favorited }: { itemId: number; favorited: boolean }) =>
+      favorited ? unfavoriteItem(itemId) : favoriteItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.mine })
+    },
   })
 
   const allItems = itemsQuery.data?.data.items ?? emptyItems
@@ -474,8 +502,8 @@ export function ItemsPage() {
 
         return `${item.title} ${displayCategoryName(item.categoryName)} ${item.seller.nickname}`.toLowerCase().includes(normalizedKeyword)
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [category, condition, hasSpecialItems, isTicketsPage, keyword, pickupMode, priceRange, sourceItems, ticketPickup, ticketTime, verifiedOnly])
+      .sort((a, b) => compareItems(a, b, sortMode))
+  }, [category, condition, hasSpecialItems, isTicketsPage, keyword, pickupMode, priceRange, sortMode, sourceItems, ticketPickup, ticketTime, verifiedOnly])
 
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -487,15 +515,7 @@ export function ItemsPage() {
   }
 
   function toggleFavorite(itemId: number) {
-    setFavoriteIds((current) => {
-      const next = new Set(current)
-      if (next.has(itemId)) {
-        next.delete(itemId)
-      } else {
-        next.add(itemId)
-      }
-      return next
-    })
+    favoriteMutation.mutate({ itemId, favorited: favoriteIds.has(itemId) })
   }
 
   return (
@@ -651,10 +671,18 @@ export function ItemsPage() {
                 </div>
                 <div>
                   <span>排序：</span>
-                  <button type="button">
-                    最新发布
+                  <div className="items-sort-control">
+                    <select
+                      aria-label="商品排序方式"
+                      value={sortMode}
+                      onChange={(event) => resetPage(() => setSortMode(event.target.value as SortMode))}
+                    >
+                      {sortOptions.map((option) => (
+                        <option value={option.value} key={option.value}>{option.label}</option>
+                      ))}
+                    </select>
                     <ChevronDown size={16} />
-                  </button>
+                  </div>
                   <a href="/publish">
                     <Pencil size={18} />
                     发布闲置
@@ -685,7 +713,7 @@ export function ItemsPage() {
                   {visibleItems.map((item) => (
                     <ProductCard
                       item={item}
-                      favorited={favoriteIds.has(item.id) || item.favorited}
+                      favorited={favoriteIds.has(item.id)}
                       onToggleFavorite={() => toggleFavorite(item.id)}
                       key={item.id}
                     />
@@ -876,4 +904,24 @@ function inferCondition(item: ItemSummary) {
 
 function formatPrice(priceCent: number) {
   return `¥${(priceCent / 100).toFixed(2)}`
+}
+
+function compareItems(a: ItemSummary, b: ItemSummary, sortMode: SortMode) {
+  if (sortMode === 'price-low') {
+    return a.priceCent - b.priceCent || compareNewest(a, b)
+  }
+
+  if (sortMode === 'price-high') {
+    return b.priceCent - a.priceCent || compareNewest(a, b)
+  }
+
+  if (sortMode === 'popular') {
+    return b.favoriteCount - a.favoriteCount || compareNewest(a, b)
+  }
+
+  return compareNewest(a, b)
+}
+
+function compareNewest(a: ItemSummary, b: ItemSummary) {
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 }

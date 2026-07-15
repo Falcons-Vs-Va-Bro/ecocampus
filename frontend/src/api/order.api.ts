@@ -27,6 +27,10 @@ export interface OrderSummary {
   status: OrderStatus
   remark?: string
   createdAt: string
+  itemCoverImageUrl?: string
+  itemPriceCent?: number
+  buyerNickname?: string
+  sellerNickname?: string
 }
 
 export interface OrderListParams {

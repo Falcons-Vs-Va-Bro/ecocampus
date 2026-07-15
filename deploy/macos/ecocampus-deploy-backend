@@ -1,0 +1,80 @@
+#!/bin/zsh
+set -euo pipefail
+
+if (( $# != 2 )); then
+  print -u2 "usage: ecocampus-deploy-backend <jar-path> <commit-sha>"
+  exit 64
+fi
+
+source_jar="$1"
+commit_sha="$2"
+target_jar="${ECOCAMPUS_JAR_PATH:-$HOME/.local/share/ecocampus/ecocampus.jar}"
+state_dir="${ECOCAMPUS_STATE_DIR:-$HOME/.local/state/ecocampus}"
+service_label="${ECOCAMPUS_SERVICE_LABEL:-com.falconsvsvabro.ecocampus.backend}"
+health_url="${ECOCAMPUS_HEALTH_URL:-http://127.0.0.1:8080/api/v1/health}"
+lock_dir="$state_dir/deploy.lock"
+deployed_sha_file="$state_dir/deployed-commit"
+backup_jar="$target_jar.previous"
+
+test -s "$source_jar"
+test -s "$target_jar"
+mkdir -p "$state_dir"
+
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  print -u2 "another backend deployment is already running"
+  exit 75
+fi
+
+cleanup() {
+  rmdir "$lock_dir" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+restart_backend() {
+  launchctl kickstart -k "gui/$(id -u)/$service_label"
+}
+
+wait_for_health() {
+  local attempt response
+
+  for attempt in {1..45}; do
+    response="$(curl -fsS --max-time 2 "$health_url" 2>/dev/null || true)"
+    if [[ "$response" == *'"status":"UP"'* ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
+if [[ -f "$deployed_sha_file" ]] && [[ "$(<"$deployed_sha_file")" == "$commit_sha" ]] && wait_for_health; then
+  print "commit $commit_sha is already deployed and healthy"
+  exit 0
+fi
+
+print "deploying backend commit $commit_sha"
+cp -p "$target_jar" "$backup_jar"
+install -m 0644 "$source_jar" "$target_jar.next"
+mv -f "$target_jar.next" "$target_jar"
+restart_backend
+
+if wait_for_health; then
+  print -r -- "$commit_sha" > "$deployed_sha_file.next"
+  mv -f "$deployed_sha_file.next" "$deployed_sha_file"
+  print "backend commit $commit_sha is healthy"
+  exit 0
+fi
+
+print -u2 "new backend failed health check; restoring previous JAR"
+install -m 0644 "$backup_jar" "$target_jar.next"
+mv -f "$target_jar.next" "$target_jar"
+restart_backend
+
+if wait_for_health; then
+  print -u2 "rollback succeeded"
+  exit 1
+fi
+
+print -u2 "rollback failed health check; manual recovery is required"
+exit 2

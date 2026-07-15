@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FolderOpen,
   Grid2X2,
+  LogOut,
   Megaphone,
   Search,
   Settings,
@@ -19,6 +20,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
+import { useAuthStore } from '../../stores/auth.store'
 import './AdminShell.css'
 
 interface AdminShellProps {
@@ -32,11 +34,11 @@ const adminNav = [
   { label: '用户管理', icon: UsersRound, to: '/admin/users' },
   { label: '黑名单', icon: UserRound, to: '/admin/users?scope=blacklist', alert: true },
   { label: '类目管理', icon: FolderOpen, to: '/admin/categories' },
-  { label: '订单记录', icon: ClipboardList, to: '/orders' },
-  { label: '求购管理', icon: ShoppingCart, to: '/demands' },
 ]
 
 const utilityNav = [
+  { label: '订单记录', icon: ClipboardList },
+  { label: '求购管理', icon: ShoppingCart },
   { label: '公告管理', icon: Megaphone },
   { label: '系统设置', icon: Settings },
 ]
@@ -46,6 +48,7 @@ export function AdminShell({ children }: AdminShellProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const clearSession = useAuthStore((state) => state.clearSession)
   const [keyword, setKeyword] = useState(searchParams.get('keyword') ?? '')
 
   useEffect(() => {
@@ -61,6 +64,11 @@ export function AdminShell({ children }: AdminShellProps) {
     }
 
     navigate(`/admin/items${params.toString() ? `?${params.toString()}` : ''}`)
+  }
+
+  function logout() {
+    clearSession()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -106,6 +114,9 @@ export function AdminShell({ children }: AdminShellProps) {
             <em>管理员</em>
           </span>
           <ChevronDown size={18} aria-hidden="true" />
+          <button type="button" className="admin-icon-button" aria-label="退出登录" onClick={logout}>
+            <LogOut size={20} />
+          </button>
         </div>
       </motion.header>
 

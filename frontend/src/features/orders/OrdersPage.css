@@ -811,6 +811,12 @@
   font-size: 15px;
   font-weight: 900;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.demand-status:hover {
+  box-shadow: 0 3px 0 rgba(47, 120, 191, 0.14);
+  transform: translateY(-1px);
 }
 
 .demand-status--blue {
@@ -1393,6 +1399,17 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.demand-mine-notice {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(47, 120, 191, 0.35);
+  border-radius: 7px;
+  color: #2369aa;
+  background: rgba(238, 248, 255, 0.86);
+  font-size: 16px;
+  font-weight: 850;
 }
 
 .demand-mine-actions button,

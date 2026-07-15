@@ -5,11 +5,11 @@ import com.falconsvsvabro.ecocampus.category.CategoryRepository;
 import com.falconsvsvabro.ecocampus.common.api.BusinessException;
 import com.falconsvsvabro.ecocampus.common.api.ErrorCode;
 import com.falconsvsvabro.ecocampus.common.api.PageResponse;
+import com.falconsvsvabro.ecocampus.favorite.dto.FavoriteItemResponse;
 import com.falconsvsvabro.ecocampus.item.Item;
 import com.falconsvsvabro.ecocampus.item.ItemRepository;
 import com.falconsvsvabro.ecocampus.item.ItemStatus;
 import com.falconsvsvabro.ecocampus.item.dto.PublicItemDetailResponse;
-import com.falconsvsvabro.ecocampus.item.dto.PublicItemListResponse;
 import com.falconsvsvabro.ecocampus.user.User;
 import com.falconsvsvabro.ecocampus.user.UserRepository;
 import java.util.List;
@@ -59,15 +59,24 @@ public class FavoriteService {
 	}
 
 	@Transactional(readOnly = true)
-	public PageResponse<PublicItemListResponse> listMyFavorites(Long userId, int page, int size) {
+	public PageResponse<FavoriteItemResponse> listMyFavorites(Long userId, int page, int size) {
 		User user = campusAccessGuard.requireVerifiedUser(userId);
 		Pageable pageable = PageRequest.of(normalizePage(page) - 1, normalizeSize(size));
-		var itemPage = favoriteRepository.findFavoriteItems(user.getId(), pageable);
-		List<PublicItemListResponse> items = itemPage.getContent()
+		var favoritePage = favoriteRepository.findUserFavorites(user.getId(), pageable);
+		List<FavoriteItemResponse> items = favoritePage.getContent()
 			.stream()
-			.map(item -> PublicItemListResponse.from(item, getCategoryName(item.getCategoryId())))
+			.map(this::toFavoriteItemResponse)
 			.toList();
-		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), itemPage.getTotalElements());
+		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), favoritePage.getTotalElements());
+	}
+
+	private FavoriteItemResponse toFavoriteItemResponse(Favorite favorite) {
+		Item item = itemRepository.findById(favorite.getItemId())
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+		User seller = userRepository.findById(item.getSellerId())
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "user not found"));
+		return FavoriteItemResponse.from(item, getCategoryName(item.getCategoryId()), seller,
+				favoriteRepository.countByItemId(item.getId()), favorite.getCreatedAt());
 	}
 
 	private PublicItemDetailResponse toDetail(Item item, Long viewerUserId) {

@@ -1,43 +1,25 @@
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlarmClock,
   BarChart3,
   BookOpen,
   CheckCircle2,
-  Edit3,
-  Headphones,
   MessageCircle,
+  PackageSearch,
   Search,
-  Trash2,
   XCircle,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState } from 'react'
-import airpodsImage from '../../assets/favorites/items/airpods.webp'
-import mathBooksImage from '../../assets/favorites/items/math-books.webp'
+import { useNavigate } from 'react-router-dom'
+import type { DemandMatch, DemandSummary } from '../../api/demand.api'
+import { closeDemand, listDemandMatches, listMyDemands } from '../../api/demand.api'
+import { queryKeys } from '../../api/queryKeys'
 import messageHelperImage from '../../assets/messages/message-helper.webp'
 import { MarketplaceShell } from '../../components/marketplace'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import type { DemandStatus } from '../../types/api'
 import './OrdersPage.css'
-
-type MineDemandStatus = 'active' | 'matching' | 'matched' | 'expiring' | 'closed'
-
-interface MineDemand {
-  budget: string
-  category: string
-  description: string
-  icon: React.ReactNode
-  id: number
-  match: {
-    image: string
-    price: string
-    seller: string
-    title: string
-    value: number
-  }
-  publishedAt: string
-  status: MineDemandStatus
-  title: string
-}
 
 const purchaseNav = [
   { label: '我的订单', to: '/orders/purchase' },
@@ -46,76 +28,85 @@ const purchaseNav = [
   { label: '我的求购 / 匹配结果', to: '/orders/purchase/demand/mine' },
 ]
 
-const statusFilters: Array<{ label: string; value: MineDemandStatus | 'all' }> = [
+const emptyDemands: DemandSummary[] = []
+
+const statusFilters: Array<{ label: string; value: DemandStatus | 'all' }> = [
   { label: '全部', value: 'all' },
-  { label: '匹配中', value: 'matching' },
-  { label: '已匹配', value: 'matched' },
-  { label: '即将过期', value: 'expiring' },
-  { label: '已关闭', value: 'closed' },
+  { label: '开放中', value: 'OPEN' },
+  { label: '已匹配', value: 'MATCHED' },
+  { label: '已关闭', value: 'CLOSED' },
 ]
 
-const statusCopy: Record<MineDemandStatus, { label: string; tone: 'blue' | 'orange' | 'green' | 'red' | 'gray' }> = {
-  active: { label: '活跃求购', tone: 'blue' },
-  matching: { label: '匹配中', tone: 'orange' },
-  matched: { label: '已匹配', tone: 'green' },
-  expiring: { label: '即将过期', tone: 'red' },
-  closed: { label: '已关闭', tone: 'gray' },
+const statusCopy: Record<DemandStatus, { label: string; tone: 'blue' | 'green' | 'gray' }> = {
+  OPEN: { label: '开放中', tone: 'blue' },
+  MATCHED: { label: '已匹配', tone: 'green' },
+  CLOSED: { label: '已关闭', tone: 'gray' },
 }
-
-const mineDemands: MineDemand[] = [
-  {
-    id: 1,
-    title: '想收高等数学第七版教材',
-    budget: '¥20-40',
-    category: '教材教辅',
-    description: '希望上下册齐全，笔记少一点，期末复习前能自取。',
-    publishedAt: '发布于 10 分钟前',
-    status: 'matching',
-    icon: <BookOpen size={44} />,
-    match: {
-      title: '高等数学（第七版）上下册',
-      price: '¥28.00',
-      seller: '李同学',
-      value: 92,
-      image: mathBooksImage,
-    },
-  },
-  {
-    id: 2,
-    title: '求 AirPods 二代或三代',
-    budget: '¥200-450',
-    category: '数码电子',
-    description: '希望电池健康还可以，外壳无明显磕碰，能当面试用。',
-    publishedAt: '发布于 1 小时前',
-    status: 'matched',
-    icon: <Headphones size={44} />,
-    match: {
-      title: 'AirPods 二代',
-      price: '¥399.00',
-      seller: '周同学',
-      value: 88,
-      image: airpodsImage,
-    },
-  },
-]
 
 export function PurchaseDemandMinePage() {
   useDocumentTitle('厦大闲置 - 我的求购')
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion() ?? false
   const [keyword, setKeyword] = useState('')
-  const [status, setStatus] = useState<MineDemandStatus | 'all'>('all')
+  const [status, setStatus] = useState<DemandStatus | 'all'>('all')
+  const [actionNotice, setActionNotice] = useState('')
+
+  const demandsQuery = useQuery({
+    queryKey: queryKeys.demands.mine,
+    queryFn: () => listMyDemands({ page: 1, size: 50 }),
+  })
+  const demands = demandsQuery.data?.data.items ?? emptyDemands
+  const matchQueries = useQueries({
+    queries: demands.map((demand) => ({
+      queryKey: queryKeys.demands.matches(demand.id),
+      queryFn: () => listDemandMatches(demand.id, { limit: 3 }),
+      enabled: demand.status !== 'CLOSED',
+    })),
+  })
+  const matchesByDemandId = useMemo(() => {
+    const next = new Map<number, DemandMatch[]>()
+    demands.forEach((demand, index) => {
+      next.set(demand.id, matchQueries[index]?.data?.data ?? [])
+    })
+    return next
+  }, [demands, matchQueries])
+
+  const closeMutation = useMutation({
+    mutationFn: (demand: DemandSummary) => closeDemand(demand.id),
+    onSuccess: (_, demand) => {
+      setActionNotice(`已关闭：${demand.title}`)
+      queryClient.invalidateQueries({ queryKey: ['demands'] })
+    },
+    onError: (error) => {
+      setActionNotice(error instanceof Error ? error.message : '关闭失败，请稍后再试')
+    },
+  })
 
   const visibleDemands = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
 
-    return mineDemands.filter((item) => {
+    return demands.filter((item) => {
+      const matches = matchesByDemandId.get(item.id) ?? []
       const matchesStatus = status === 'all' || item.status === status
       const matchesKeyword =
         !normalizedKeyword ||
-        `${item.title} ${item.category} ${item.description} ${item.match.title}`.toLowerCase().includes(normalizedKeyword)
+        `${item.title} ${item.categoryName} ${item.description} ${item.keywords.join(' ')} ${matches.map((match) => match.title).join(' ')}`
+          .toLowerCase()
+          .includes(normalizedKeyword)
       return matchesStatus && matchesKeyword
     })
-  }, [keyword, status])
+  }, [demands, keyword, matchesByDemandId, status])
+
+  const stats = useMemo(() => {
+    const totalMatches = Array.from(matchesByDemandId.values()).reduce((sum, matches) => sum + matches.length, 0)
+    return {
+      active: demands.filter((item) => item.status === 'OPEN').length,
+      today: demands.filter((item) => isToday(item.createdAt)).length,
+      matched: demands.filter((item) => item.status === 'MATCHED').length,
+      matches: totalMatches,
+    }
+  }, [demands, matchesByDemandId])
 
   return (
     <MarketplaceShell
@@ -148,10 +139,10 @@ export function PurchaseDemandMinePage() {
           </nav>
 
           <section className="order-stat-strip demand-stat-strip" aria-label="我的求购统计">
-            <DemandMineStat icon={<MessageCircle size={42} />} label="活跃求购" value={4} />
-            <DemandMineStat icon={<BarChart3 size={42} />} label="今日新增" tone="orange" value={2} />
-            <DemandMineStat icon={<CheckCircle2 size={46} />} label="已匹配" tone="green" value={8} />
-            <DemandMineStat icon={<AlarmClock size={42} />} label="即将过期" tone="red" value={2} />
+            <DemandMineStat icon={<MessageCircle size={42} />} label="活跃求购" value={stats.active} />
+            <DemandMineStat icon={<BarChart3 size={42} />} label="今日新增" tone="orange" value={stats.today} />
+            <DemandMineStat icon={<CheckCircle2 size={46} />} label="已匹配" tone="green" value={stats.matched} />
+            <DemandMineStat icon={<AlarmClock size={42} />} label="推荐商品" tone="red" value={stats.matches} />
           </section>
 
           <div className="demand-mine-toolbar">
@@ -186,9 +177,33 @@ export function PurchaseDemandMinePage() {
           </div>
 
           <div className="demand-mine-list">
-            {visibleDemands.map((item, index) => (
-              <MineDemandCard demand={item} index={index} reduceMotion={shouldReduceMotion} key={item.id} />
-            ))}
+            {actionNotice ? <p className="demand-mine-notice" role="status">{actionNotice}</p> : null}
+            {demandsQuery.isLoading ? <div className="orders-empty-state"><h2>正在加载我的求购</h2><p>正在读取后端已发布需求。</p></div> : null}
+            {demandsQuery.isError ? (
+              <div className="orders-empty-state">
+                <h2>我的求购加载失败</h2>
+                <p>请确认已登录且后端接口可用。</p>
+                <button type="button" onClick={() => demandsQuery.refetch()}>重新加载</button>
+              </div>
+            ) : null}
+            {!demandsQuery.isLoading && !demandsQuery.isError && visibleDemands.length === 0 ? (
+              <div className="orders-empty-state">
+                <h2>没有符合条件的求购</h2>
+                <p>可以发布一条新的求购，或换个状态筛选。</p>
+              </div>
+            ) : null}
+            {!demandsQuery.isLoading && !demandsQuery.isError ? visibleDemands.map((item, index) => (
+              <MineDemandCard
+                demand={item}
+                index={index}
+                isClosing={closeMutation.isPending}
+                matches={matchesByDemandId.get(item.id) ?? []}
+                onClose={() => closeMutation.mutate(item)}
+                onOpenDetail={() => navigate(`/orders/purchase/demand/${item.id}/detail`)}
+                reduceMotion={shouldReduceMotion}
+                key={item.id}
+              />
+            )) : null}
           </div>
         </div>
 
@@ -196,22 +211,10 @@ export function PurchaseDemandMinePage() {
           <section className="order-tips-panel demand-match-tip-panel">
             <h2>匹配提示</h2>
             <ul>
-              <li>
-                <CheckCircle2 size={20} />
-                系统按分类和关键词推荐
-              </li>
-              <li>
-                <CheckCircle2 size={20} />
-                预算越清晰推荐越准确
-              </li>
-              <li>
-                <CheckCircle2 size={20} />
-                点击商品可查看详情
-              </li>
-              <li>
-                <CheckCircle2 size={20} />
-                直接联系会发起私信
-              </li>
+              <li><CheckCircle2 size={20} />系统按分类和关键词推荐</li>
+              <li><CheckCircle2 size={20} />预算越清晰推荐越准确</li>
+              <li><CheckCircle2 size={20} />点击商品可查看详情</li>
+              <li><CheckCircle2 size={20} />关闭求购会同步后端状态</li>
             </ul>
             <span className="painted-asset demand-panel-art" aria-hidden="true">
               <img src={messageHelperImage} alt="" />
@@ -221,9 +224,9 @@ export function PurchaseDemandMinePage() {
           <section className="order-flow-panel demand-match-overview">
             <h2>匹配概览</h2>
             <div>
-              <OverviewRow label="高匹配" value={5} />
-              <OverviewRow label="待联系" value={3} tone="blue" />
-              <OverviewRow label="即将过期" value={2} tone="orange" />
+              <OverviewRow label="推荐商品" value={stats.matches} />
+              <OverviewRow label="开放需求" value={stats.active} tone="blue" />
+              <OverviewRow label="今日新增" value={stats.today} tone="orange" />
             </div>
           </section>
         </aside>
@@ -232,7 +235,23 @@ export function PurchaseDemandMinePage() {
   )
 }
 
-function MineDemandCard({ demand, index, reduceMotion }: { demand: MineDemand; index: number; reduceMotion: boolean }) {
+function MineDemandCard({
+  demand,
+  index,
+  isClosing,
+  matches,
+  onClose,
+  onOpenDetail,
+  reduceMotion,
+}: {
+  demand: DemandSummary
+  index: number
+  isClosing: boolean
+  matches: DemandMatch[]
+  onClose: () => void
+  onOpenDetail: () => void
+  reduceMotion: boolean
+}) {
   const status = statusCopy[demand.status]
 
   return (
@@ -243,46 +262,64 @@ function MineDemandCard({ demand, index, reduceMotion }: { demand: MineDemand; i
       transition={{ duration: 0.3, delay: 0.12 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
     >
       <header>
-        <span className="demand-mine-icon">{demand.icon}</span>
+        <span className="demand-mine-icon"><BookOpen size={44} /></span>
         <div>
           <h2>{demand.title}</h2>
           <p>
-            预算范围：<strong>{demand.budget}</strong>
-            <span>期望分类：{demand.category}</span>
+            预算范围：<strong>{formatBudget(demand)}</strong>
+            <span>期望分类：{demand.categoryName}</span>
           </p>
           <p>描述：{demand.description}</p>
-          <small>发布时间：{demand.publishedAt}</small>
+          <small>发布时间：{formatDate(demand.createdAt)}</small>
         </div>
-        <em className={`demand-status demand-status--${status.tone}`}>{status.label}</em>
+        <button
+          type="button"
+          className={`demand-status demand-status--${status.tone}`}
+          onClick={onOpenDetail}
+          aria-label={`查看 ${demand.title} 的求购详情`}
+        >
+          {status.label}
+        </button>
         <div className="demand-mine-actions">
-          <button type="button">
-            <Edit3 size={17} />
-            编辑
+          <button type="button" onClick={onOpenDetail}>
+            <PackageSearch size={17} />
+            查看
           </button>
-          <button type="button" className="danger">
-            <Trash2 size={17} />
-            删除
-          </button>
-          <button type="button">
+          <button type="button" disabled={isClosing || demand.status === 'CLOSED'} onClick={onClose}>
             <XCircle size={17} />
-            关闭需求
+            {demand.status === 'CLOSED' ? '已关闭' : '关闭需求'}
           </button>
         </div>
       </header>
 
       <section className="demand-match-row">
         <strong>系统推荐商品</strong>
-        <img src={demand.match.image} alt="" />
-        <div>
-          <h3>{demand.match.title}</h3>
-          <p>{demand.match.price}</p>
-          <small>卖家：{demand.match.seller}</small>
-        </div>
-        <span>匹配度 {demand.match.value}%</span>
-        <a href="/items/1001">查看详情</a>
-        <a href="/messages">直接联系</a>
+        {matches.length === 0 ? (
+          <div>
+            <h3>暂无匹配商品</h3>
+            <p>后端暂未返回匹配结果</p>
+          </div>
+        ) : matches.slice(0, 1).map((match) => (
+          <MatchPreview match={match} key={match.itemId} />
+        ))}
       </section>
     </motion.article>
+  )
+}
+
+function MatchPreview({ match }: { match: DemandMatch }) {
+  return (
+    <>
+      <span className="demand-mine-icon"><PackageSearch size={34} /></span>
+      <div>
+        <h3>{match.title}</h3>
+        <p>{formatPrice(match.priceCent)}</p>
+        <small>{match.matchReason}</small>
+      </div>
+      <span>已匹配</span>
+      <a href={`/items/${match.itemId}`}>查看详情</a>
+      <a href={`/messages?itemId=${match.itemId}`}>直接联系</a>
+    </>
   )
 }
 
@@ -315,4 +352,28 @@ function OverviewRow({ label, tone, value }: { label: string; tone?: 'blue' | 'o
       <strong>{value}</strong>
     </p>
   )
+}
+
+function isToday(value: string) {
+  const date = new Date(value)
+  const today = new Date()
+  return date.toDateString() === today.toDateString()
+}
+
+function formatBudget(demand: DemandSummary) {
+  const min = typeof demand.budgetMinCent === 'number' ? formatPrice(demand.budgetMinCent) : ''
+  const max = typeof demand.budgetMaxCent === 'number' ? formatPrice(demand.budgetMaxCent) : ''
+
+  if (min && max) return `${min}-${max}`
+  if (min) return `${min} 起`
+  if (max) return `${max} 内`
+  return '预算面议'
+}
+
+function formatPrice(value: number) {
+  return `¥${(value / 100).toFixed(0)}`
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
 }

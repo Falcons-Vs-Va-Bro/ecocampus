@@ -27,7 +27,7 @@ import {
   Store,
   User,
 } from 'lucide-react'
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
@@ -118,6 +118,10 @@ export function ProfilePage() {
 
   function deleteAddress(addressId: number) {
     setAddresses((current) => current.filter((item) => item.id !== addressId))
+  }
+
+  function updateAddress(addressId: number, updates: Pick<Address, 'title' | 'detail' | 'contact' | 'mode'>) {
+    setAddresses((current) => current.map((item) => (item.id === addressId ? { ...item, ...updates } : item)))
   }
 
   function addAddress() {
@@ -313,7 +317,13 @@ export function ProfilePage() {
               </header>
               <div className="address-grid">
                 {addresses.map((address) => (
-                  <AddressCard address={address} onDelete={deleteAddress} onSetDefault={setDefaultAddress} key={address.id} />
+                  <AddressCard
+                    address={address}
+                    onDelete={deleteAddress}
+                    onSetDefault={setDefaultAddress}
+                    onUpdate={updateAddress}
+                    key={address.id}
+                  />
                 ))}
               </div>
             </section>
@@ -438,34 +448,108 @@ function AddressCard({
   address,
   onDelete,
   onSetDefault,
+  onUpdate,
 }: {
   address: Address
   onDelete: (addressId: number) => void
   onSetDefault: (addressId: number) => void
+  onUpdate: (addressId: number, updates: Pick<Address, 'title' | 'detail' | 'contact' | 'mode'>) => void
 }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftTitle, setDraftTitle] = useState(address.title)
+  const [draftDetail, setDraftDetail] = useState(address.detail)
+  const [draftContact, setDraftContact] = useState(address.contact)
+  const [draftMode, setDraftMode] = useState<Address['mode']>(address.mode)
+
+  function startEditing() {
+    setDraftTitle(address.title)
+    setDraftDetail(address.detail)
+    setDraftContact(address.contact)
+    setDraftMode(address.mode)
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setIsEditing(false)
+  }
+
+  function saveAddress(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    onUpdate(address.id, {
+      title: draftTitle.trim() || address.title,
+      detail: draftDetail.trim() || address.detail,
+      contact: draftContact.trim() || address.contact,
+      mode: draftMode,
+    })
+    setIsEditing(false)
+  }
+
   return (
     <article className="address-card">
-      <header>
-        <div>
-          <address.icon size={28} />
-          <h3>{address.title}</h3>
-          {address.isDefault ? <span>默认</span> : null}
-        </div>
-        <em>{address.mode}</em>
-      </header>
-      <p>{address.detail}</p>
-      <p>联系人：{address.contact}</p>
-      <footer>
-        {!address.isDefault ? (
-          <button type="button" onClick={() => onSetDefault(address.id)}>
-            设为默认
+      <form onSubmit={saveAddress}>
+        <header>
+          <div>
+            <address.icon size={28} />
+            {isEditing ? (
+              <input
+                className="address-title-input"
+                aria-label="地址名称"
+                value={draftTitle}
+                onChange={(event) => setDraftTitle(event.target.value)}
+                autoFocus
+              />
+            ) : (
+              <h3>{address.title}</h3>
+            )}
+            {address.isDefault ? <span>默认</span> : null}
+          </div>
+          {isEditing ? (
+            <select aria-label="配送方式" value={draftMode} onChange={(event) => setDraftMode(event.target.value as Address['mode'])}>
+              <option value="自提">自提</option>
+              <option value="送货">送货</option>
+            </select>
+          ) : (
+            <em>{address.mode}</em>
+          )}
+        </header>
+        {isEditing ? (
+          <div className="address-edit-fields">
+            <label>
+              <span>详细地点</span>
+              <input value={draftDetail} onChange={(event) => setDraftDetail(event.target.value)} />
+            </label>
+            <label>
+              <span>联系人</span>
+              <input value={draftContact} onChange={(event) => setDraftContact(event.target.value)} />
+            </label>
+          </div>
+        ) : (
+          <>
+            <p>{address.detail}</p>
+            <p>联系人：{address.contact}</p>
+          </>
+        )}
+        <footer>
+          {isEditing ? (
+            <>
+              <button type="submit">保存</button>
+              <button type="button" onClick={cancelEditing}>取消</button>
+            </>
+          ) : (
+            <>
+              {!address.isDefault ? (
+                <button type="button" onClick={() => onSetDefault(address.id)}>
+                  设为默认
+                </button>
+              ) : null}
+              <button type="button" onClick={startEditing}>编辑</button>
+            </>
+          )}
+          <button type="button" className="danger" onClick={() => onDelete(address.id)}>
+            删除
           </button>
-        ) : null}
-        <button type="button">编辑</button>
-        <button type="button" className="danger" onClick={() => onDelete(address.id)}>
-          删除
-        </button>
-      </footer>
+        </footer>
+      </form>
     </article>
   )
 }

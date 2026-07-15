@@ -375,10 +375,12 @@
   object-fit: cover;
 }
 
-.preview-crop {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.28);
+.upload-error {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  color: #b83a31;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .preview-image button {
