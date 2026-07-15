@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import airpodsImage from '../../assets/favorites/items/airpods.webp'
 import mathBooksImage from '../../assets/favorites/items/math-books.webp'
 import mechanicalKeyboardImage from '../../assets/favorites/items/mechanical-keyboard.webp'
@@ -41,18 +42,51 @@ const matchPreview = [
   { title: '机械键盘', price: '¥120-180', meta: '八成新 · 可自提', image: mechanicalKeyboardImage },
 ]
 
+const editableDemands: Record<string, {
+  category: string
+  deliveryMode: string
+  description: string
+  maxBudget: string
+  minBudget: string
+  pickupSpot: string
+  title: string
+}> = {
+  '1': {
+    title: '想收高等数学第七版教材',
+    category: '教材教辅',
+    minBudget: '20',
+    maxBudget: '40',
+    deliveryMode: '可自提',
+    pickupSpot: '芙蓉园门口',
+    description: '希望上下册齐全，笔记少一点，期末复习前能自取。',
+  },
+  '2': {
+    title: '求 AirPods 二代或三代',
+    category: '数码电子',
+    minBudget: '200',
+    maxBudget: '450',
+    deliveryMode: '可自提',
+    pickupSpot: '图书馆附近',
+    description: '希望电池健康还可以，外壳无明显磕碰，能当面试用。',
+  },
+}
+
 export function PurchaseDemandNewPage() {
-  useDocumentTitle('厦大闲置 - 发布求购')
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editId = searchParams.get('edit') ?? ''
+  const editingDemand = editableDemands[editId]
+  useDocumentTitle(editingDemand ? '厦大闲置 - 编辑求购' : '厦大闲置 - 发布求购')
   const shouldReduceMotion = useReducedMotion() ?? false
   const [keyword, setKeyword] = useState('')
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('教材教辅')
+  const [title, setTitle] = useState(editingDemand?.title ?? '')
+  const [category, setCategory] = useState(editingDemand?.category ?? '教材教辅')
   const [condition, setCondition] = useState('全部')
-  const [minBudget, setMinBudget] = useState('')
-  const [maxBudget, setMaxBudget] = useState('')
-  const [deliveryMode, setDeliveryMode] = useState('可自提')
-  const [pickupSpot, setPickupSpot] = useState('')
-  const [description, setDescription] = useState('')
+  const [minBudget, setMinBudget] = useState(editingDemand?.minBudget ?? '')
+  const [maxBudget, setMaxBudget] = useState(editingDemand?.maxBudget ?? '')
+  const [deliveryMode, setDeliveryMode] = useState(editingDemand?.deliveryMode ?? '可自提')
+  const [pickupSpot, setPickupSpot] = useState(editingDemand?.pickupSpot ?? '')
+  const [description, setDescription] = useState(editingDemand?.description ?? '')
   const [privateContact, setPrivateContact] = useState(true)
   const [draftSaved, setDraftSaved] = useState(false)
   const [published, setPublished] = useState(false)
@@ -71,6 +105,9 @@ export function PurchaseDemandNewPage() {
     }
     setPublished(true)
     setDraftSaved(false)
+    if (editingDemand) {
+      navigate(`/orders/purchase/demand/mine?updated=${editId}`)
+    }
   }
 
   return (
@@ -89,8 +126,8 @@ export function PurchaseDemandNewPage() {
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.36, delay: 0.18 }}
       >
-        <h1>发布求购</h1>
-        <p>填写想要的物品，系统会帮你匹配可能商品</p>
+        <h1>{editingDemand ? '编辑求购' : '发布求购'}</h1>
+        <p>{editingDemand ? '修改求购信息后保存，系统会重新计算匹配结果' : '填写想要的物品，系统会帮你匹配可能商品'}</p>
       </motion.section>
 
       <section className="orders-layout">
@@ -180,7 +217,7 @@ export function PurchaseDemandNewPage() {
 
             <div className="demand-form-actions">
               <button type="button" className="primary" onClick={publishDemand}>
-                发布求购
+                {editingDemand ? '保存修改' : '发布求购'}
               </button>
               <button type="button" onClick={saveDraft}>
                 保存草稿

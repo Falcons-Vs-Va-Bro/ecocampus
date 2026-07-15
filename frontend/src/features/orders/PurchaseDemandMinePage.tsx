@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import airpodsImage from '../../assets/favorites/items/airpods.webp'
 import mathBooksImage from '../../assets/favorites/items/math-books.webp'
 import messageHelperImage from '../../assets/messages/message-helper.webp'
@@ -29,6 +30,7 @@ interface MineDemand {
   id: number
   match: {
     image: string
+    itemId: number
     price: string
     seller: string
     title: string
@@ -78,6 +80,7 @@ const mineDemands: MineDemand[] = [
       seller: '李同学',
       value: 92,
       image: mathBooksImage,
+      itemId: 1001,
     },
   },
   {
@@ -95,27 +98,46 @@ const mineDemands: MineDemand[] = [
       seller: '周同学',
       value: 88,
       image: airpodsImage,
+      itemId: 1007,
     },
   },
 ]
 
 export function PurchaseDemandMinePage() {
   useDocumentTitle('厦大闲置 - 我的求购')
+  const navigate = useNavigate()
   const shouldReduceMotion = useReducedMotion() ?? false
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState<MineDemandStatus | 'all'>('all')
+  const [demands, setDemands] = useState(mineDemands)
+  const [actionNotice, setActionNotice] = useState('')
 
   const visibleDemands = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
 
-    return mineDemands.filter((item) => {
+    return demands.filter((item) => {
       const matchesStatus = status === 'all' || item.status === status
       const matchesKeyword =
         !normalizedKeyword ||
         `${item.title} ${item.category} ${item.description} ${item.match.title}`.toLowerCase().includes(normalizedKeyword)
       return matchesStatus && matchesKeyword
     })
-  }, [keyword, status])
+  }, [demands, keyword, status])
+
+  function deleteDemand(demand: MineDemand) {
+    if (!window.confirm(`确定删除“${demand.title}”吗？删除后将不再显示。`)) {
+      return
+    }
+
+    setDemands((current) => current.filter((item) => item.id !== demand.id))
+    setActionNotice(`已删除：${demand.title}`)
+  }
+
+  function toggleClosed(demand: MineDemand) {
+    const nextStatus: MineDemandStatus = demand.status === 'closed' ? 'matching' : 'closed'
+    setDemands((current) => current.map((item) => (item.id === demand.id ? { ...item, status: nextStatus } : item)))
+    setActionNotice(nextStatus === 'closed' ? `已关闭：${demand.title}` : `已重新开启：${demand.title}`)
+  }
 
   return (
     <MarketplaceShell
@@ -186,8 +208,18 @@ export function PurchaseDemandMinePage() {
           </div>
 
           <div className="demand-mine-list">
+            {actionNotice ? <p className="demand-mine-notice" role="status">{actionNotice}</p> : null}
             {visibleDemands.map((item, index) => (
-              <MineDemandCard demand={item} index={index} reduceMotion={shouldReduceMotion} key={item.id} />
+              <MineDemandCard
+                demand={item}
+                index={index}
+                onClose={() => toggleClosed(item)}
+                onDelete={() => deleteDemand(item)}
+                onEdit={() => navigate(`/orders/purchase/demand/new?edit=${item.id}`)}
+                onOpenDetail={() => navigate(`/orders/purchase/demand/${item.id}/detail`)}
+                reduceMotion={shouldReduceMotion}
+                key={item.id}
+              />
             ))}
           </div>
         </div>
@@ -232,7 +264,23 @@ export function PurchaseDemandMinePage() {
   )
 }
 
-function MineDemandCard({ demand, index, reduceMotion }: { demand: MineDemand; index: number; reduceMotion: boolean }) {
+function MineDemandCard({
+  demand,
+  index,
+  onClose,
+  onDelete,
+  onEdit,
+  onOpenDetail,
+  reduceMotion,
+}: {
+  demand: MineDemand
+  index: number
+  onClose: () => void
+  onDelete: () => void
+  onEdit: () => void
+  onOpenDetail: () => void
+  reduceMotion: boolean
+}) {
   const status = statusCopy[demand.status]
 
   return (
@@ -253,19 +301,26 @@ function MineDemandCard({ demand, index, reduceMotion }: { demand: MineDemand; i
           <p>描述：{demand.description}</p>
           <small>发布时间：{demand.publishedAt}</small>
         </div>
-        <em className={`demand-status demand-status--${status.tone}`}>{status.label}</em>
+        <button
+          type="button"
+          className={`demand-status demand-status--${status.tone}`}
+          onClick={onOpenDetail}
+          aria-label={`查看 ${demand.title} 的求购详情`}
+        >
+          {status.label}
+        </button>
         <div className="demand-mine-actions">
-          <button type="button">
+          <button type="button" onClick={onEdit}>
             <Edit3 size={17} />
             编辑
           </button>
-          <button type="button" className="danger">
+          <button type="button" className="danger" onClick={onDelete}>
             <Trash2 size={17} />
             删除
           </button>
-          <button type="button">
+          <button type="button" onClick={onClose}>
             <XCircle size={17} />
-            关闭需求
+            {demand.status === 'closed' ? '重新开启' : '关闭需求'}
           </button>
         </div>
       </header>
@@ -279,8 +334,8 @@ function MineDemandCard({ demand, index, reduceMotion }: { demand: MineDemand; i
           <small>卖家：{demand.match.seller}</small>
         </div>
         <span>匹配度 {demand.match.value}%</span>
-        <a href="/items/1001">查看详情</a>
-        <a href="/messages">直接联系</a>
+        <a href={`/items/${demand.match.itemId}`}>查看详情</a>
+        <a href={`/messages?itemId=${demand.match.itemId}`}>直接联系</a>
       </section>
     </motion.article>
   )
