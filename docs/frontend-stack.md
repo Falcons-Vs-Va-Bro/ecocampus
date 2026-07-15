@@ -1,6 +1,6 @@
 # EcoCampus 前端技术栈、路由与数据源
 
-最近一次按 `frontend/package.json`、`routeCatalog.ts`、`routes.tsx`、API wrappers 和页面组件复核：2026-07-14。
+最近一次按 `frontend/package.json`、`routeCatalog.ts`、`routes.tsx`、API wrappers 和页面组件全量复核：2026-07-14；登录页视觉与响应式实现复核：2026-07-15。
 
 ## 1. 技术栈
 
@@ -61,7 +61,7 @@ src/
 
 | 路由 | 页面状态 | 当前数据源/说明 |
 | --- | --- | --- |
-| `/login` | API-backed | 真实模式调用 `POST /auth/login`；mock 模式本地自动建档并生成 mock token |
+| `/login` | API-backed | 真实模式调用 `POST /auth/login`；mock 模式本地自动建档并生成 mock token；桌面与移动端使用独立厦大统一认证布局 |
 | `/` | API-backed | `GET /items`、`GET /categories`；真实商品列表 DTO 目前与卡片所需字段不一致 |
 | `/items` | API-backed | `GET /items`；客户端筛选和分页 |
 | `/items/textbook` 等 9 个分类路由 | Local mock | 共用 `ItemsPage`，分类专属商品集合和筛选主要来自组件内本地数据；仍会发起通用商品查询 |
@@ -153,6 +153,8 @@ src/
 - `/` 保持公开市场首页；收藏管理仅在 `/favorites`。
 - 用户端复用 `components/marketplace/` 的 `MarketplaceShell`、卡片和手绘动画语义。
 - `/login` 采用厦门大学统一身份认证风格的视觉模拟，但当前生产行为是项目自有账号密码 API，不是跳转学校 SSO。
+- 登录页只共享认证状态和提交逻辑：宽度不超过 `640px` 时渲染独立移动布局，粗指针且高度不超过 `500px` 时保持横屏手机版；其余尺寸渲染现有桌面轮播与扫码/账号双标签布局。
+- 移动版默认中文，只保留账号密码登录，使用仓库内的官网移动背景、Logo 和密码显隐图标；不渲染桌面轮播、扫码入口、轮播圆点或版权页脚。
 - 后台复用 `components/admin/AdminShell.tsx`，以表格、筛选和操作效率为先。
 - 动画使用 Motion + CSS keyframes，尊重 `prefers-reduced-motion`；详细规范见 `frontend-animation/README.md`。
 

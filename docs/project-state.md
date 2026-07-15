@@ -65,6 +65,12 @@ API 模块：
 - Placeholder：`/demands`、`/demands/new`、`/demands/mine`。
 - Redirect：`/orders -> /orders/purchase`，`/orders/sales -> /orders/sale`。
 
+登录视觉：
+
+- `/login` 的桌面与移动展示已拆分，共享账号、密码、语言、错误、认证请求和安全 `returnTo` 跳转状态。
+- 宽度不超过 `640px` 时使用独立厦大官网移动版：默认中文、仅账号密码登录、本地移动背景与品牌/密码图标；横屏粗指针手机也保持移动布局。
+- 桌面版继续使用三张官网背景轮播和扫码/账号双标签，不受移动端样式影响。
+
 mock 与守卫：
 
 - `pnpm dev:mock` 读取 `.env.mock`；API mock 覆盖类目、商品、收藏、私信、订单、后台商品和后台用户。
@@ -120,6 +126,7 @@ GitHub Pages frontend
 - `cd frontend && pnpm lint && pnpm build`：通过；入口包为 628.14 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 相对 Markdown 链接检查和 `git diff --check` 通过。
 - 公网首页 HTTP 200，API health 为 `UP`；深层路由返回相同前端内容但 HTTP 404。
+- 2026-07-15 登录页移动适配：`pnpm lint`、`pnpm build` 通过；浏览器模拟验证 360×740、390×844、430×932、640/641 断点、390×640 矮屏和 844×390 粗指针横屏，桌面 1440×900 布局保持原有轮播与双登录标签。
 
 ## 文档维护规则
 
@@ -132,6 +139,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-15：登录页新增独立厦大官网移动版，背景、Logo 和密码图标改为本地资源；移动端默认中文并只保留账号密码登录，桌面版保持原结构。
 - 2026-07-14：完成全仓库文档/实现对照审计，按代码重写入口 README、API、RBAC、前端数据源和项目状态，显式记录真实 DTO 与 mock UI 差异。
 - 2026-07-14：前端改为路由级动态导入，位图统一为 WebP 并限制首屏主动加载；课堂单实例连接池和 Tomcat 并发参数上调，完成 60 并发负载基线。
 - 2026-07-14：课堂展示前端切换到 GitHub Pages，后端继续运行在 Mac mini 并经 Cloudflare Tunnel 暴露。

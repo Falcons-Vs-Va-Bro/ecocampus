@@ -271,6 +271,11 @@
   cursor: pointer;
 }
 
+.xmu-login-submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .xmu-account-links {
   display: flex;
   justify-content: space-between;
@@ -374,60 +379,5 @@
 
   .xmu-language-switch {
     right: 32px;
-  }
-}
-
-@media (max-width: 640px) {
-  .xmu-login-page {
-    min-height: 100svh;
-  }
-
-  .xmu-background-slide {
-    background-position: center bottom;
-  }
-
-  .xmu-language-switch {
-    top: 18px;
-    right: 16px;
-    width: 172px;
-    height: 36px;
-  }
-
-  .xmu-language-switch button {
-    font-size: 14px;
-    line-height: 36px;
-  }
-
-  .xmu-login-card {
-    top: 92px;
-    width: min(100% - 30px, 440px);
-    min-height: auto;
-    padding: 24px 28px 26px;
-  }
-
-  .xmu-login-brand {
-    justify-content: center;
-  }
-
-  .xmu-login-brand img {
-    width: 168px;
-  }
-
-  .xmu-login-brand h1 {
-    font-size: 18px;
-  }
-
-  .xmu-qr-placeholder {
-    width: min(236px, 72vw);
-    height: min(236px, 72vw);
-  }
-
-  .xmu-qr-pattern {
-    width: calc(min(236px, 72vw) - 32px);
-    height: calc(min(236px, 72vw) - 32px);
-  }
-
-  .xmu-carousel-dots {
-    bottom: 42px;
   }
 }
