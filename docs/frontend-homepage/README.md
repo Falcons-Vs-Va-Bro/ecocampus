@@ -2,7 +2,7 @@
 
 This guide fixes the frontend content direction for the public `/` route and the matching user-side visual language. It should be read together with `docs/frontend-stack.md` and `docs/api-contract.md`.
 
-Implementation status was last checked on 2026-07-14. This file defines the intended content/visual boundary; actual page data-source status and known DTO gaps are tracked in `docs/frontend-stack.md` and must not be inferred from this design guide.
+Implementation status was last checked on 2026-07-15. This file defines the intended content/visual boundary; actual page data-source status and known DTO gaps are tracked in `docs/frontend-stack.md` and must not be inferred from this design guide.
 
 ## Content Review
 
@@ -38,7 +38,7 @@ The provided reference is viable as the visual direction, but its current page c
 
 Those features should remain under authenticated user routes such as `/favorites`, `/items/mine`, `/orders/purchase`, `/orders/sale`, and `/messages`.
 
-Current implementation note: the homepage still links demand calls to the placeholder routes `/demands` and `/demands/new`; the implemented local mock demand flow lives under `/orders/purchase/demand*`. This is a known route-alignment issue, not evidence that the legacy routes are complete.
+Current implementation note: the independent mobile homepage links demand calls to `/orders/purchase/demand*`; the desktop homepage still links to placeholder routes `/demands` and `/demands/new`. This is a known route-alignment issue, not evidence that the legacy routes are complete.
 
 ## Homepage Content Model
 
@@ -52,6 +52,17 @@ Recommended desktop layout:
 - left rail: item categories and user route shortcuts;
 - main area: homepage title or section title, filters, item grid, pagination or infinite loading;
 - right panel: demand highlights, recently active categories, or campus trading tips.
+
+Mobile/H5 is an independent composition rather than a compressed desktop grid. At widths up to `720px` it uses:
+
+- a compact sticky brand row, search bar, and horizontally scrollable category strip;
+- a fixed five-item bottom navigation for home, categories, publish, messages, and profile;
+- publish-item and post-demand quick actions before the discovery feed;
+- horizontally scrollable homepage section tabs and a collapsed filter drawer;
+- a dense two-column item grid that exposes title, price, delivery mode, seller, verification, favorite count, and favorite action without requiring a detail-page visit;
+- demand highlights, hot categories, and safety guidance after the primary product feed instead of occupying the first screen.
+
+The shared mobile shell belongs in `components/marketplace/`; homepage-specific ordering and compact item cards belong in `features/item-market/`. Desktop keeps the existing top bar, left rail, three-column content area, and full filter panel.
 
 Recommended homepage sections:
 

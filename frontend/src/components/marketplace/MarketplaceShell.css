@@ -1630,3 +1630,296 @@ a.icon-button {
     width: 100%;
   }
 }
+
+/* Mobile marketplace shell is rendered independently from the desktop shell. */
+.mobile-market-shell {
+  min-height: 100dvh;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  color: #25211c;
+  background:
+    linear-gradient(rgba(67, 103, 139, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(67, 103, 139, 0.035) 1px, transparent 1px),
+    #f8f3ea;
+  background-size: 22px 22px, 22px 22px, auto;
+  font-family: "Kaiti SC", "STKaiti", "Songti SC", "Noto Serif SC", ui-serif, Georgia, serif;
+}
+
+.mobile-market-shell button,
+.mobile-market-shell input {
+  font: inherit;
+}
+
+.mobile-market-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: env(safe-area-inset-top) 12px 8px;
+  border-bottom: 1px solid rgba(78, 112, 150, 0.22);
+  background: rgba(248, 243, 234, 0.96);
+  box-shadow: 0 5px 16px rgba(70, 83, 96, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.mobile-market-header {
+  display: flex;
+  height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.mobile-market-brand {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+  color: #276cae;
+}
+
+.mobile-market-brand strong {
+  position: relative;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.mobile-market-brand strong::after {
+  position: absolute;
+  right: 1px;
+  bottom: -4px;
+  left: 1px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(75, 145, 208, 0.18);
+  content: "";
+  transform: rotate(-1deg);
+}
+
+.mobile-market-brand small {
+  color: #6d625a;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mobile-market-userbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-market-icon-button {
+  position: relative;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(72, 117, 159, 0.3);
+  border-radius: 999px;
+  color: #315f89;
+  background: rgba(255, 252, 246, 0.86);
+}
+
+.mobile-market-icon-button span,
+.mobile-market-bottom-nav b {
+  position: absolute;
+  display: grid;
+  min-width: 17px;
+  height: 17px;
+  place-items: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  color: #fff;
+  background: #e5544d;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.mobile-market-icon-button span {
+  top: -4px;
+  right: -4px;
+}
+
+.mobile-market-profile {
+  display: flex;
+  min-width: 0;
+  max-width: 112px;
+  align-items: center;
+  gap: 6px;
+  color: #312d29;
+}
+
+.mobile-market-profile > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1.5px solid #3f85c4;
+  border-radius: 999px;
+  background: #dceeff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.mobile-market-profile strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-market-search {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 58px;
+  height: 44px;
+  align-items: center;
+  padding: 3px 4px 3px 10px;
+  border: 1.5px solid rgba(70, 107, 146, 0.48);
+  border-radius: 12px;
+  background: rgba(255, 252, 246, 0.94);
+}
+
+.mobile-market-search svg {
+  color: #52606b;
+}
+
+.mobile-market-search input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: #302f2b;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.mobile-market-search input::placeholder {
+  color: rgba(80, 78, 74, 0.52);
+}
+
+.mobile-market-search button {
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: #3e83c7;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.mobile-market-category-strip {
+  display: flex;
+  gap: 8px;
+  margin: 8px -12px 0;
+  padding: 0 12px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.mobile-market-category-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-market-category-strip a {
+  display: inline-flex;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  border: 1px solid rgba(76, 112, 146, 0.2);
+  border-radius: 999px;
+  color: #524b45;
+  background: rgba(255, 252, 246, 0.76);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.mobile-market-category-strip a.active {
+  border-color: rgba(47, 120, 191, 0.4);
+  color: #2f78bf;
+  background: #eaf5ff;
+}
+
+.mobile-market-main {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px 24px;
+}
+
+.mobile-market-bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding: 4px 6px env(safe-area-inset-bottom);
+  border-top: 1px solid rgba(72, 109, 143, 0.24);
+  background: rgba(255, 252, 246, 0.97);
+  box-shadow: 0 -8px 24px rgba(61, 75, 89, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.mobile-market-bottom-nav a {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  color: #77706a;
+}
+
+.mobile-market-bottom-nav a > span {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.mobile-market-bottom-nav small {
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.mobile-market-bottom-nav a.active {
+  color: #2f78bf;
+}
+
+.mobile-market-bottom-nav a.primary > span {
+  width: 46px;
+  height: 46px;
+  margin-top: -22px;
+  border: 4px solid #f8f3ea;
+  border-radius: 999px;
+  color: #fff;
+  background: #3e83c7;
+  box-shadow: 0 4px 12px rgba(47, 120, 191, 0.28);
+}
+
+.mobile-market-bottom-nav a.primary small {
+  margin-top: -4px;
+}
+
+.mobile-market-bottom-nav b {
+  top: -7px;
+  right: -10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-market-sticky,
+  .mobile-market-bottom-nav {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

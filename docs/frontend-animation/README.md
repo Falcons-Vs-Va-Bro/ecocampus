@@ -47,6 +47,8 @@
 - 样式入口：`frontend/src/components/marketplace/MarketplaceShell.css`
 - 公开/用户侧占位页入口：`frontend/src/components/marketplace/MarketplacePlaceholderPage.tsx`
 
+移动端共享壳同样位于 `MarketplaceShell.tsx`，但在 `720px` 及以下使用独立 DOM 和信息层级。移动首页的双列卡片只做轻量进入与按压反馈，固定底部导航、横向分类和筛选展开不得使用会阻塞滚动或触发布局抖动的持续动画；`721px` 起继续使用原桌面动画结构。
+
 已形成的可复用模式：
 
 - `motion` 与 `useReducedMotion` 控制顶部栏、侧栏、内容区和商品卡片进场。
