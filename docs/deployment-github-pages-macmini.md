@@ -69,6 +69,8 @@ checkout main
 
 本机固定部署器从仓库 `deploy/macos/ecocampus-deploy-backend` 手动安装到 `~/.local/bin/`，工作流不在每次运行时覆盖它。数据库/JWT 等密钥继续只存在 `~/.config/ecocampus/backend.env`，不进入 GitHub Actions secrets 或仓库。
 
+如果部署失败，工作流会在 Actions 摘要中记录脱敏后的 LaunchAgent 状态、后端 Java 进程、8080 监听和本机健康响应，不输出 LaunchAgent 环境变量或数据库凭据。
+
 安全边界：该仓库为公开仓库且 `main` 当前未启用分支保护；拥有 `main` 写权限的人可以修改 workflow 并由 self-hosted Runner 执行。Runner 不响应 `pull_request`，但仍建议启用 `main` 必须经 PR、状态检查和审核后合并。
 
 2026-07-14 首次自动部署基线：Runner 2.335.1 安装目录约 433 MB，空闲 `Runner.Listener` RSS 约 97 MB；工作流 48 秒完成 32 项测试、构建与部署，JAR 替换后约 19 秒恢复健康，公网 health 为 `UP`。
