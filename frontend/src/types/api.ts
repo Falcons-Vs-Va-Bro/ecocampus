@@ -59,4 +59,8 @@ export interface CurrentUser {
   role: Extract<UserRole, 'USER' | 'ADMIN'>
   verificationStatus: VerificationStatus
   studentNoMasked?: string
+  avatarUrl?: string
+  realName?: string
+  college?: string
+  grade?: string
 }

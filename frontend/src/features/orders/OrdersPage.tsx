@@ -230,14 +230,14 @@ export function OrdersPage({ role = 'BUYER' }: { role?: OrderRole }) {
               <>
                 <TipPoint icon={<CheckCircle2 size={20} />} text="及时回复买家" />
                 <TipPoint icon={<CheckCircle2 size={20} />} text="交付前确认价格和地点" />
-                <TipPoint icon={<CheckCircle2 size={20} />} text="线下交付后再确认已交付" />
+                <TipPoint icon={<CheckCircle2 size={20} />} text="确认可交易后等待买家确认自提" />
                 <TipPoint icon={<CheckCircle2 size={20} />} text="取消后商品可重新上架" />
               </>
             ) : (
               <>
                 <TipPoint icon={<ShieldCheck size={20} />} text="待沟通时请确认价格、取货时间和地点" />
                 <TipPoint icon={<CheckCircle2 size={20} />} text="待自提订单由买家确认自提后完成" />
-                <TipPoint icon={<MessageCircle size={20} />} text="卖家也可在沟通后标记交易完成" />
+                <TipPoint icon={<MessageCircle size={20} />} text="只有买家确认自提后订单才会完成" />
               </>
             )}
           </section>
@@ -386,9 +386,7 @@ function renderSaleOrderActions(
     return (
       <>
         <ActionLink href="/messages">联系买家</ActionLink>
-        <ActionButton disabled={isMutating} onClick={() => onStatusChange(order.id, 'COMPLETED', '卖家已确认交付')} primary>
-          确认已交付
-        </ActionButton>
+        <span className="order-awaiting-buyer" aria-label="等待买家确认自提">等待买家确认自提</span>
         <ActionLink href="/messages">修改地点</ActionLink>
       </>
     )

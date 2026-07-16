@@ -1,16 +1,16 @@
 import type { ApiResponse } from '../../types/api'
-import type { Category } from '../category.api'
+import type { Category, CategoryRequest } from '../category.api'
 
 let mockCategories: Category[] = [
-  { id: 1, name: '教材', sort: 10 },
-  { id: 2, name: '数码', sort: 20 },
-  { id: 3, name: '宿舍用品', sort: 30 },
-  { id: 4, name: '运动户外', sort: 40 },
-  { id: 5, name: '生活日用', sort: 50 },
-  { id: 6, name: '美妆个护', sort: 60 },
-  { id: 7, name: '乐器文具', sort: 70 },
-  { id: 8, name: '票务转让', sort: 80 },
-  { id: 9, name: '其他', sort: 90 },
+  { id: 1, name: '教材', sort: 10, enabled: true, itemCount: 18 },
+  { id: 2, name: '数码', sort: 20, enabled: true, itemCount: 16 },
+  { id: 3, name: '宿舍用品', sort: 30, enabled: true, itemCount: 14 },
+  { id: 4, name: '运动户外', sort: 40, enabled: true, itemCount: 12 },
+  { id: 5, name: '生活日用', sort: 50, enabled: true, itemCount: 10 },
+  { id: 6, name: '美妆个护', sort: 60, enabled: true, itemCount: 8 },
+  { id: 7, name: '乐器文具', sort: 70, enabled: true, itemCount: 7 },
+  { id: 8, name: '票务转让', sort: 80, enabled: true, itemCount: 6 },
+  { id: 9, name: '其他', sort: 90, enabled: true, itemCount: 5 },
 ]
 
 export async function listMockCategories(): Promise<ApiResponse<Category[]>> {
@@ -24,16 +24,17 @@ export async function listMockCategories(): Promise<ApiResponse<Category[]>> {
   }
 }
 
-export async function createMockCategory(payload: Omit<Category, 'id'>): Promise<ApiResponse<Category>> {
+export async function createMockCategory(payload: CategoryRequest): Promise<ApiResponse<Category>> {
   await delay(120)
-  const category = { id: Math.max(0, ...mockCategories.map((item) => item.id)) + 1, ...payload }
+  const category: Category = { id: Math.max(0, ...mockCategories.map((item) => item.id)) + 1, ...payload, enabled: payload.enabled ?? true, itemCount: 0 }
   mockCategories = [...mockCategories, category]
   return { code: 'OK', message: 'success', data: category, traceId: 'mock-create-category' }
 }
 
-export async function updateMockCategory(categoryId: number, payload: Omit<Category, 'id'>): Promise<ApiResponse<Category>> {
+export async function updateMockCategory(categoryId: number, payload: CategoryRequest): Promise<ApiResponse<Category>> {
   await delay(120)
-  const category = { id: categoryId, ...payload }
+  const current = mockCategories.find((item) => item.id === categoryId)
+  const category: Category = { id: categoryId, itemCount: current?.itemCount ?? 0, enabled: payload.enabled ?? current?.enabled ?? true, ...payload }
   mockCategories = mockCategories.map((item) => item.id === categoryId ? category : item)
   return { code: 'OK', message: 'success', data: category, traceId: 'mock-update-category' }
 }

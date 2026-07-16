@@ -70,7 +70,7 @@ src/
 | `/messages` | API-backed | 会话列表 API；商品图/状态等使用 mock 展示元数据 |
 | `/messages/:conversationId` | API-backed | 会话和消息 API；消息归属使用真实 `/auth/me` 当前用户 id |
 | `/orders/purchase` | API-backed | `GET /orders?role=BUYER` 与状态 mutation；图片、价格和昵称来自真实订单响应 |
-| `/orders/sale` | API-backed | `GET /orders?role=SELLER` 与状态 mutation；图片、价格和昵称来自真实订单响应 |
+| `/orders/sale` | API-backed | `GET /orders?role=SELLER`；卖家只能从待沟通确认“可交易”进入待自提，完成动作仅在买家端出现 |
 | `/orders` | Redirect | 跳转 `/orders/purchase` |
 | `/orders/sales` | Redirect | 跳转 `/orders/sale` |
 | `/orders/purchase/demand` | API-backed + Local favorite | 求购广场调用 `GET /demands` 与 `GET /categories`；求购关注仍存 `localStorage` |
@@ -79,8 +79,8 @@ src/
 | `/orders/purchase/demand/mine` | API-backed | 我的求购调用 `GET /users/me/demands`，匹配调用 `GET /demands/{demandId}/matches`，关闭调用 `POST /demands/{demandId}/close` |
 | `/publish` | API-backed + Local draft | 图片调用 `POST /files/images`，类目调用 `GET /categories`，提交调用 `POST /items`；未提交草稿仍保存在 `localStorage` |
 | `/items/mine` | API-backed | 调用 `GET /users/me/items` 获取真实状态，重新申请审核与下架分别调用 `POST /items/{id}/on-sale`、`POST /items/{id}/off-shelf` |
-| `/items/:id/edit` | Local mock | 编辑本地发布数据，未调用商品详情/更新 API |
-| `/profile` | API-backed + Local profile UI | 顶部身份调用 `/auth/me`；常用地址调用 `GET/POST/PUT/DELETE /users/me/addresses` 并刷新 Query cache；头像和基本资料编辑仍是本地交互 |
+| `/items/:id/edit` | API-backed | `GET /users/me/items/{id}` 回填所有者完整详情，图片上传调用文件 API，保存与下架分别调用 `PUT /items/{id}`、`POST /items/{id}/off-shelf` |
+| `/profile` | API-backed | `/auth/me` 展示只读真实学号、手机号和校园资料；昵称、头像通过 `PUT /users/me` 持久化，头像先调用文件 API；常用地址调用完整 CRUD |
 | `/verify` | API-backed + mock adapter | 真实模式调用演示验证码签发与 `/auth/campus-verification`；mock 模式复现随机码、过期和一次性校验。学生证图片仅作本地 UI 展示，不上传服务器 |
 | `/demands` | Placeholder | catalog 保留的旧公开求购入口 |
 | `/demands/new` | Placeholder | catalog 保留的旧发布求购入口 |
@@ -96,7 +96,7 @@ src/
 | `/admin/items/review` | API-backed | wrapper 支持 mock/真实；真实摘要包含卖家、学号掩码、描述、封面与图片数；举报提示、审核标记等仍仅在 mock 中可选展示 |
 | `/admin/items` | API-backed | wrapper 支持 mock/真实；使用独立 `AdminItemSummary`，不再误声明为公开市场 `ItemSummary` |
 | `/admin/users` | API-backed + Local UI model | 用户列表和黑名单 mutation 支持 mock/真实；顶部总量、注册日期、发布数等为硬编码展示值 |
-| `/admin/categories` | API-backed + Local UI model | 页面调用一级类目列表/创建/更新；删除 wrapper 存在但页面未调用，树层级、启停、商品数和预置子类目为本地展示模型 |
+| `/admin/categories` | API-backed | 一级/二级关系、启停、排序和真实商品数均来自后台类目 API；新增、编辑、启停和安全删除全部落库，禁用项从发布页移除 |
 
 当前 `routes.tsx` 已为 catalog 中所有管理路由映射真实页面，没有后台占位路由。
 

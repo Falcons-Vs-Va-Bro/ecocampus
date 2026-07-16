@@ -2,13 +2,13 @@
 
 本文记录 EcoCampus 后端当前数据库约束、索引和锁的设计意图。数据库结构以 `backend/src/main/resources/db/migration/` 下的 Flyway migration 为准。
 
-最近一次按 V1–V4 migration、默认 MySQL 配置和自动 seed 复核：2026-07-15。
+最近一次按 V1–V6 migration、默认 MySQL 配置和自动 seed 复核：2026-07-16。
 
 ## 初始化方式
 
 - 使用 Flyway 管理表结构和种子数据，避免开发、测试和真实 MySQL 环境使用不同建表脚本。
 - `application.yml` 已关闭旧的 `schema.sql` / `data.sql` 自动初始化，防止重复建表或重复写入种子数据。
-- V1 创建核心表、约束和索引；V2 自动插入 4 个初始类目；V3 为 `users` 增加可空的 `password_hash`；V4 为会话增加双方已读时间。
+- V1 创建核心表、约束和索引；V2 自动插入 4 个初始类目；V3 为 `users` 增加可空的 `password_hash`；V4 为会话增加双方已读时间；V5 增加独立绑定手机号；V6 为类目增加父类关系、启停状态和父类索引。
 - 默认 `application.yml` 使用本地 MySQL，并将 `classpath:db/migration` 和 `classpath:db/seed` 都纳入 Flyway locations。
 - `db/seed/R__mysql_demo_seed.sql` 是默认环境自动执行的 repeatable Flyway 演示 seed，补齐贴近前端 mock 的用户、类目、商品、订单、会话、求购和审计数据。
 - `db/seed/R__mysql_catalog_seed.sql` 是独立的 repeatable 商品目录 seed，使用预留 ID `50001`–`50072`，为九个一级类目各补 8 件符合校园二手场景的商品及图片、配送方式关联。
@@ -33,6 +33,7 @@
 - 会话使用 `(item_id, user_one_id, user_two_id)` 唯一约束，并要求 `user_one_id < user_two_id`，防止同一对用户生成重复会话。
 - 会话保存 `user_one_read_at` 和 `user_two_read_at`，用于计算每个参与者的未读数。
 - 商品配送方式、商品图片和求购关键词使用组合主键，防止重复明细。
+- 类目通过可空 `parent_id` 自关联，应用层限制为两级；`enabled` 持久化启停状态。商品数不冗余存列，由非删除商品实时聚合，避免计数漂移。
 
 ## 活跃订单约束
 
@@ -62,7 +63,7 @@
 - 用户地址悲观写锁：管理默认地址时锁定该用户已有地址，减少并发设置默认地址的窗口。
 - 商品、订单、用户、求购聚合根增加乐观锁版本号，用于捕获后台治理、用户编辑和系统任务之间的后写覆盖。
 
-当前类目仍是扁平一级模型，没有父类、启停状态或商品数列。`MATCHED`、`DRAFT`、`DELETED` 等枚举虽受数据库约束允许，但当前未必有对应写入端点。
+类目删除前会检查子类和商品引用，禁用不会破坏已有商品关系，但会阻止新建/编辑商品继续选择该类目。`MATCHED`、`DRAFT`、`DELETED` 等枚举虽受数据库约束允许，但当前未必有对应写入端点。
 
 ## 异常处理
 

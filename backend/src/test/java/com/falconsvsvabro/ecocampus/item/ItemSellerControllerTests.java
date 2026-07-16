@@ -45,6 +45,12 @@ class ItemSellerControllerTests {
 
 		long itemId = read(created, "/data/id").asLong();
 
+		mockMvc.perform(get("/api/v1/users/me/items/{itemId}", itemId)
+			.header("Authorization", "Bearer " + accessToken))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.id").value(itemId))
+			.andExpect(jsonPath("$.data.description").value("Lightly used and ready for campus pickup."));
+
 		mockMvc.perform(get("/api/v1/users/me/items")
 			.header("Authorization", "Bearer " + accessToken)
 			.param("status", "PENDING_REVIEW"))

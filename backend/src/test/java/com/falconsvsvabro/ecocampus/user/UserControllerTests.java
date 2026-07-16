@@ -42,7 +42,14 @@ class UserControllerTests {
 					{"nickname":"Eco Student","avatarUrl":"https://cdn.example.com/avatar.png"}
 					"""))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.nickname").value("Eco Student"));
+			.andExpect(jsonPath("$.data.nickname").value("Eco Student"))
+			.andExpect(jsonPath("$.data.avatarUrl").value("https://cdn.example.com/avatar.png"))
+			.andExpect(jsonPath("$.data.studentNoMasked").value("2026****011"));
+
+		mockMvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + accessToken))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.nickname").value("Eco Student"))
+			.andExpect(jsonPath("$.data.avatarUrl").value("https://cdn.example.com/avatar.png"));
 
 		MvcResult created = mockMvc.perform(post("/api/v1/users/me/addresses")
 			.header("Authorization", "Bearer " + accessToken)

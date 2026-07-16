@@ -46,7 +46,7 @@ public class ItemService {
 	@Transactional
 	public ItemDetailResponse createItem(Long userId, ItemRequest request) {
 		User seller = campusAccessGuard.requireVerifiedUser(userId);
-		Category category = getCategory(request.categoryId());
+		Category category = getEnabledCategory(request.categoryId());
 		Item item = new Item(seller.getId(), request.title(), request.description(), request.categoryId(),
 				request.priceCent(), request.deliveryModes(), request.imageUrls());
 		Item saved = itemRepository.save(item);
@@ -61,7 +61,7 @@ public class ItemService {
 		if (!item.isEditableBySeller()) {
 			throw new BusinessException(ErrorCode.CONFLICT, "item cannot be edited in current status");
 		}
-		Category category = getCategory(request.categoryId());
+		Category category = getEnabledCategory(request.categoryId());
 		item.updateContent(request.title(), request.description(), request.categoryId(), request.priceCent(),
 				request.deliveryModes(), request.imageUrls());
 		writeAudit(seller.getId(), item.getId(), "ITEM_UPDATED", "seller updated item content");
@@ -106,6 +106,17 @@ public class ItemService {
 			.map(item -> MyItemResponse.from(item, getCategory(item.getCategoryId()).getName()))
 			.toList();
 		return new PageResponse<>(items, normalizePage(page), normalizeSize(size), itemPage.getTotalElements());
+	}
+
+	@Transactional(readOnly = true)
+	public ItemDetailResponse getMyItem(Long userId, Long itemId) {
+		User seller = campusAccessGuard.requireVerifiedUser(userId);
+		Item item = itemRepository.findById(itemId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "item not found"));
+		if (!item.getSellerId().equals(seller.getId())) {
+			throw new BusinessException(ErrorCode.FORBIDDEN, "item does not belong to current user");
+		}
+		return ItemDetailResponse.from(item, getCategory(item.getCategoryId()).getName());
 	}
 
 	@Transactional(readOnly = true)
@@ -210,6 +221,17 @@ public class ItemService {
 	private Category getCategory(Long categoryId) {
 		return categoryRepository.findById(categoryId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "category not found"));
+	}
+
+	private Category getEnabledCategory(Long categoryId) {
+		Category category = getCategory(categoryId);
+		if (!category.isEnabled()) {
+			throw new BusinessException(ErrorCode.CONFLICT, "category is disabled");
+		}
+		if (category.getParentId() != null && !getCategory(category.getParentId()).isEnabled()) {
+			throw new BusinessException(ErrorCode.CONFLICT, "parent category is disabled");
+		}
+		return category;
 	}
 
 	private User getUser(Long userId) {

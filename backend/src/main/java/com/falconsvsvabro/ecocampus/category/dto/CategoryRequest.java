@@ -7,5 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record CategoryRequest(
 		@NotBlank @Size(max = 40) String name,
-		@Min(0) @Max(10000) int sort) {
+		@Min(0) @Max(10000) int sort,
+		Long parentId,
+		Boolean enabled) {
 }

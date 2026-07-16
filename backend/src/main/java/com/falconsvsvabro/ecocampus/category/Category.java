@@ -24,6 +24,12 @@ public class Category {
 	@Column(nullable = false)
 	private int sort;
 
+	@Column(name = "parent_id")
+	private Long parentId;
+
+	@Column(nullable = false)
+	private boolean enabled;
+
 	@Column(nullable = false)
 	private OffsetDateTime createdAt;
 
@@ -33,14 +39,18 @@ public class Category {
 	protected Category() {
 	}
 
-	public Category(String name, int sort) {
+	public Category(String name, int sort, Long parentId, boolean enabled) {
 		this.name = name;
 		this.sort = sort;
+		this.parentId = parentId;
+		this.enabled = enabled;
 	}
 
-	public void update(String name, int sort) {
+	public void update(String name, int sort, Long parentId, boolean enabled) {
 		this.name = name;
 		this.sort = sort;
+		this.parentId = parentId;
+		this.enabled = enabled;
 	}
 
 	@PrePersist
@@ -65,5 +75,13 @@ public class Category {
 
 	public int getSort() {
 		return sort;
+	}
+
+	public Long getParentId() {
+		return parentId;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
 	}
 }

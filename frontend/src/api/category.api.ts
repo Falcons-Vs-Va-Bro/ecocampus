@@ -8,11 +8,16 @@ export interface Category {
   id: number
   name: string
   sort: number
+  parentId?: number
+  enabled: boolean
+  itemCount: number
 }
 
 export interface CategoryRequest {
   name: string
   sort: number
+  parentId?: number
+  enabled?: boolean
 }
 
 export async function listCategories() {

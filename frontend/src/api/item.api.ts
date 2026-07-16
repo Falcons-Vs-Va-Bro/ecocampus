@@ -114,3 +114,8 @@ export async function listMyItems(params?: { status?: ItemStatus; page?: number;
   const response = await apiClient.get<ApiResponse<PageResult<MyItemSummary>>>('/users/me/items', { params })
   return response.data
 }
+
+export async function getMyItem(itemId: string | number) {
+  const response = await apiClient.get<ApiResponse<OwnedItemDetail>>(`/users/me/items/${itemId}`)
+  return response.data
+}

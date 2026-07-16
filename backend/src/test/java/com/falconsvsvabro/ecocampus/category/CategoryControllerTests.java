@@ -50,7 +50,7 @@ class CategoryControllerTests {
 			.header("Authorization", "Bearer " + accessToken)
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"name":"Musical Instruments","sort":50}
+					{"name":"Musical Instruments","sort":50,"enabled":true}
 					"""))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.name").value("Musical Instruments"))
@@ -58,11 +58,41 @@ class CategoryControllerTests {
 
 		long categoryId = read(created, "/data/id").asLong();
 
+		MvcResult childCreated = mockMvc.perform(post("/api/v1/admin/categories")
+			.header("Authorization", "Bearer " + accessToken)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"name":"Guitar Accessories","sort":51,"parentId":%d,"enabled":true}
+					""".formatted(categoryId)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.parentId").value(categoryId))
+			.andExpect(jsonPath("$.data.enabled").value(true))
+			.andExpect(jsonPath("$.data.itemCount").value(0))
+			.andReturn();
+		long childCategoryId = read(childCreated, "/data/id").asLong();
+
+		mockMvc.perform(put("/api/v1/admin/categories/{categoryId}", childCategoryId)
+			.header("Authorization", "Bearer " + accessToken)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"name":"Guitar Accessories","sort":52,"parentId":%d,"enabled":false}
+					""".formatted(categoryId)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.enabled").value(false));
+
+		mockMvc.perform(get("/api/v1/categories"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data[?(@.name == 'Guitar Accessories')]").isEmpty());
+
+		mockMvc.perform(delete("/api/v1/admin/categories/{categoryId}", categoryId)
+			.header("Authorization", "Bearer " + accessToken))
+			.andExpect(status().isConflict());
+
 		mockMvc.perform(put("/api/v1/admin/categories/{categoryId}", categoryId)
 			.header("Authorization", "Bearer " + accessToken)
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("""
-					{"name":"Instruments","sort":55}
+					{"name":"Instruments","sort":55,"enabled":true}
 					"""))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.name").value("Instruments"));
@@ -70,6 +100,10 @@ class CategoryControllerTests {
 		mockMvc.perform(get("/api/v1/admin/categories").header("Authorization", "Bearer " + accessToken))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data[*].name", hasItem("Instruments")));
+
+		mockMvc.perform(delete("/api/v1/admin/categories/{categoryId}", childCategoryId)
+			.header("Authorization", "Bearer " + accessToken))
+			.andExpect(status().isOk());
 
 		mockMvc.perform(delete("/api/v1/admin/categories/{categoryId}", categoryId)
 			.header("Authorization", "Bearer " + accessToken))

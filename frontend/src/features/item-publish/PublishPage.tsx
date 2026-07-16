@@ -10,7 +10,6 @@ import {
   Dumbbell,
   Gift,
   Grid3X3,
-  Heart,
   Home,
   Mail,
   MapPin,
@@ -63,18 +62,6 @@ const userNav = [
   { label: '出售订单', icon: Store, to: '/orders/sale' },
   { label: '消息中心', icon: MessageCircle, to: '/messages' },
   { label: '个人中心', icon: User, to: '/profile' },
-]
-
-const categoryOptions = [
-  { label: '教材教辅', icon: BookOpen },
-  { label: '数码电子', icon: Camera },
-  { label: '宿舍用品', icon: Package },
-  { label: '运动户外', icon: Dumbbell },
-  { label: '生活日用', icon: ShoppingBasket },
-  { label: '美妆个护', icon: Sparkles },
-  { label: '乐器文具', icon: Paperclip },
-  { label: '票务转让', icon: ClipboardList },
-  { label: '其他', icon: Heart },
 ]
 
 const pickupPlaces = ['芙蓉园门口', '翔安一期食堂', '思明校门口', '海韵教学楼']
@@ -340,22 +327,25 @@ export function PublishPage() {
                 </button>
                 {isCategoryOpen ? (
                   <div className="category-menu" role="listbox" aria-label="商品分类">
-                    {categoryOptions.map((item) => (
+                    {(categoriesQuery.data?.data ?? []).map((category) => {
+                      const label = categoryDisplayName(category, categoriesQuery.data?.data ?? [])
+                      return (
                       <button
                         type="button"
                         role="option"
-                        aria-selected={selectedCategory === item.label}
-                        className={selectedCategory === item.label ? 'active' : undefined}
+                        aria-selected={selectedCategory === label}
+                        className={selectedCategory === label ? 'active' : undefined}
                         onClick={() => {
-                          setSelectedCategory(item.label)
+                          setSelectedCategory(label)
                           setIsCategoryOpen(false)
                         }}
-                        key={item.label}
+                        key={category.id}
                       >
-                        <item.icon size={17} />
-                        <span>{item.label}</span>
+                        <BookOpen size={17} />
+                        <span>{label}</span>
                       </button>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : null}
               </div>
@@ -549,8 +539,15 @@ function createDraftImages(draft: PublishDraft | null): UploadedImage[] {
 }
 
 function resolveCategoryId(categories: Category[], label: string) {
-  const backendName = label === '教材教辅' ? '教材' : label === '数码电子' ? '数码' : label
-  return categories.find((category) => category.name === backendName || category.name === label)?.id
+  return categories.find((category) => categoryDisplayName(category, categories) === label)?.id
+}
+
+function categoryDisplayName(category: Category, categories: Category[]) {
+  const rootLabel = category.name === '教材' ? '教材教辅' : category.name === '数码' ? '数码电子' : category.name
+  if (!category.parentId) return rootLabel
+  const parent = categories.find((item) => item.id === category.parentId)
+  const parentLabel = parent?.name === '教材' ? '教材教辅' : parent?.name === '数码' ? '数码电子' : parent?.name
+  return `${parentLabel ?? '二级类目'} / ${category.name}`
 }
 
 function parsePriceCent(value: string) {

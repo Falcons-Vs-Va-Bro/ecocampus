@@ -110,7 +110,7 @@ public class Item {
 	}
 
 	public void offShelf() {
-		if (status == ItemStatus.SOLD || status == ItemStatus.DELETED) {
+		if (status == ItemStatus.VIOLATION_REMOVED || status == ItemStatus.SOLD || status == ItemStatus.DELETED) {
 			throw new IllegalStateException("item cannot be off-shelved");
 		}
 		this.status = ItemStatus.OFF_SHELF;
