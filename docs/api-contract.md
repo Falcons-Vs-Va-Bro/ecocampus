@@ -119,7 +119,11 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
   "phone": "138****6721",
   "role": "USER",
   "verificationStatus": "VERIFIED",
-  "studentNoMasked": null
+  "studentNoMasked": "2024****153",
+  "avatarUrl": "https://ecocampus-api.teamdsb.online/uploads/AVATAR/uuid.png",
+  "realName": "张三",
+  "college": "信息学院",
+  "grade": "2024"
 }
 ```
 
@@ -171,7 +175,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 }
 ```
 
-响应为当前用户结构。当前 `MeResponse` 不返回 `avatarUrl`。
+响应为当前用户结构，刷新后 `GET /auth/me` 会返回持久化后的昵称和头像。学号、绑定手机号及校园认证资料在个人中心只读展示，不能通过此接口绕过认证流程修改。
 
 ### 地址
 
@@ -198,11 +202,12 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 
 ### 公开类目
 
-`GET /categories`，公开。响应 `data` 为按 `sort,id` 排序的扁平数组：
+`GET /categories`，公开。响应 `data` 为按 `sort,id` 排序的两级扁平数组，只包含有效启用且父类也启用的类目：
 
 ```json
 [
-  { "id": 1, "name": "教材", "sort": 10 }
+  { "id": 1, "name": "教材", "sort": 10, "parentId": null, "enabled": true, "itemCount": 40 },
+  { "id": 10, "name": "公共课教材", "sort": 11, "parentId": 1, "enabled": true, "itemCount": 12 }
 ]
 ```
 
@@ -216,10 +221,10 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 仅 `ADMIN`。创建/更新请求：
 
 ```json
-{ "name": "教材", "sort": 10 }
+{ "name": "公共课教材", "sort": 11, "parentId": 1, "enabled": true }
 ```
 
-`name` 最大 40 字符，`sort` 为 0–10000。当前模型只有一级类目和排序，没有父子关系、启停状态或商品数。
+`name` 最大 40 字符，`sort` 为 0–10000；`parentId` 为空表示一级类目，非空时必须指向一级类目，系统只允许两级。后台列表包含启用和禁用类目，`itemCount` 由非删除商品实时汇总，一级类目包含直属商品与子类商品数。含商品或子类的类目不能删除；禁用类目及其子类不会出现在发布页，也不能用于新建或编辑商品。
 
 ## 4. 文件
 
@@ -317,10 +322,11 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 - `POST /items/{itemId}/on-sale`：所有者申请重新审核，响应卖家商品详情。
 - `POST /items/{itemId}/off-shelf`：所有者下架，响应卖家商品详情。
 - `GET /users/me/items?status=ON_SALE&page=1&size=20`：分页返回自己的商品。
+- `GET /users/me/items/{itemId}`：仅所有者读取包括非公开状态在内的完整商品详情，供编辑页回填。
 
 “我的发布”摘要字段只有 `id/title/categoryName/priceCent/status/coverImageUrl/createdAt`。
 
-实现注意：`off-shelf` 当前只拒绝 `SOLD/DELETED`，因此甚至能把 `VIOLATION_REMOVED` 改成 `OFF_SHELF`，随后再申请上架审核；这是现有状态校验漏洞，不是期望业务规则。
+`VIOLATION_REMOVED`、`SOLD`、`DELETED` 商品均禁止卖家编辑、下架或重新申请上架，不能绕过后台治理状态。
 
 ### 收藏
 

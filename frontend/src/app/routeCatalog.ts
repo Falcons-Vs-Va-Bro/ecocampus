@@ -149,7 +149,7 @@ export const routeCatalog = [
     description: '仅商品所有者可编辑未售出且未违规下架的商品。',
     guard: 'owner',
     module: 'user',
-    endpoints: ['GET /items/{itemId}', 'POST /files/images', 'GET /categories', 'PUT /items/{itemId}'],
+    endpoints: ['GET /users/me/items/{itemId}', 'POST /files/images', 'GET /categories', 'PUT /items/{itemId}', 'POST /items/{itemId}/off-shelf'],
   },
   {
     path: '/favorites',
@@ -209,7 +209,7 @@ export const routeCatalog = [
     path: '/orders/sale',
     title: '出售订单',
     permission: 'USER',
-    description: '查看卖家侧订单进度，联系买家并确认交易完成。',
+    description: '查看卖家侧订单进度，确认可交易后等待买家确认自提。',
     guard: 'verified',
     module: 'user',
     endpoints: ['GET /orders', 'GET /orders/{orderId}', 'POST /orders/{orderId}/status'],

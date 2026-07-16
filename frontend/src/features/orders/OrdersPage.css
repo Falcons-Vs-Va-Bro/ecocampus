@@ -2071,3 +2071,15 @@
     display: none;
   }
 }
+.order-awaiting-buyer {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px dashed rgba(194, 126, 32, 0.7);
+  border-radius: 7px;
+  color: #9a5d16;
+  background: rgba(255, 241, 204, 0.7);
+  font-size: 15px;
+  font-weight: 800;
+}

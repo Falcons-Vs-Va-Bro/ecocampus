@@ -63,15 +63,15 @@ const allStatuses: ItemStatus[] = [
 ]
 
 const fallbackCategories: Category[] = [
-  { id: 1, name: '教材', sort: 10 },
-  { id: 2, name: '数码', sort: 20 },
-  { id: 3, name: '宿舍用品', sort: 30 },
-  { id: 4, name: '运动户外', sort: 40 },
-  { id: 5, name: '生活日用', sort: 50 },
-  { id: 6, name: '美妆个护', sort: 60 },
-  { id: 7, name: '乐器文具', sort: 70 },
-  { id: 8, name: '票务转让', sort: 80 },
-  { id: 9, name: '其他', sort: 90 },
+  { id: 1, name: '教材', sort: 10, enabled: true, itemCount: 0 },
+  { id: 2, name: '数码', sort: 20, enabled: true, itemCount: 0 },
+  { id: 3, name: '宿舍用品', sort: 30, enabled: true, itemCount: 0 },
+  { id: 4, name: '运动户外', sort: 40, enabled: true, itemCount: 0 },
+  { id: 5, name: '生活日用', sort: 50, enabled: true, itemCount: 0 },
+  { id: 6, name: '美妆个护', sort: 60, enabled: true, itemCount: 0 },
+  { id: 7, name: '乐器文具', sort: 70, enabled: true, itemCount: 0 },
+  { id: 8, name: '票务转让', sort: 80, enabled: true, itemCount: 0 },
+  { id: 9, name: '其他', sort: 90, enabled: true, itemCount: 0 },
 ]
 
 const statusTabs: Array<{ label: string; value: StatusFilter }> = [

@@ -78,6 +78,15 @@ class OrderControllerTests {
 			.andExpect(jsonPath("$.data.remark").value("Tomorrow 18:00"));
 
 		mockMvc.perform(post("/api/v1/orders/{orderId}/status", orderId)
+			.header("Authorization", "Bearer " + sellerToken)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"targetStatus":"COMPLETED","remark":"Seller cannot complete"}
+					"""))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
+		mockMvc.perform(post("/api/v1/orders/{orderId}/status", orderId)
 			.header("Authorization", "Bearer " + buyerToken)
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("""

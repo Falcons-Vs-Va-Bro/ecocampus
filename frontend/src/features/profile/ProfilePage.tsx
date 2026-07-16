@@ -11,7 +11,6 @@ import {
   Dumbbell,
   Grid3X3,
   Home,
-  Lock,
   LogOut,
   Mail,
   MapPin,
@@ -35,7 +34,9 @@ import {
   deleteAddress as deleteAddressRequest,
   listAddresses,
   updateAddress as updateAddressRequest,
+  updateProfile as updateProfileRequest,
 } from '../../api/profile.api'
+import { uploadImage } from '../../api/file.api'
 import type { Address, UpsertAddressRequest } from '../../api/profile.api'
 import { queryKeys } from '../../api/queryKeys'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
@@ -80,13 +81,8 @@ export function ProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [studentNo, setStudentNo] = useState('2023****5123')
-  const [phoneNumber, setPhoneNumber] = useState('138****6721')
-  const [draftStudentNo, setDraftStudentNo] = useState(studentNo)
-  const [draftPhoneNumber, setDraftPhoneNumber] = useState(phoneNumber)
+  const [draftNickname, setDraftNickname] = useState('')
   const [avatarPreview, setAvatarPreview] = useState('')
-  const [phoneVisible, setPhoneVisible] = useState(true)
-  const [messageReminder, setMessageReminder] = useState(true)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const displayNickname = identity.currentUser?.nickname ?? identity.nickname
   const verificationLabel = verificationStatusLabel(identity.currentUser?.verificationStatus)
@@ -117,6 +113,17 @@ export function ProfilePage() {
     onSuccess: refreshAddresses,
   })
 
+  const profileMutation = useMutation({
+    mutationFn: updateProfileRequest,
+    onSuccess: (response) => {
+      queryClient.setQueryData(queryKeys.auth.me, response)
+      setAvatarPreview(response.data.avatarUrl ?? '')
+      setDraftNickname(response.data.nickname)
+      setIsEditingProfile(false)
+    },
+    onError: () => setAvatarPreview(identity.currentUser?.avatarUrl ?? ''),
+  })
+
   const addresses = addressesQuery.data?.data ?? []
   const addressMutationError = createAddressMutation.error ?? updateAddressMutation.error ?? deleteAddressMutation.error
 
@@ -125,12 +132,8 @@ export function ProfilePage() {
       return
     }
 
-    const nextStudentNo = identity.currentUser.studentNoMasked ?? '尚未提交'
-    const nextPhone = maskAccount(identity.currentUser.phone)
-    setStudentNo(nextStudentNo)
-    setPhoneNumber(nextPhone)
-    setDraftStudentNo(nextStudentNo)
-    setDraftPhoneNumber(nextPhone)
+    setDraftNickname(identity.currentUser.nickname)
+    setAvatarPreview(identity.currentUser.avatarUrl ?? '')
   }, [identity.currentUser])
 
   function setDefaultAddress(address: Address) {
@@ -150,30 +153,36 @@ export function ProfilePage() {
   }
 
   function startEditProfile() {
-    setDraftStudentNo(studentNo)
-    setDraftPhoneNumber(phoneNumber)
+    setDraftNickname(displayNickname)
     setIsEditingProfile(true)
   }
 
   function saveProfile() {
-    setStudentNo(draftStudentNo.trim() || studentNo)
-    setPhoneNumber(draftPhoneNumber.trim() || phoneNumber)
-    setIsEditingProfile(false)
+    const nickname = draftNickname.trim()
+    if (!nickname) return
+    profileMutation.mutate({ nickname, avatarUrl: avatarPreview || undefined })
   }
 
   function cancelEditProfile() {
-    setDraftStudentNo(studentNo)
-    setDraftPhoneNumber(phoneNumber)
+    setDraftNickname(displayNickname)
     setIsEditingProfile(false)
   }
 
-  function changeAvatar(event: ChangeEvent<HTMLInputElement>) {
+  async function changeAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0]
     if (!file) {
       return
     }
-    setAvatarPreview(URL.createObjectURL(file))
     event.currentTarget.value = ''
+    try {
+      const uploaded = await uploadImage(file, 'AVATAR')
+      const nextAvatarUrl = uploaded.data.url
+      setAvatarPreview(nextAvatarUrl)
+      const nickname = (draftNickname || displayNickname).trim()
+      profileMutation.mutate({ nickname, avatarUrl: nextAvatarUrl })
+    } catch {
+      setAvatarPreview(identity.currentUser?.avatarUrl ?? '')
+    }
   }
 
   function confirmLogout() {
@@ -249,30 +258,23 @@ export function ProfilePage() {
             <section className="profile-card">
               <div className="student-card">
                 <div className="profile-avatar large" aria-hidden="true">
-                  {avatarPreview ? <img src={avatarPreview} alt="" /> : identity.avatarText}
+                  {avatarPreview ? <img src={avatarPreview} alt="个人头像" /> : identity.avatarText}
                 </div>
                 <div>
                   <h2>{displayNickname}</h2>
                   {isEditingProfile ? (
                     <div className="profile-edit-fields">
-                      <label>
-                        <span>学号</span>
-                        <input value={draftStudentNo} onChange={(event) => setDraftStudentNo(event.target.value)} />
-                      </label>
-                      <label>
-                        <span>手机号</span>
-                        <input value={draftPhoneNumber} onChange={(event) => setDraftPhoneNumber(event.target.value)} />
-                      </label>
+                      <label><span>昵称</span><input value={draftNickname} maxLength={40} onChange={(event) => setDraftNickname(event.target.value)} /></label>
                     </div>
                   ) : (
                     <>
-                      <p>学号：{studentNo}</p>
-                      <p>手机号：{phoneNumber}</p>
+                      <p>学号：{identity.currentUser?.studentNoMasked ?? '尚未认证'}</p>
+                      <p>手机号：{identity.currentUser?.phone ?? '尚未绑定'}</p>
                     </>
                   )}
                   <div className="profile-tags">
-                    <span>厦门大学</span>
-                    <span>学生认证</span>
+                    <span>{identity.currentUser?.college ?? '厦门大学'}</span>
+                    <span>{identity.currentUser?.grade ?? '学生认证'}</span>
                   </div>
                 </div>
               </div>
@@ -291,7 +293,7 @@ export function ProfilePage() {
               <div className="profile-actions">
                 {isEditingProfile ? (
                   <>
-                    <button type="button" onClick={saveProfile}>
+                    <button type="button" disabled={profileMutation.isPending} onClick={saveProfile}>
                       <Pencil size={20} />
                       保存资料
                     </button>
@@ -306,12 +308,13 @@ export function ProfilePage() {
                     编辑资料
                   </button>
                 )}
-                <input ref={avatarInputRef} type="file" accept="image/*" className="profile-avatar-input" onChange={changeAvatar} />
-                <button type="button" onClick={() => avatarInputRef.current?.click()}>
+                <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/gif" className="profile-avatar-input" onChange={changeAvatar} />
+                <button type="button" disabled={profileMutation.isPending} onClick={() => avatarInputRef.current?.click()}>
                   <User size={20} />
                   更换头像
                 </button>
               </div>
+              {profileMutation.isError ? <p className="address-status address-status-error" role="alert">资料保存失败：{profileMutation.error.message}</p> : null}
             </section>
 
             <section className="address-panel">
@@ -354,25 +357,6 @@ export function ProfilePage() {
                     key={address.id}
                   />
                 ))}
-              </div>
-            </section>
-
-            <section className="settings-row">
-              <div className="setting-card">
-                <Lock size={25} />
-                <div>
-                  <h3>隐私设置</h3>
-                  <p>手机号仅交易双方可见</p>
-                </div>
-                <Toggle checked={phoneVisible} onClick={() => setPhoneVisible((current) => !current)} label="手机号可见" />
-              </div>
-              <div className="setting-card">
-                <Bell size={25} />
-                <div>
-                  <h3>消息提醒</h3>
-                  <p>订单状态变化提醒</p>
-                </div>
-                <Toggle checked={messageReminder} onClick={() => setMessageReminder((current) => !current)} label="消息提醒" />
               </div>
             </section>
 
@@ -448,14 +432,6 @@ export function ProfilePage() {
 
 function XCircleIcon() {
   return <span className="x-circle-icon">×</span>
-}
-
-function maskAccount(value: string) {
-  if (value.length <= 7) {
-    return value
-  }
-
-  return `${value.slice(0, 3)}****${value.slice(-4)}`
 }
 
 function verificationStatusLabel(status?: string) {
@@ -659,14 +635,6 @@ function toAddressPayload(address: Address, isDefault: boolean): UpsertAddressRe
 
 function maskPhone(value: string) {
   return value.length === 11 ? `${value.slice(0, 3)}****${value.slice(-4)}` : value
-}
-
-function Toggle({ checked, onClick, label }: { checked: boolean; onClick: () => void; label: string }) {
-  return (
-    <button type="button" className={checked ? 'profile-toggle active' : 'profile-toggle'} aria-pressed={checked} aria-label={label} onClick={onClick}>
-      <span />
-    </button>
-  )
 }
 
 function NoticeButton({ children, label, count }: { children: React.ReactNode; label: string; count: number }) {

@@ -13,6 +13,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
+	interface CategoryItemCount {
+		Long getCategoryId();
+
+		long getItemCount();
+	}
+
 	/**
 	 * 悲观写锁：锁定商品行，防止下单、售出、审核、下架等状态变更并发互相穿透。
 	 */
@@ -79,6 +85,14 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 	long countByStatusNot(ItemStatus status);
 
 	long countByCategoryIdAndStatusNot(Long categoryId, ItemStatus status);
+
+	@Query("""
+			select item.categoryId as categoryId, count(item) as itemCount
+			from Item item
+			where item.status <> com.falconsvsvabro.ecocampus.item.ItemStatus.DELETED
+			group by item.categoryId
+			""")
+	List<CategoryItemCount> countNonDeletedItemsByCategory();
 
 	long countByStatusNotAndCreatedAtBetween(ItemStatus status, OffsetDateTime start, OffsetDateTime end);
 

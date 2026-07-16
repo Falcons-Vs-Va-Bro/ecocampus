@@ -8,4 +8,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 	List<Category> findByOrderBySortAscIdAsc();
 
 	boolean existsByNameAndIdNot(String name, Long id);
+
+	boolean existsByParentId(Long parentId);
 }

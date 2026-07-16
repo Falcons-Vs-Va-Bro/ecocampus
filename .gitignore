@@ -66,6 +66,10 @@ pnpm-debug.log*
 # Generated presentation bundle
 process-standalone.html
 
+# Generated recording artifacts
+recording/output/
+recording/.tmp/
+
 # Agent
 .agents
 skills-lock.json

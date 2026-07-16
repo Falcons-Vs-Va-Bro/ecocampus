@@ -5,12 +5,13 @@ import com.falconsvsvabro.ecocampus.user.User;
 import com.falconsvsvabro.ecocampus.user.VerificationStatus;
 
 public record MeResponse(Long id, String nickname, String phone, UserRole role, VerificationStatus verificationStatus,
-		String studentNoMasked) {
+		String studentNoMasked, String avatarUrl, String realName, String college, String grade) {
 
 	public static MeResponse from(User user) {
 		String displayPhone = user.getMobilePhone() == null ? user.getPhone() : user.getMobilePhone();
 		return new MeResponse(user.getId(), user.getNickname(), maskPhone(displayPhone), user.getRole(),
-				user.getVerificationStatus(), maskStudentNo(user.getStudentNo()));
+				user.getVerificationStatus(), maskStudentNo(user.getStudentNo()), user.getAvatarUrl(), user.getRealName(),
+				user.getCollege(), user.getGrade());
 	}
 
 	private static String maskPhone(String phone) {
