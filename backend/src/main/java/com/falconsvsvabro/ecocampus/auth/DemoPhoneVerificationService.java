@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
 
 /**
- * Classroom-only phone-code simulator. The returned code is deliberately visible
- * to the caller and must never be described as real SMS verification.
+ * Classroom-only phone-code simulator. The returned code is deliberately shown in
+ * an in-page notification and must never be described as real SMS verification.
  */
 @Service
 public class DemoPhoneVerificationService {
@@ -33,7 +33,7 @@ public class DemoPhoneVerificationService {
 		String code = "%06d".formatted(secureRandom.nextInt(1_000_000));
 		challenges.put(userId, new Challenge(mobilePhone, code, now.plus(CODE_TTL), now.plus(RESEND_COOLDOWN)));
 		return new PhoneVerificationCodeResponse(maskPhone(mobilePhone), code, (int) CODE_TTL.toSeconds(),
-				(int) RESEND_COOLDOWN.toSeconds(), "厦大白鹭短信站已送达课堂演示码");
+				(int) RESEND_COOLDOWN.toSeconds(), "网页模拟短信验证码已生成");
 	}
 
 	public void consume(Long userId, String mobilePhone, String code) {

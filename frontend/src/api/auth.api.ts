@@ -45,10 +45,10 @@ export async function submitCampusVerification(payload: CampusVerificationReques
   if (useMocks) {
     await mockDelay(480)
     if (!mockPhoneChallenge || mockPhoneChallenge.expiresAt < Date.now()) {
-      throw new Error('演示验证码已过期，请让白鹭重新送一封')
+      throw new Error('验证码已过期，请重新发送')
     }
     if (mockPhoneChallenge.mobilePhone !== payload.mobilePhone || mockPhoneChallenge.code !== payload.verificationCode) {
-      throw new Error('验证码不对，白鹭说再检查一下信封')
+      throw new Error('验证码不正确，请检查后重试')
     }
     mockPhoneChallenge = undefined
     return mockResponse<CurrentUser>({
@@ -75,7 +75,7 @@ export async function requestPhoneVerificationCode(payload: { mobilePhone: strin
       demoCode: code,
       expiresInSeconds: 300,
       resendAfterSeconds: 45,
-      deliveryMessage: '厦大白鹭短信站已送达课堂演示码',
+      deliveryMessage: '网页模拟短信验证码已生成',
     })
   }
 

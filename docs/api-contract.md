@@ -141,7 +141,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
   "demoCode": "483921",
   "expiresInSeconds": 300,
   "resendAfterSeconds": 45,
-  "deliveryMessage": "厦大白鹭短信站已送达课堂演示码"
+  "deliveryMessage": "网页模拟短信验证码已生成"
 }
 ```
 
