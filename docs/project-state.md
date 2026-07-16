@@ -168,6 +168,7 @@ GitHub Pages frontend
 - 2026-07-16 私信接收侧轮询与会话查询缓存隔离完成后，`cd frontend && pnpm lint && pnpm build` 通过；生产构建中的消息中心和私信详情路由 chunk 均正常生成，Vite 仅保留既有的入口 chunk 超过 500 kB 提示。
 - 2026-07-16 后台商品扁平 DTO 对齐后 `cd frontend && pnpm lint && pnpm build` 通过；GitHub Pages 工作流 `29480267698` 发布成功，真实管理员会话复核 `/admin/items` 加载 50 条商品、`/admin/items/review` 加载 6 条待审商品，均无 Router 页面错误。
 - 2026-07-16 用户商品真实发布链路接线后，前端 `pnpm lint && pnpm build` 与后端跳过测试打包通过；GitHub Pages 工作流 `29482647399`、Mac mini 后端工作流 `29482647463` 均发布成功。生产端用学生账号上传并创建商品 `50073`，学生“我的发布”显示审核中，管理员审核页显示真实封面、描述和 `1 张` 图片；网页批准后待审数恢复 3，公开详情返回 `ON_SALE`，浏览器控制台 0 error。
+- 2026-07-16 修正生产 `FILE_STORAGE_PUBLIC_URL_PREFIX` 被本机环境文件覆盖为 `/uploads` 的问题；Mac mini 现使用 `https://ecocampus-api.teamdsb.online/uploads`，数据库中 2 条既有用户上传 URL 已同步为完整 API 域名。后端重启健康检查为 `UP`，两张图片经 Cloudflare 返回 200、`public, max-age=31536000, immutable`，重复请求命中边缘缓存。
 - 2026-07-15 分类、发布、消息页移动端密度调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器在 430×932 下验证三页无横向溢出、控制台 0 error。分类页筛选默认折叠且可展开/收起，商品首卡位于 `y≈287`；发布页不再被固定最小宽度裁切；消息统计区由约 357px 降至 81px，首条会话由 `y≈771` 提前至 `y≈344`。
 - 2026-07-15 主页求购摘要、九个分类商品页和 `/profile` 常用地址切换真实 API 后，`cd frontend && pnpm lint && pnpm build` 通过；内置浏览器经可选 Vite API 代理验证主页返回 3 条真实求购、教材页返回后端当前 8 件商品，未登录访问 `/profile` 正确跳转 `/login?returnTo=%2Fprofile`。地址写操作未在无登录凭据下执行。
 
@@ -187,6 +188,7 @@ GitHub Pages frontend
 - 2026-07-16：修复正式环境已登录用户的共享顶栏“退出登录”可见但无法点击：将顶栏提升为独立交互层，避免下方工作区覆盖下拉菜单命中区域；退出后改为替换导航到登录页并清空当前浏览器内的用户查询缓存。
 - 2026-07-16：修复真实管理员访问 `/admin/items` 和 `/admin/items/review` 时读取不存在的嵌套 `seller.nickname` 导致整页崩溃；后台商品 wrapper 与页面改用后端真实的扁平 `sellerNickname` DTO，mock 数据同步同一契约。
 - 2026-07-16：补齐用户发布到管理员审核的真实链路：`/publish` 上传图片并创建 `PENDING_REVIEW` 商品，`/items/mine` 读取真实卖家商品及状态 mutation；后台审核摘要同步补齐描述、封面、图片数和学生学号掩码。
+- 2026-07-16：修正生产上传图片的地址链路：图片二进制持久化在 Mac mini 上传目录，`item_images` 保存完整 API 图片 URL，`ecocampus-api.teamdsb.online/uploads/*` 由 Cloudflare 缓存；GitHub Pages 只承载前端构建与种子目录静态素材，不承载用户上传。
 - 2026-07-16：将手机号模拟验证重构为标准表单与网页顶部短信通知，移除故事化角色、送信动画和庆祝插画；保留后端随机码过期、重发冷却、一次性消费以及手机号与学号唯一绑定逻辑，并继续明确标注非真实短信。
 - 2026-07-16：修复生产 Flyway 只扫描结构迁移、无法解析真实库中已执行 repeatable seed 的问题；生产 profile 改为同时扫描 `db/migration` 与 `db/seed`，避免后端启动和 CD 回滚健康检查失败。
 - 2026-07-16：后端 self-hosted 部署工作流在测试前自动准备隔离的本机 MySQL 测试库和权限，不写入生产数据库凭据，也不清理生产 schema。
