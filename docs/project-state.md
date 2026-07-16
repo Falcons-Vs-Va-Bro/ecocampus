@@ -11,6 +11,7 @@
 - 前端路由、页面数据源与 DTO 风险：[`frontend-stack.md`](frontend-stack.md)
 - 首页/收藏视觉：[`frontend-homepage/README.md`](frontend-homepage/README.md)
 - 用户端动画：[`frontend-animation/README.md`](frontend-animation/README.md)
+- 线上演示录制：[`demo-recording-storyboard.md`](demo-recording-storyboard.md)
 - 数据库约束与锁：[`database-constraints-and-locking.md`](database-constraints-and-locking.md)
 - 当前部署：[`deployment-github-pages-macmini.md`](deployment-github-pages-macmini.md)
 - 历史/备选部署：[`deployment-sites-macmini.md`](deployment-sites-macmini.md)、[`deployment-low-memory.md`](deployment-low-memory.md)
@@ -68,7 +69,7 @@ API 模块：
 - API-backed：`/login`、`/verify`、`/`、`/items`、九个 `/items/*` 分类页、`/items/:id`、商品发布/编辑、我的发布、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、个人资料/地址、后台看板、后台商品/用户/类目。商品编辑读取所有者详情并真实保存/下架；个人页持久化昵称与头像，只读展示认证手机号和学号；后台类目层级、启停和商品数全部落库。私信详情前台每 2 秒查询新消息，会话列表和全局未读数每 3 秒查询，后台标签页暂停轮询。`/verify` 的学生证图片仍只作本地 UI 展示。
 - API-backed limited：求购详情页通过公开 `GET /demands` 列表兜底定位开放求购；后端没有单条求购详情接口，关闭/非公开求购无法直接展示。
 - Local mock：收藏里的求购关注。商品发布仅保留未提交草稿在 `localStorage`。
-- Placeholder：`/demands`、`/demands/new`、`/demands/mine`。
+- Placeholder：当前题目要求内没有仍以纯占位页呈现的求购主链路；求购详情因后端缺少单条查询端点而采用公开列表兜底。
 - Redirect：`/orders -> /orders/purchase`，`/orders/sales -> /orders/sale`。
 
 市场移动布局：
@@ -98,6 +99,15 @@ mock 与守卫：
 - `routeComponents.ts` 通过 `React.lazy` 按路由加载页面，`App.tsx` 提供 `Suspense` 回退；公开首页不预加载后台页面。
 - 业务位图已转换为 WebP；商品列表仅前 4 张首屏图主动加载，其余商品图和插画懒加载并异步解码。
 - 2026-07-14 生产构建入口从约 1,232 kB（gzip 380 kB）降至约 628 kB（gzip 206 kB），页面拆为独立路由 chunk。
+
+演示录制：
+
+- `recording/record-online-message.mjs` 使用两个已认证 seed 账号同时录制 1366×768 桌面端与 390×844 移动端，真实发送双向私信并等待接收侧轮询同步。
+- `recording/record-online-flows.mjs` 追加五条可独立执行的线上场景：移动认证与地址、商品发布与审核、检索收藏与订单闭环、后台治理、求购智能匹配；共享登录、录屏、双画面合成、旁白和字幕逻辑位于 `recording/lib/recording-kit.mjs`。
+- 录制前校验线上账号、校园认证、会话参与关系和消息数量；access token 只保留在进程内存，输出只记录掩码账号和同步耗时。
+- Playwright 分别输出两路 WebM，静态 FFmpeg 合成为 1920×1080 MP4；macOS 中文旁白通过 `say -o` 只生成 AIFF 文件，再按分镜时间混入，不在录制时直接播放。
+- 生成的 MP4、预览图、原始录屏和临时旁白位于已忽略的 `recording/output/` 与 `recording/.tmp/`，仓库只维护可复现脚本、依赖锁、运行说明和分镜文档。
+- 线上录制数据采用可识别的专用标记；地址录制后删除，求购录制后关闭，黑名单在正常与异常路径都恢复，交易商品最终已售、治理商品最终违规下架并保留审计轨迹。
 
 ## 已知实现对齐问题
 
@@ -169,6 +179,8 @@ GitHub Pages frontend
 - 2026-07-16 手机号模拟验证简化后 `cd frontend && pnpm lint && pnpm build`、`cd backend && ./mvnw -Dtest=DemoPhoneVerificationServiceTests test` 通过；内置浏览器完整验证登录未认证账号、发送验证码、顶部网页短信通知、自动填码、校园资料解锁和认证成功，桌面 1280px 与移动 390×844 均无横向溢出、控制台 0 error。
 - 2026-07-16 移动端手机号错误反馈修复后，内置浏览器 390×844 原样输入 `123 1234 1234` 并点击发码，输入被规范化为 `12312341234`，号段错误提示在当前视口内显示；输入 `138 0000 6721` 可正常生成顶部验证码通知，控制台 0 error。
 - 2026-07-16 私信接收侧轮询与会话查询缓存隔离完成后，`cd frontend && pnpm lint && pnpm build` 通过；生产构建中的消息中心和私信详情路由 chunk 均正常生成，Vite 仅保留既有的入口 chunk 超过 500 kB 提示。
+- 2026-07-16 线上私信录制器第一版实跑成功：会话 `502` 中桌面账号与移动账号真实双向发信，桌面到移动同步 3133 ms、移动到桌面同步 2874 ms；生成 38 秒、1920×1080、H.264/AAC 成片及双路原始录屏、预览图、SRT 和分镜 JSON，关键帧确认双端最终显示一致。
+- 2026-07-16 线上多场景录制器实跑成功：生成认证地址 43 秒、发布审核 40 秒、检索收藏与订单 49 秒、后台治理 56 秒、求购匹配 37 秒五段 1920×1080 H.264/AAC 成片；真实订单完成后商品变为已售，演示求购已关闭，演示地址已删除，治理用户已移出黑名单恢复正常。
 - 2026-07-16 后台商品扁平 DTO 对齐后 `cd frontend && pnpm lint && pnpm build` 通过；GitHub Pages 工作流 `29480267698` 发布成功，真实管理员会话复核 `/admin/items` 加载 50 条商品、`/admin/items/review` 加载 6 条待审商品，均无 Router 页面错误。
 - 2026-07-16 用户商品真实发布链路接线后，前端 `pnpm lint && pnpm build` 与后端跳过测试打包通过；GitHub Pages 工作流 `29482647399`、Mac mini 后端工作流 `29482647463` 均发布成功。生产端用学生账号上传并创建商品 `50073`，学生“我的发布”显示审核中，管理员审核页显示真实封面、描述和 `1 张` 图片；网页批准后待审数恢复 3，公开详情返回 `ON_SALE`，浏览器控制台 0 error。
 - 2026-07-16 修正生产 `FILE_STORAGE_PUBLIC_URL_PREFIX` 被本机环境文件覆盖为 `/uploads` 的问题；Mac mini 现使用 `https://ecocampus-api.teamdsb.online/uploads`，数据库中 2 条既有用户上传 URL 已同步为完整 API 域名。后端重启健康检查为 `UP`，两张图片经 Cloudflare 返回 200、`public, max-age=31536000, immutable`，重复请求命中边缘缓存。
@@ -186,6 +198,8 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-16：新增线上五场景录制器、共享录制框架和需求覆盖总分镜；真实覆盖校园认证/地址、商品发布/审核、关键词检索/收藏/预约、订单三态、违规下架/黑名单/看板以及求购匹配，旁白继续只生成文件并后期混入。
+- 2026-07-16：新增线上私信自动录制器与第一版分镜：两个真实演示账号以桌面/移动双视口进入同一会话，双向发送并测量同步耗时，自动合成双画面、离线中文旁白、字幕时间轴和预览图。
 - 2026-07-16：为真实私信增加接收侧前台轮询：聊天详情每 2 秒更新消息，会话中心和全局未读数每 3 秒更新；后台标签页不轮询，并按分页参数隔离会话查询缓存，避免列表与未读统计互相覆盖。
 - 2026-07-16：修复移动端手机号格式错误时反馈不可见的问题：错误提示移动到手机号输入框正下方，输入框同步显示错误状态，并明确大陆手机号号段和格式示例。
 - 2026-07-16：修复正式环境已登录用户的共享顶栏“退出登录”可见但无法点击：将顶栏提升为独立交互层，避免下方工作区覆盖下拉菜单命中区域；退出后改为替换导航到登录页并清空当前浏览器内的用户查询缓存。
