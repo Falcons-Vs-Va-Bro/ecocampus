@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Camera,
   CheckCircle2,
+  CircleAlert,
   FileImage,
   IdCard,
   KeyRound,
@@ -41,6 +42,7 @@ export function VerifyPage() {
   const [deliveryPhone, setDeliveryPhone] = useState('')
   const [notificationVisible, setNotificationVisible] = useState(false)
   const [resendSeconds, setResendSeconds] = useState(0)
+  const [phoneError, setPhoneError] = useState('')
   const [realName, setRealName] = useState('')
   const [studentNo, setStudentNo] = useState('')
   const [college, setCollege] = useState('')
@@ -64,9 +66,10 @@ export function VerifyPage() {
       setVerificationCode('')
       setNotificationVisible(true)
       setResendSeconds(response.data.resendAfterSeconds)
+      setPhoneError('')
       setFormError('')
     },
-    onError: (error) => setFormError(error instanceof Error ? error.message : '验证码发送失败，请稍后重试'),
+    onError: (error) => setPhoneError(error instanceof Error ? error.message : '验证码发送失败，请稍后重试'),
   })
 
   const phoneConfirmed = Boolean(
@@ -104,7 +107,7 @@ export function VerifyPage() {
 
   function sendCode() {
     if (!/^1[3-9]\d{9}$/.test(mobilePhone)) {
-      setFormError('请输入 11 位中国大陆手机号')
+      setPhoneError('请输入有效的中国大陆手机号，例如 138 0000 6721')
       return
     }
     if (resendSeconds > 0) return
@@ -114,6 +117,7 @@ export function VerifyPage() {
   function updateMobilePhone(value: string) {
     const nextPhone = value.replace(/\D/g, '').slice(0, 11)
     setMobilePhone(nextPhone)
+    setPhoneError('')
     setFormError('')
     if (deliveryPhone && nextPhone !== deliveryPhone) {
       setVerificationCode('')
@@ -208,20 +212,29 @@ export function VerifyPage() {
                     <p className="verify-card-intro">输入手机号并发送验证码。验证码会显示在网页顶部通知中，不会发送真实短信。</p>
 
                     <div className="phone-verification-fields">
-                      <label className="phone-field">
-                        <Phone size={22} />
-                        <input
-                          value={mobilePhone}
-                          onChange={(event) => updateMobilePhone(event.target.value)}
-                          inputMode="tel"
-                          autoComplete="tel"
-                          placeholder="请输入 11 位手机号"
-                          aria-label="手机号"
-                        />
-                        <button type="button" disabled={sendCodeMutation.isPending || resendSeconds > 0} onClick={sendCode}>
-                          {sendCodeMutation.isPending ? '发送中…' : resendSeconds > 0 ? `${resendSeconds}s 后重发` : delivery ? '重新发送' : '发送验证码'}
-                        </button>
-                      </label>
+                      <div className="phone-input-group">
+                        <label className={phoneError ? 'phone-field invalid' : 'phone-field'}>
+                          <Phone size={22} />
+                          <input
+                            value={mobilePhone}
+                            onChange={(event) => updateMobilePhone(event.target.value)}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="请输入 11 位手机号"
+                            aria-label="手机号"
+                            aria-invalid={Boolean(phoneError)}
+                            aria-describedby={phoneError ? 'phone-verification-error' : undefined}
+                          />
+                          <button type="button" disabled={sendCodeMutation.isPending || resendSeconds > 0} onClick={sendCode}>
+                            {sendCodeMutation.isPending ? '发送中…' : resendSeconds > 0 ? `${resendSeconds}s 后重发` : delivery ? '重新发送' : '发送验证码'}
+                          </button>
+                        </label>
+                        {phoneError ? (
+                          <p className="phone-verification-error" id="phone-verification-error" role="alert">
+                            <CircleAlert size={16} /> {phoneError}
+                          </p>
+                        ) : <small className="phone-format-hint">支持带空格输入，需使用有效的大陆手机号段</small>}
+                      </div>
 
                       <label className={phoneConfirmed ? 'code-field confirmed' : 'code-field'}>
                         <KeyRound size={21} />

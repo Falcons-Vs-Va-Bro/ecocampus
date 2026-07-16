@@ -182,7 +182,13 @@
 .phone-verification-fields {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: start;
   gap: 12px;
+}
+
+.phone-input-group {
+  display: grid;
+  gap: 7px;
 }
 
 .phone-field,
@@ -203,6 +209,37 @@
 .code-field:focus-within {
   border-color: #2f78bf;
   box-shadow: 0 0 0 3px rgba(47, 120, 191, 0.12);
+}
+
+.phone-field.invalid {
+  border-color: #d14c3c;
+  background: rgba(255, 246, 243, 0.96);
+  box-shadow: 0 0 0 3px rgba(209, 76, 60, 0.1);
+}
+
+.phone-verification-error,
+.phone-format-hint {
+  margin: 0 2px;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.phone-verification-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #b83f31;
+}
+
+.phone-verification-error svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.phone-format-hint {
+  color: #777067;
 }
 
 .phone-field > svg,
