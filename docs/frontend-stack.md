@@ -77,8 +77,8 @@ src/
 | `/orders/purchase/demand/:id/detail` | API-backed limited | 后端没有单条详情端点，页面通过 `GET /demands` 的公开列表兜底定位开放求购，找不到时提示接口限制 |
 | `/orders/purchase/demand/new` | API-backed | 发布调用 `POST /demands`；分类来自 `GET /categories`；草稿/编辑不是后端能力 |
 | `/orders/purchase/demand/mine` | API-backed | 我的求购调用 `GET /users/me/demands`，匹配调用 `GET /demands/{demandId}/matches`，关闭调用 `POST /demands/{demandId}/close` |
-| `/publish` | Local mock | 草稿和发布商品写入 `localStorage`，未调用上传/类目/商品 API |
-| `/items/mine` | Local mock | `myItems.mock.ts` + `localStorage`，未调用我的商品 API |
+| `/publish` | API-backed + Local draft | 图片调用 `POST /files/images`，类目调用 `GET /categories`，提交调用 `POST /items`；未提交草稿仍保存在 `localStorage` |
+| `/items/mine` | API-backed | 调用 `GET /users/me/items` 获取真实状态，重新申请审核与下架分别调用 `POST /items/{id}/on-sale`、`POST /items/{id}/off-shelf` |
 | `/items/:id/edit` | Local mock | 编辑本地发布数据，未调用商品详情/更新 API |
 | `/profile` | API-backed + Local profile UI | 顶部身份调用 `/auth/me`；常用地址调用 `GET/POST/PUT/DELETE /users/me/addresses` 并刷新 Query cache；头像和基本资料编辑仍是本地交互 |
 | `/verify` | API-backed + mock adapter | 真实模式调用演示验证码签发与 `/auth/campus-verification`；mock 模式复现随机码、过期和一次性校验。学生证图片仅作本地 UI 展示，不上传服务器 |
@@ -132,7 +132,7 @@ src/
 - demand API。
 - dashboard overview/summary。
 
-页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如发布/我的商品、头像与基本资料编辑即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。校园核验已经区分真实 API 与 mock adapter；真实模式下主页求购摘要、分类商品和个人地址都通过现有 API wrapper 获取，不再读取页面硬编码业务数组。
+页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如商品编辑、头像与基本资料编辑即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。商品发布与我的发布在真实模式下已接入文件、类目、商品和状态 API；校园核验已经区分真实 API 与 mock adapter。
 
 ## 6. 当前 DTO 对齐风险
 
@@ -141,7 +141,7 @@ src/
 | 前端期望 | 后端真实响应 | 影响 |
 | --- | --- | --- |
 | 后台审核/治理使用 `AdminItemSummary` | 后台商品摘要只有治理基础字段 | 类型已与真实扁平 DTO 对齐；真实模式仍缺图片、描述、举报/审核展示元数据 |
-| 收藏、上下架、关闭求购等 wrappers 中部分声明 `void` | 后端实际返回商品/求购详情 | 当前页面多半忽略响应，但类型不准确；校园核验和后台审核/违规下架响应类型已对齐 |
+| 收藏、关闭求购等 wrappers 中部分声明 `void` | 后端实际返回商品/求购详情 | 当前页面多半忽略响应，但类型不准确；商品创建/更新/上下架、校园核验和后台审核/违规下架响应类型已对齐 |
 
 2026-07-15 已对齐：`GET /items`、商品详情 seller、商品收藏列表、购买/出售订单卡片字段、私信详情当前用户判断、求购广场/发布/我的求购/匹配结果，以及主页求购摘要、九个分类商品页和个人常用地址 CRUD 的主要 API 接线。
 

@@ -64,9 +64,9 @@ API 模块：
 
 页面数据源摘要：
 
-- API-backed：`/login`、`/verify`、`/`、`/items`、九个 `/items/*` 分类页、`/items/:id`、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、个人常用地址、后台看板、后台商品/用户/类目。主页求购摘要、分类商品、商品卡片、收藏失效、订单卡片、私信详情当前用户判断和求购主要链路已使用真实 API 字段。`/verify` 的学生证图片仍只作本地 UI 展示。
+- API-backed：`/login`、`/verify`、`/`、`/items`、九个 `/items/*` 分类页、`/items/:id`、商品发布、我的发布、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、个人常用地址、后台看板、后台商品/用户/类目。商品发布已串联真实图片上传、类目和待审商品创建；我的发布展示真实状态并支持下架/重新申请审核。`/verify` 的学生证图片仍只作本地 UI 展示。
 - API-backed limited：求购详情页通过公开 `GET /demands` 列表兜底定位开放求购；后端没有单条求购详情接口，关闭/非公开求购无法直接展示。
-- Local mock：发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；头像与基本资料编辑；收藏里的求购关注。
+- Local mock：商品编辑；头像与基本资料编辑；收藏里的求购关注。商品发布仅保留未提交草稿在 `localStorage`。
 - Placeholder：`/demands`、`/demands/new`、`/demands/mine`。
 - Redirect：`/orders -> /orders/purchase`，`/orders/sales -> /orders/sale`。
 
@@ -100,7 +100,7 @@ mock 与守卫：
 ## 已知实现对齐问题
 
 1. 后台商品真实摘要已使用独立 `AdminItemSummary` 对齐扁平 `sellerId/sellerNickname` 字段；后端仍缺少审核/治理页面 mock 中的图片、描述、举报数、审核标记等元数据。
-2. 收藏、上下架、关闭求购等若干 mutation wrapper 声明 `void`，后端实际返回商品/求购详情；校园核验和后台审核/违规下架响应类型已对齐。
+2. 收藏、关闭求购等若干 mutation wrapper 声明 `void`，后端实际返回商品/求购详情；商品创建/更新/上下架、校园核验和后台审核/违规下架响应类型已对齐。
 3. 后端没有 `GET /demands/{demandId}`、求购编辑、删除或重开端点；前端求购详情只能通过公开列表兜底，发布页编辑模式明确不可用。
 4. 求购关注仍为 `localStorage` 本地能力，后端没有对应收藏表/API。
 5. 九个分类页面已改用真实商品列表，但当前先取前 80 件后按 `categoryName` 做客户端筛选；数据量超过 80 时应改为先解析真实类目 id，再用后端 `categoryId` 分页查询。
@@ -109,7 +109,7 @@ mock 与守卫：
 8. 过期黑名单不会自动恢复 `verificationStatus`；过期后交易请求从 423 变为 403，仍需管理员移出。
 9. 没有前端组件/路由自动化测试；前端验证目前只有 lint/build 和人工页面检查记录。
 10. GitHub Pages 深层 URL 依靠 `404.html` 启动 SPA，内容可用但 HTTP 状态仍为 404，不是真正的服务端 rewrite。
-11. `/uploads/**` 匿名读取和缓存头已闭合，但发布页仍是 Local mock，尚未调用上传/商品发布 API；seed 商品图片使用随前端发布的 `/catalog/*.webp`，不属于真实上传链路。
+11. `/uploads/**` 匿名读取和缓存头已闭合，发布页已调用真实图片上传与商品创建 API；seed 商品图片继续使用随前端发布的 `/catalog/*.webp`，不属于真实上传链路。
 12. `application-local.example.yml` 的 `FILE_STORAGE_TYPE` 和 Redis 配置没有对应运行时实现/依赖。
 13. Vite 支持通过 `VITE_API_PROXY_TARGET` 为 `/api` 开启可选同源代理；未设置时保持原有无代理行为。
 14. 商品 `off-shelf` 只阻止 `SOLD/DELETED`，卖家可把 `VIOLATION_REMOVED` 改为 `OFF_SHELF` 后重新申请审核，违规下架存在绕过路径。
@@ -166,6 +166,7 @@ GitHub Pages frontend
 - 2026-07-16 手机号模拟验证简化后 `cd frontend && pnpm lint && pnpm build`、`cd backend && ./mvnw -Dtest=DemoPhoneVerificationServiceTests test` 通过；内置浏览器完整验证登录未认证账号、发送验证码、顶部网页短信通知、自动填码、校园资料解锁和认证成功，桌面 1280px 与移动 390×844 均无横向溢出、控制台 0 error。
 - 2026-07-16 移动端手机号错误反馈修复后，内置浏览器 390×844 原样输入 `123 1234 1234` 并点击发码，输入被规范化为 `12312341234`，号段错误提示在当前视口内显示；输入 `138 0000 6721` 可正常生成顶部验证码通知，控制台 0 error。
 - 2026-07-16 后台商品扁平 DTO 对齐后 `cd frontend && pnpm lint && pnpm build` 通过；GitHub Pages 工作流 `29480267698` 发布成功，真实管理员会话复核 `/admin/items` 加载 50 条商品、`/admin/items/review` 加载 6 条待审商品，均无 Router 页面错误。
+- 2026-07-16 用户商品真实发布链路接线后 `cd frontend && pnpm lint && pnpm build` 通过；生产端到端验证需在 Pages 发布后使用学生账号提交图片商品，并以管理员账号确认待审记录。
 - 2026-07-15 分类、发布、消息页移动端密度调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器在 430×932 下验证三页无横向溢出、控制台 0 error。分类页筛选默认折叠且可展开/收起，商品首卡位于 `y≈287`；发布页不再被固定最小宽度裁切；消息统计区由约 357px 降至 81px，首条会话由 `y≈771` 提前至 `y≈344`。
 - 2026-07-15 主页求购摘要、九个分类商品页和 `/profile` 常用地址切换真实 API 后，`cd frontend && pnpm lint && pnpm build` 通过；内置浏览器经可选 Vite API 代理验证主页返回 3 条真实求购、教材页返回后端当前 8 件商品，未登录访问 `/profile` 正确跳转 `/login?returnTo=%2Fprofile`。地址写操作未在无登录凭据下执行。
 
@@ -183,6 +184,7 @@ GitHub Pages frontend
 - 2026-07-16：修复移动端手机号格式错误时反馈不可见的问题：错误提示移动到手机号输入框正下方，输入框同步显示错误状态，并明确大陆手机号号段和格式示例。
 - 2026-07-16：修复正式环境已登录用户的共享顶栏“退出登录”可见但无法点击：将顶栏提升为独立交互层，避免下方工作区覆盖下拉菜单命中区域；退出后改为替换导航到登录页并清空当前浏览器内的用户查询缓存。
 - 2026-07-16：修复真实管理员访问 `/admin/items` 和 `/admin/items/review` 时读取不存在的嵌套 `seller.nickname` 导致整页崩溃；后台商品 wrapper 与页面改用后端真实的扁平 `sellerNickname` DTO，mock 数据同步同一契约。
+- 2026-07-16：补齐用户发布到管理员审核的真实链路：`/publish` 上传图片并创建 `PENDING_REVIEW` 商品，`/items/mine` 读取真实卖家商品及状态 mutation，管理员审核列表可直接看到用户新提交记录。
 - 2026-07-16：将手机号模拟验证重构为标准表单与网页顶部短信通知，移除故事化角色、送信动画和庆祝插画；保留后端随机码过期、重发冷却、一次性消费以及手机号与学号唯一绑定逻辑，并继续明确标注非真实短信。
 - 2026-07-16：修复生产 Flyway 只扫描结构迁移、无法解析真实库中已执行 repeatable seed 的问题；生产 profile 改为同时扫描 `db/migration` 与 `db/seed`，避免后端启动和 CD 回滚健康检查失败。
 - 2026-07-16：后端 self-hosted 部署工作流在测试前自动准备隔离的本机 MySQL 测试库和权限，不写入生产数据库凭据，也不清理生产 schema。
