@@ -37,7 +37,7 @@
 - Flyway 当前为 V1–V4：核心表、4 个初始类目、账号密码哈希列、会话双方已读时间。
 - `db/seed/R__mysql_demo_seed.sql` 和 `R__mysql_catalog_seed.sql` 是 repeatable Flyway 演示 seed；后者使用预留 ID `50001`–`50072` 为九类目各补 8 件商品。生产 profile 会解析这两份已登记脚本，校验和不变时不会重复执行，脚本变更则会按 Flyway repeatable 语义再次运行。
 - 2026-07-15 已按运维授权通过 SSH 隧道将两份 repeatable seed 导入真实 `ecocampus`：9 类目、36 用户、99 商品、14 收藏、9 订单、5 会话、11 消息、4 求购、4 审计记录；扩展商品九类目各 8 件，Flyway history 均标记执行成功。
-- 112 条 seed 商品图片记录已统一改为 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；真实库旧 `/src/assets` 图片地址为 0，Vite 生产构建已确认复制全部 112 个文件。
+- 112 条 seed 商品图片记录已统一改为 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；2026-07-16 已按商品名称从 Wikimedia Commons/Flickr 重新匹配并本地化全部图片，来源清单位于 `frontend/public/catalog/sources.json`，可重复生成脚本位于 `frontend/scripts/fetch-catalog-images.ps1`。真实库旧 `/src/assets` 图片地址为 0，Vite 生产构建已确认复制全部 112 个文件。
 - Maven 已移除 Redis 依赖和业务使用；`application-local.example.yml` 中 Redis 段只是未生效的遗留占位。
 - 图片仅实现本地 JPEG/PNG/GIF 存储；`FILE_STORAGE_TYPE` 没有实现选择器。`GET /uploads/**` 已公开并返回一年期 `public, immutable` 缓存头，生产上传响应默认使用 API 域名完整 URL，可由 Cloudflare和浏览器缓存。
 
@@ -141,6 +141,7 @@ GitHub Pages frontend
 - 2026-07-15 真实库 demo seed 导入成功；MySQL 9.6 对 seed 使用的 `VALUES(col)` upsert 语法给出弃用警告，但本次事务和 Flyway repeatable migration 均成功提交。
 - 2026-07-15 扩展 catalog seed 导入成功：新增 72 商品、72 图片关联和 82 配送方式；新增商品状态为 63 在售、5 已售、4 下架。
 - 2026-07-15 商品图片生产路径修复后，`cd frontend && pnpm lint`、`pnpm build` 通过；本地预览首页与 `/catalog/50001.webp` 均返回 200，图片响应类型为 `image/webp`。
+- 2026-07-16 商品名称与图片重新匹配后，112 个 WebP 均可解码，来源清单含 99 条独立商品/同款映射；重复哈希仅存在于明确复用同款商品及审核详情图的 8 组文件。`cd frontend && pnpm lint && pnpm build` 通过。
 - 2026-07-15 用户端共享顶栏交互变更后，`cd frontend && pnpm lint && pnpm build` 通过；入口包为 628.25 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-16 上传图片匿名读取和一年期缓存头变更在合并前的远端基线上通过 33 项测试；合并 MySQL 专用测试配置后，本机因无法连接 `ecocampus_test` 未能重新执行完整套件，`./mvnw -DskipTests package` 通过。
 - 2026-07-16 Mac mini Runner 工作流增加幂等的 `ecocampus_test` 建库和测试账号授权步骤，避免移除 H2 后因 Runner 缺少专用测试库而阻断部署；测试清库仍受 `_test` 库名保护。
@@ -181,6 +182,7 @@ GitHub Pages frontend
 - 2026-07-16：修复 Mac mini 启动失败：明确 shell 环境文件中的 JDBC URL 必须引用，并让生产 Flyway 同时解析结构迁移和已登记的 repeatable seed。
 - 2026-07-16：配置完整图片缓存链路：匿名开放 `GET /uploads/**`，添加一年期 `public, immutable` 缓存头，并让生产上传响应默认返回 API 域名完整 URL；Cloudflare 已启用仅匹配 `ecocampus-api.teamdsb.online/uploads/*` 的一年期 Edge/Browser Cache Rule，未匹配 `/api/*` 或启用 Cache Reserve。
 - 2026-07-15：修复真实 API 首页商品图片不显示：将 seed 图片从不可发布的 `/src/assets` 迁移到 `frontend/public/catalog/`，同步真实 MySQL，并验证 112 个静态图片进入生产构建。
+- 2026-07-16：按 90 个独立 seed 商品名称重新检索网络实物图片，覆盖 112 个 catalog WebP；新增来源追溯清单和可重复执行的图片获取脚本，并通过拼图目视抽查修正压缩袋、轮滑鞋、卷发棒、旅行洗护和化妆品收纳盒等易错项。
 - 2026-07-15：参考公开商品目录的名称和价格区间，新增经校园二手场景重写的 `R__mysql_catalog_seed.sql`；未采集用户身份、商家描述或第三方图片，真实库商品总数从 27 增至 99。
 - 2026-07-15：经运维明确授权，将 `R__mysql_demo_seed.sql` 导入 Mac mini 真实 `ecocampus` 并通过 JDBC 核对各业务表数量。
 - 2026-07-15：确认内网数据库运维入口为 Shadowrocket 节点 `100.80.234.31:22`，受限 SSH 隧道转发本地 `13306` 至目标 MySQL；真实库认证、Flyway V1–V4、JPA 和数据库型 API 验证通过。
