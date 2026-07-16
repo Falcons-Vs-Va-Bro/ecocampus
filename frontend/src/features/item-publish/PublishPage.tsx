@@ -28,6 +28,12 @@ import {
   X,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { listCategories, type Category } from '../../api/category.api'
+import { uploadImage } from '../../api/file.api'
+import { createItem } from '../../api/item.api'
+import { queryKeys } from '../../api/queryKeys'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
@@ -35,8 +41,6 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './PublishPage.css'
 import '../../styles/marketplace-consistency.css'
-import { createLocalImages } from './localImage'
-import type { MineItem } from './myItems.mock'
 
 const categoryNav = [
   { label: '首页', icon: Home, to: '/' },
@@ -75,7 +79,6 @@ const categoryOptions = [
 
 const pickupPlaces = ['芙蓉园门口', '翔安一期食堂', '思明校门口', '海韵教学楼']
 const deliveryModes = ['自提', '送货到校'] as const
-const publishedItemsStorageKey = 'ecocampus:published-items'
 const publishDraftStorageKey = 'ecocampus:publish-draft'
 
 interface UploadedImage {
@@ -98,6 +101,8 @@ interface PublishDraft {
 
 export function PublishPage() {
   const unreadMessageCount = useUnreadMessageCount()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   useDocumentTitle('厦大闲置 - 发布闲置商品')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const draft = readPublishDraft()
@@ -112,43 +117,61 @@ export function PublishPage() {
   const [description, setDescription] = useState(draft?.description ?? '')
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(() => createDraftImages(draft))
   const [uploadError, setUploadError] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const categoriesQuery = useQuery({ queryKey: queryKeys.categories.list, queryFn: listCategories })
 
-  function submitPublish() {
-    const coverImage = uploadedImages[0]?.src
-    if (!coverImage) {
+  async function submitPublish() {
+    if (isUploading || isSubmitting) {
+      return
+    }
+
+    if (uploadedImages.length === 0) {
       setUploadError('请至少上传一张商品图片')
       return
     }
 
-    const normalizedTitle = title.trim() || '新发布的闲置商品'
-    const normalizedPrice = formatCurrency(price || '0.00')
-    const normalizedOriginalPrice = originalPrice.trim() ? formatCurrency(originalPrice) : '¥0.00'
-    const categoryName = selectedCategory || '其他'
-    const now = new Date()
-    const newItem: MineItem = {
-      id: now.getTime(),
-      title: normalizedTitle,
-      price: normalizedPrice,
-      originalPrice: normalizedOriginalPrice,
-      category: categoryName,
-      detailCategory: categoryName,
-      condition: '九成新',
-      deliveryMode,
-      pickupPlace: pickupPlace || '待补充自提地址',
-      description: description.trim() || '卖家暂未填写详细描述。',
-      updatedAt: formatDateTime(now),
-      image: coverImage,
-      status: 'reviewing',
-    }
-    const storedItems = readPublishedItems()
-    try {
-      window.localStorage.setItem(publishedItemsStorageKey, JSON.stringify([newItem, ...storedItems]))
-    } catch {
-      setUploadError('图片占用空间过大，请减少图片数量后重试')
+    const normalizedTitle = title.trim()
+    const normalizedDescription = description.trim()
+    const categoryId = resolveCategoryId(categoriesQuery.data?.data ?? [], selectedCategory)
+    const priceCent = parsePriceCent(price)
+
+    if (!normalizedTitle) {
+      setUploadError('请填写商品标题')
       return
     }
-    window.localStorage.removeItem(publishDraftStorageKey)
-    window.location.href = '/items/mine?tab=reviewing'
+    if (!categoryId) {
+      setUploadError(categoriesQuery.isError ? '类目加载失败，请刷新页面后重试' : '请选择商品分类')
+      return
+    }
+    if (priceCent == null) {
+      setUploadError('请填写有效的出售价格')
+      return
+    }
+    if (!normalizedDescription) {
+      setUploadError('请填写商品描述')
+      return
+    }
+
+    setIsSubmitting(true)
+    setUploadError('')
+    try {
+      await createItem({
+        title: normalizedTitle,
+        description: pickupPlace ? `${normalizedDescription}\n交易地点：${pickupPlace}` : normalizedDescription,
+        categoryId,
+        priceCent,
+        deliveryModes: [deliveryMode === '自提' ? 'SELF_PICKUP' : 'DELIVER_TO_SCHOOL'],
+        imageUrls: uploadedImages.map((image) => image.src),
+      })
+      window.localStorage.removeItem(publishDraftStorageKey)
+      await queryClient.invalidateQueries({ queryKey: ['items', 'mine'] })
+      navigate('/items/mine?tab=reviewing', { replace: true })
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : '提交失败，请稍后重试')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   function saveDraft() {
@@ -173,12 +196,24 @@ export function PublishPage() {
   }
 
   async function addImages(files: File[]) {
+    const selectedFiles = files.slice(0, 9 - uploadedImages.length)
+    if (selectedFiles.length === 0) {
+      return
+    }
+
+    setIsUploading(true)
     try {
-      const nextImages = await createLocalImages(files, 9 - uploadedImages.length, 'published')
+      const uploaded = await Promise.all(selectedFiles.map((file) => uploadImage(file, 'ITEM')))
+      const nextImages = uploaded.map((result, index) => ({
+        id: `uploaded-${Date.now()}-${index}`,
+        src: result.data.url,
+      }))
       setUploadedImages((current) => [...current, ...nextImages].slice(0, 9))
       setUploadError('')
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : '图片读取失败，请重新选择')
+      setUploadError(error instanceof Error ? error.message : '图片上传失败，请重新选择')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -261,7 +296,7 @@ export function PublishPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/gif"
                   multiple
                   className="visually-hidden-file"
                   onChange={(event) => {
@@ -273,11 +308,12 @@ export function PublishPage() {
                   type="button"
                   className="add-image-button"
                   aria-label="继续添加图片"
+                  disabled={uploadedImages.length >= 9 || isUploading}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Plus size={34} />
                 </button>
-                <p className="upload-hint">最多 9 张，首图将作为封面</p>
+                <p className="upload-hint">{isUploading ? '图片上传中...' : '最多 9 张，首图将作为封面'}</p>
                 {uploadError ? <p className="upload-error" role="alert">{uploadError}</p> : null}
               </div>
             </div>
@@ -404,8 +440,8 @@ export function PublishPage() {
             </FormRow>
 
             <footer className="publish-actions">
-              <button type="button" className="primary" onClick={submitPublish}>
-                提交发布
+              <button type="button" className="primary" disabled={isSubmitting || isUploading} onClick={() => void submitPublish()}>
+                {isSubmitting ? '提交中...' : '提交发布'}
               </button>
               <button type="button" onClick={saveDraft}>
                 保存草稿
@@ -493,15 +529,6 @@ function FlowStep({ icon: Icon, label, tone }: { icon: typeof Send; label: strin
   )
 }
 
-function readPublishedItems(): MineItem[] {
-  try {
-    const storedValue = window.localStorage.getItem(publishedItemsStorageKey)
-    return storedValue ? (JSON.parse(storedValue) as MineItem[]) : []
-  } catch {
-    return []
-  }
-}
-
 function readPublishDraft(): PublishDraft | null {
   try {
     const storedValue = window.localStorage.getItem(publishDraftStorageKey)
@@ -512,22 +539,26 @@ function readPublishDraft(): PublishDraft | null {
 }
 
 function createDraftImages(draft: PublishDraft | null): UploadedImage[] {
-  return (draft?.uploadedImages ?? []).slice(0, 9).map((src, index) => ({
-    id: `draft-${index}`,
-    src,
-  }))
+  return (draft?.uploadedImages ?? [])
+    .filter((src) => src.startsWith('/uploads/') || src.startsWith('http://') || src.startsWith('https://'))
+    .slice(0, 9)
+    .map((src, index) => ({
+      id: `draft-${index}`,
+      src,
+    }))
 }
 
-function formatCurrency(value: string) {
-  const normalizedValue = value.replace(/[^\d.]/g, '')
-  const amount = Number.parseFloat(normalizedValue)
-  return `¥${Number.isFinite(amount) ? amount.toFixed(2) : '0.00'}`
+function resolveCategoryId(categories: Category[], label: string) {
+  const backendName = label === '教材教辅' ? '教材' : label === '数码电子' ? '数码' : label
+  return categories.find((category) => category.name === backendName || category.name === label)?.id
 }
 
-function formatDateTime(date: Date) {
-  const datePart = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
-    .map((part) => String(part).padStart(2, '0'))
-    .join('-')
-  const timePart = [date.getHours(), date.getMinutes()].map((part) => String(part).padStart(2, '0')).join(':')
-  return `${datePart} ${timePart}`
+function parsePriceCent(value: string) {
+  const normalized = value.trim()
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+    return null
+  }
+
+  const amount = Number(normalized)
+  return Number.isFinite(amount) && amount >= 0 ? Math.round(amount * 100) : null
 }

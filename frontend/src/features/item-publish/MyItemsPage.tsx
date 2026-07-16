@@ -25,7 +25,10 @@ import {
   Store,
   User,
 } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { listMyItems, setItemOffShelf, setItemOnSale, type MyItemSummary } from '../../api/item.api'
+import { queryKeys } from '../../api/queryKeys'
 import campusGateImage from '../../assets/favorites/campus-gate.webp'
 import campusSidebarImage from '../../assets/favorites/campus-sidebar.webp'
 import { UnifiedMarketplacePage } from '../../components/marketplace'
@@ -33,8 +36,27 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessageCount'
 import './MyItemsPage.css'
 import '../../styles/marketplace-consistency.css'
-import { mineItems, statusLabels } from './myItems.mock'
-import type { MineItem, MineStatus } from './myItems.mock'
+
+type MineStatus = 'on_sale' | 'off_shelf' | 'reviewing' | 'rejected' | 'sold' | 'violation'
+
+interface MineItem {
+  id: number
+  title: string
+  price: string
+  category: string
+  updatedAt: string
+  image: string
+  status: MineStatus
+}
+
+const statusLabels: Record<MineStatus, string> = {
+  on_sale: '已上架',
+  off_shelf: '已下架',
+  reviewing: '审核中',
+  rejected: '审核驳回',
+  sold: '已售出',
+  violation: '违规下架',
+}
 
 const categoryNav = [
   { label: '首页', icon: Home, to: '/' },
@@ -63,15 +85,27 @@ const tabs = [
   { label: '在售', value: 'on_sale' },
   { label: '已下架', value: 'off_shelf' },
   { label: '审核中', value: 'reviewing' },
+  { label: '审核驳回', value: 'rejected' },
+  { label: '已售出', value: 'sold' },
+  { label: '违规', value: 'violation' },
 ] as const
-const publishedItemsStorageKey = 'ecocampus:published-items'
 
 export function MyItemsPage() {
   const unreadMessageCount = useUnreadMessageCount()
+  const queryClient = useQueryClient()
   useDocumentTitle('厦大闲置 - 我的发布')
-  const [items, setItems] = useState(() => [...readPublishedItems(), ...mineItems])
   const [activeTab, setActiveTab] = useState<MineStatus>(() => getInitialTab())
   const [keyword, setKeyword] = useState('')
+  const itemsQuery = useQuery({
+    queryKey: queryKeys.items.mine({ page: 1, size: 100 }),
+    queryFn: () => listMyItems({ page: 1, size: 100 }),
+  })
+  const statusMutation = useMutation({
+    mutationFn: ({ itemId, status }: { itemId: number; status: MineStatus }) =>
+      status === 'on_sale' ? setItemOnSale(itemId) : setItemOffShelf(itemId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items', 'mine'] }),
+  })
+  const items = useMemo(() => (itemsQuery.data?.data.items ?? []).map(toMineItem), [itemsQuery.data])
 
   const counts = useMemo(
     () => ({
@@ -95,7 +129,7 @@ export function MyItemsPage() {
   }, [activeTab, items, keyword])
 
   function setItemStatus(itemId: number, status: MineStatus) {
-    setItems((current) => current.map((item) => (item.id === itemId ? { ...item, status } : item)))
+    statusMutation.mutate({ itemId, status })
   }
 
   return (
@@ -211,6 +245,9 @@ export function MyItemsPage() {
             </section>
 
             <section className="mine-card-grid" aria-label="我的商品列表">
+              {itemsQuery.isLoading ? <p>正在加载真实发布记录...</p> : null}
+              {itemsQuery.isError ? <p role="alert">发布记录加载失败，请稍后重试。</p> : null}
+              {!itemsQuery.isLoading && !itemsQuery.isError && visibleItems.length === 0 ? <p>当前状态下暂无商品。</p> : null}
               {visibleItems.map((item) => (
                 <MineItemCard item={item} onStatusChange={setItemStatus} key={item.id} />
               ))}
@@ -258,7 +295,7 @@ export function MyItemsPage() {
 }
 
 function MineItemCard({ item, onStatusChange }: { item: MineItem; onStatusChange: (itemId: number, status: MineStatus) => void }) {
-  const canToggle = item.status === 'on_sale' || item.status === 'off_shelf'
+  const canToggle = item.status === 'on_sale' || item.status === 'off_shelf' || item.status === 'rejected'
 
   return (
     <article className="mine-card">
@@ -279,7 +316,7 @@ function MineItemCard({ item, onStatusChange }: { item: MineItem; onStatusChange
               下架
             </button>
           ) : null}
-          {item.status === 'off_shelf' ? (
+          {item.status === 'off_shelf' || item.status === 'rejected' ? (
             <button type="button" className="success" onClick={() => onStatusChange(item.id, 'on_sale')}>
               上架
             </button>
@@ -292,7 +329,7 @@ function MineItemCard({ item, onStatusChange }: { item: MineItem; onStatusChange
         </div>
       </div>
       <footer>
-        <span>{item.status === 'violation' ? '不可上架' : item.status === 'off_shelf' ? '已下架' : item.status === 'reviewing' ? '待审核' : '上架中'}</span>
+        <span>{item.status === 'on_sale' ? '上架中' : statusLabels[item.status]}</span>
         <button
           type="button"
           className={item.status === 'on_sale' ? 'toggle active' : 'toggle'}
@@ -326,16 +363,34 @@ function NoticeButton({ children, label, count }: { children: React.ReactNode; l
   )
 }
 
-function readPublishedItems(): MineItem[] {
-  try {
-    const storedValue = window.localStorage.getItem(publishedItemsStorageKey)
-    return storedValue ? (JSON.parse(storedValue) as MineItem[]) : []
-  } catch {
-    return []
+function toMineItem(item: MyItemSummary): MineItem {
+  return {
+    id: item.id,
+    title: item.title,
+    price: `¥${(item.priceCent / 100).toFixed(2)}`,
+    category: item.categoryName === '教材' ? '教材教辅' : item.categoryName === '数码' ? '数码电子' : item.categoryName,
+    updatedAt: formatItemTime(item.createdAt),
+    image: item.coverImageUrl ?? campusGateImage,
+    status: toMineStatus(item.status),
   }
+}
+
+function toMineStatus(status: MyItemSummary['status']): MineStatus {
+  if (status === 'ON_SALE') return 'on_sale'
+  if (status === 'PENDING_REVIEW') return 'reviewing'
+  if (status === 'REJECTED') return 'rejected'
+  if (status === 'SOLD') return 'sold'
+  if (status === 'VIOLATION_REMOVED') return 'violation'
+  return 'off_shelf'
+}
+
+function formatItemTime(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '时间未知'
+  return date.toLocaleString('zh-CN', { hour12: false })
 }
 
 function getInitialTab(): MineStatus {
   const tab = new URLSearchParams(window.location.search).get('tab')
-  return tab === 'reviewing' || tab === 'off_shelf' || tab === 'on_sale' || tab === 'violation' ? tab : 'on_sale'
+  return tab === 'reviewing' || tab === 'off_shelf' || tab === 'on_sale' || tab === 'rejected' || tab === 'sold' || tab === 'violation' ? tab : 'on_sale'
 }

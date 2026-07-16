@@ -30,6 +30,8 @@ ssh -i <私钥路径> -N \
 
 Cloudflare Zone `teamdsb.online` 已配置 Cache Rule `EcoCampus uploaded image cache`：仅匹配 `ecocampus-api.teamdsb.online/uploads/*`，强制允许缓存，Edge TTL 与 Browser TTL 均为 31,536,000 秒。该规则不匹配 `/api/*`，未启用付费 Cache Reserve。源站同时为上传图片返回 `public, max-age=31536000, immutable`，UUID 图片地址不得覆盖写入。
 
+Mac mini 的 `backend.env` 必须将 `FILE_STORAGE_PUBLIC_URL_PREFIX` 设置为 `https://ecocampus-api.teamdsb.online/uploads`，不能使用 `/uploads` 相对路径；否则 GitHub Pages 前端会把用户图片错误请求到前端域名。图片文件保存在 Mac mini，数据库 `item_images.image_url` 保存公开 URL，Cloudflare 只承担缓存与公网分发。
+
 ## 自动发布
 
 `.github/workflows/deploy-pages.yml` 在 `main` 分支的 `frontend/**` 或工作流自身发生变化时自动构建并发布，也支持在 GitHub Actions 页面手动触发。

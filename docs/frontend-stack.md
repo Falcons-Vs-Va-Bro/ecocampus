@@ -77,11 +77,11 @@ src/
 | `/orders/purchase/demand/:id/detail` | API-backed limited | 后端没有单条详情端点，页面通过 `GET /demands` 的公开列表兜底定位开放求购，找不到时提示接口限制 |
 | `/orders/purchase/demand/new` | API-backed | 发布调用 `POST /demands`；分类来自 `GET /categories`；草稿/编辑不是后端能力 |
 | `/orders/purchase/demand/mine` | API-backed | 我的求购调用 `GET /users/me/demands`，匹配调用 `GET /demands/{demandId}/matches`，关闭调用 `POST /demands/{demandId}/close` |
-| `/publish` | Local mock | 草稿和发布商品写入 `localStorage`，未调用上传/类目/商品 API |
-| `/items/mine` | Local mock | `myItems.mock.ts` + `localStorage`，未调用我的商品 API |
+| `/publish` | API-backed + Local draft | 图片调用 `POST /files/images`，类目调用 `GET /categories`，提交调用 `POST /items`；未提交草稿仍保存在 `localStorage` |
+| `/items/mine` | API-backed | 调用 `GET /users/me/items` 获取真实状态，重新申请审核与下架分别调用 `POST /items/{id}/on-sale`、`POST /items/{id}/off-shelf` |
 | `/items/:id/edit` | Local mock | 编辑本地发布数据，未调用商品详情/更新 API |
 | `/profile` | API-backed + Local profile UI | 顶部身份调用 `/auth/me`；常用地址调用 `GET/POST/PUT/DELETE /users/me/addresses` 并刷新 Query cache；头像和基本资料编辑仍是本地交互 |
-| `/verify` | Local mock | 本地核验演示，未调用 `/auth/campus-verification` |
+| `/verify` | API-backed + mock adapter | 真实模式调用演示验证码签发与 `/auth/campus-verification`；mock 模式复现随机码、过期和一次性校验。学生证图片仅作本地 UI 展示，不上传服务器 |
 | `/demands` | Placeholder | catalog 保留的旧公开求购入口 |
 | `/demands/new` | Placeholder | catalog 保留的旧发布求购入口 |
 | `/demands/mine` | Placeholder | catalog 保留的旧我的求购入口 |
@@ -93,8 +93,8 @@ src/
 | 路由 | 页面状态 | 当前数据源/说明 |
 | --- | --- | --- |
 | `/admin` | API-backed | 调用真实 `GET /admin/dashboard/summary`；没有 dashboard mock |
-| `/admin/items/review` | API-backed | wrapper 支持 mock/真实；真实后台摘要缺少页面使用的图片、描述、标记等字段 |
-| `/admin/items` | API-backed | wrapper 支持 mock/真实；真实响应是后台商品摘要，不是前端声明的完整 `ItemSummary` |
+| `/admin/items/review` | API-backed | wrapper 支持 mock/真实；真实摘要包含卖家、学号掩码、描述、封面与图片数；举报提示、审核标记等仍仅在 mock 中可选展示 |
+| `/admin/items` | API-backed | wrapper 支持 mock/真实；使用独立 `AdminItemSummary`，不再误声明为公开市场 `ItemSummary` |
 | `/admin/users` | API-backed + Local UI model | 用户列表和黑名单 mutation 支持 mock/真实；顶部总量、注册日期、发布数等为硬编码展示值 |
 | `/admin/categories` | API-backed + Local UI model | 页面调用一级类目列表/创建/更新；删除 wrapper 存在但页面未调用，树层级、启停、商品数和预置子类目为本地展示模型 |
 
@@ -132,7 +132,7 @@ src/
 - demand API。
 - dashboard overview/summary。
 
-页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如发布/我的商品、头像与基本资料编辑、核验页面即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。真实模式下主页求购摘要、分类商品和个人地址都通过现有 API wrapper 获取，不再读取页面硬编码业务数组。
+页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如商品编辑、头像与基本资料编辑即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。商品发布与我的发布在真实模式下已接入文件、类目、商品和状态 API；校园核验已经区分真实 API 与 mock adapter。
 
 ## 6. 当前 DTO 对齐风险
 
@@ -140,8 +140,8 @@ src/
 
 | 前端期望 | 后端真实响应 | 影响 |
 | --- | --- | --- |
-| 后台审核/治理复用或扩展 `ItemSummary` | 后台商品摘要只有治理基础字段 | 真实模式缺图片、描述、举报/审核展示元数据 |
-| 校园核验、收藏、上下架、关闭求购、审核/违规下架等 wrappers 中部分声明 `void` | 后端实际返回当前用户、商品/求购详情或后台摘要 | 当前页面多半忽略响应，但类型不准确 |
+| 后台审核/治理使用 `AdminItemSummary` | 后台商品摘要已补卖家、描述和图片字段 | 类型已与真实扁平 DTO 对齐；真实模式仍缺举报/审核标记和卖家历史违规数 |
+| 收藏、关闭求购等 wrappers 中部分声明 `void` | 后端实际返回商品/求购详情 | 当前页面多半忽略响应，但类型不准确；商品创建/更新/上下架、校园核验和后台审核/违规下架响应类型已对齐 |
 
 2026-07-15 已对齐：`GET /items`、商品详情 seller、商品收藏列表、购买/出售订单卡片字段、私信详情当前用户判断、求购广场/发布/我的求购/匹配结果，以及主页求购摘要、九个分类商品页和个人常用地址 CRUD 的主要 API 接线。
 

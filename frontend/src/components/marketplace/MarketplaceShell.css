@@ -40,6 +40,8 @@
 }
 
 .favorites-topbar {
+  position: relative;
+  z-index: 30;
   display: grid;
   grid-template-columns: 440px minmax(360px, 640px) 1fr;
   gap: 28px;
@@ -48,6 +50,8 @@
   min-height: 108px;
   margin: 0 auto;
   border-bottom: 2px solid rgba(78, 112, 150, 0.28);
+  overflow: visible;
+  isolation: isolate;
 }
 
 .favorites-logo {

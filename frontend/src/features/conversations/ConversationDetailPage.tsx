@@ -17,6 +17,8 @@ import './MessagesPage.css'
 const quickReplies = ['我想预约自提，时间地点？', '还在吗？', '可以便宜一点吗？', '什么时候方便交易？']
 const emptyMessages: MessageSummary[] = []
 const emptyConversations: ConversationSummary[] = []
+const conversationPollIntervalMs = 3_000
+const messagePollIntervalMs = 2_000
 
 export function ConversationDetailPage() {
   const { conversationId } = useParams()
@@ -30,14 +32,18 @@ export function ConversationDetailPage() {
   useDocumentTitle('厦大闲置 - 私信详情')
 
   const conversationsQuery = useQuery({
-    queryKey: queryKeys.conversations.list,
+    queryKey: queryKeys.conversations.list({ page: 1, size: 20 }),
     queryFn: () => listConversations({ page: 1, size: 20 }),
+    refetchInterval: conversationPollIntervalMs,
+    refetchIntervalInBackground: false,
   })
 
   const messagesQuery = useQuery({
     queryKey: queryKeys.conversations.messages(conversationId ?? ''),
     queryFn: () => listMessages(conversationId ?? '', { page: 1, size: 50 }),
     enabled: Boolean(conversationId),
+    refetchInterval: messagePollIntervalMs,
+    refetchIntervalInBackground: false,
   })
 
   const sendMutation = useMutation({
@@ -45,7 +51,7 @@ export function ConversationDetailPage() {
     onSuccess: () => {
       setDraft('')
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.messages(conversationId ?? '') })
-      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.list })
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.lists })
     },
   })
 

@@ -47,6 +47,8 @@ springdoc:
     path: /swagger-ui.html
 
 ecocampus:
+  auth:
+    demo-phone-verification-required: ${DEMO_PHONE_VERIFICATION_REQUIRED:true}
   file-storage:
     local-dir: ${FILE_STORAGE_LOCAL_DIR:./storage/uploads}
     public-url-prefix: ${FILE_STORAGE_PUBLIC_URL_PREFIX:/uploads}

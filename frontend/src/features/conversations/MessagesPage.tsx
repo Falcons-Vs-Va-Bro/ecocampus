@@ -22,6 +22,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import './MessagesPage.css'
 
 const emptyConversations: ConversationSummary[] = []
+const conversationPollIntervalMs = 3_000
 
 export function MessagesPage() {
   useDocumentTitle('厦大闲置 - 消息中心')
@@ -31,8 +32,10 @@ export function MessagesPage() {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
 
   const conversationsQuery = useQuery({
-    queryKey: queryKeys.conversations.list,
+    queryKey: queryKeys.conversations.list({ page: 1, size: 20 }),
     queryFn: () => listConversations({ page: 1, size: 20 }),
+    refetchInterval: conversationPollIntervalMs,
+    refetchIntervalInBackground: false,
   })
 
   const conversations = conversationsQuery.data?.data.items ?? emptyConversations

@@ -3,12 +3,16 @@ import { listConversations } from '../api/conversation.api'
 import { queryKeys } from '../api/queryKeys'
 import { useAuthStore } from '../stores/auth.store'
 
+const unreadCountPollIntervalMs = 3_000
+
 export function useUnreadMessageCount() {
   const accessToken = useAuthStore((state) => state.accessToken)
   const conversationsQuery = useQuery({
-    queryKey: queryKeys.conversations.list,
+    queryKey: queryKeys.conversations.list({ page: 1, size: 100 }),
     queryFn: () => listConversations({ page: 1, size: 100 }),
     enabled: Boolean(accessToken),
+    refetchInterval: unreadCountPollIntervalMs,
+    refetchIntervalInBackground: false,
   })
 
   return (conversationsQuery.data?.data.items ?? []).reduce(

@@ -56,7 +56,10 @@ class ItemReviewAndPublicQueryTests {
 			.header("Authorization", "Bearer " + adminToken)
 			.param("status", "PENDING_REVIEW"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.items[*].id", hasItem((int) itemId)));
+			.andExpect(jsonPath("$.data.items[*].id", hasItem((int) itemId)))
+			.andExpect(jsonPath("$.data.items[0].description").value("24 inch display, good condition."))
+			.andExpect(jsonPath("$.data.items[0].coverImageUrl").value("https://cdn.example.com/monitor.png"))
+			.andExpect(jsonPath("$.data.items[0].imageCount").value(1));
 
 		mockMvc.perform(post("/api/v1/admin/items/{itemId}/review", itemId)
 			.header("Authorization", "Bearer " + adminToken)

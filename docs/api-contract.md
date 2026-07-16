@@ -90,7 +90,8 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 
 - `account` 最大 20 字符，必须匹配 `2292024.+`。
 - `password` 最大 72 字符。
-- 账号不存在时自动创建 `USER/VERIFIED` 用户并保存 BCrypt 哈希；账号存在时校验首次创建时的密码。
+- 账号不存在时自动创建 `USER/UNVERIFIED` 用户并保存 BCrypt 哈希；账号存在时校验首次创建时的密码。
+- 普通用户首次登录后由前端直接进入 `/verify`；已核验用户和管理员保持原有目标路由。
 - 当前没有注册、刷新 token 或退出登录端点。响应会返回 refresh token，但后端尚未提供 refresh API。
 
 响应 `data`：
@@ -102,7 +103,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
   "user": {
     "id": 1,
     "role": "USER",
-    "verificationStatus": "VERIFIED"
+    "verificationStatus": "UNVERIFIED"
   }
 }
 ```
@@ -115,7 +116,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 {
   "id": 1,
   "nickname": "Eco User",
-  "phone": "229****0001",
+  "phone": "138****6721",
   "role": "USER",
   "verificationStatus": "VERIFIED",
   "studentNoMasked": null
@@ -124,6 +125,26 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 
 ### 校园核验
 
+`POST /auth/phone-verification/code`，登录用户；签发课堂演示验证码，不接入运营商短信。
+
+```json
+{
+  "mobilePhone": "13800006721"
+}
+```
+
+响应会明确返回 `demoCode`、脱敏手机号、5 分钟有效期和 45 秒重发等待。该能力只用于课堂演示，验证码由后端随机生成、单实例内存保存并在成功使用后立即失效，不应被描述为真实短信安全能力。
+
+```json
+{
+  "maskedPhone": "138****6721",
+  "demoCode": "483921",
+  "expiresInSeconds": 300,
+  "resendAfterSeconds": 45,
+  "deliveryMessage": "网页模拟短信验证码已生成"
+}
+```
+
 `POST /auth/campus-verification`，登录用户；有效黑名单用户被拒绝。
 
 ```json
@@ -131,11 +152,13 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
   "realName": "张三",
   "studentNo": "2026000001",
   "college": "信息学院",
-  "grade": "2026"
+  "grade": "2026",
+  "mobilePhone": "13800006721",
+  "verificationCode": "483921"
 }
 ```
 
-`studentNo` 必须为 8–20 位数字且全局唯一。当前实现提交后直接设为 `VERIFIED`，没有管理员核验接口或异步审核流程。响应为当前用户结构。
+`studentNo` 必须为 8–20 位数字且全局唯一；`mobilePhone` 必须为 11 位中国大陆手机号且全局唯一；`verificationCode` 必须匹配当前用户最近一次签发、尚未过期且未使用的演示码。校验成功后直接设为 `VERIFIED`，当前没有管理员人工审核接口。响应为当前用户结构。
 
 ### 个人资料
 
@@ -485,7 +508,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 { "reason": "疑似违规发布" }
 ```
 
-后台商品摘要真实字段：`id/title/sellerId/sellerNickname/categoryName/priceCent/status/createdAt`。不包含图片、完整描述、举报数、审核标记或卖家历史违规数；这些目前是前端 mock 展示字段。
+后台商品摘要真实字段：`id/title/description/sellerId/sellerNickname/studentNoMasked/categoryName/priceCent/status/coverImageUrl/imageCount/createdAt`。举报数、审核标记和卖家历史违规数仍不是后端字段；这些目前只在前端 mock 中展示。
 
 ### 用户黑名单
 

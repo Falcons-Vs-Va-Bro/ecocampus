@@ -4,6 +4,8 @@ import com.falconsvsvabro.ecocampus.auth.dto.CampusVerificationRequest;
 import com.falconsvsvabro.ecocampus.auth.dto.LoginRequest;
 import com.falconsvsvabro.ecocampus.auth.dto.LoginResponse;
 import com.falconsvsvabro.ecocampus.auth.dto.MeResponse;
+import com.falconsvsvabro.ecocampus.auth.dto.PhoneVerificationCodeRequest;
+import com.falconsvsvabro.ecocampus.auth.dto.PhoneVerificationCodeResponse;
 import com.falconsvsvabro.ecocampus.common.api.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -34,6 +36,14 @@ public class AuthController {
 	ApiResponse<MeResponse> verifyCampusIdentity(@AuthenticationPrincipal AuthenticatedUser currentUser,
 			@Valid @RequestBody CampusVerificationRequest request, HttpServletRequest httpRequest) {
 		return ApiResponse.ok(authService.verifyCampusIdentity(currentUser.id(), request), traceId(httpRequest));
+	}
+
+	@PostMapping("/phone-verification/code")
+	ApiResponse<PhoneVerificationCodeResponse> issuePhoneVerificationCode(
+			@AuthenticationPrincipal AuthenticatedUser currentUser,
+			@Valid @RequestBody PhoneVerificationCodeRequest request, HttpServletRequest httpRequest) {
+		return ApiResponse.ok(authService.issuePhoneVerificationCode(currentUser.id(), request.mobilePhone()),
+				traceId(httpRequest));
 	}
 
 	@GetMapping("/me")

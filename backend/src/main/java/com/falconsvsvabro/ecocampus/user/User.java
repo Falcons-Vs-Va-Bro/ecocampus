@@ -25,6 +25,9 @@ public class User {
 	@Column(nullable = false, unique = true, length = 20)
 	private String phone;
 
+	@Column(name = "mobile_phone", unique = true, length = 20)
+	private String mobilePhone;
+
 	@Column(name = "password_hash", length = 100)
 	private String passwordHash;
 
@@ -87,7 +90,6 @@ public class User {
 	public static User registerByAccount(String account, String passwordHash) {
 		User user = new User(account);
 		user.passwordHash = passwordHash;
-		user.verificationStatus = VerificationStatus.VERIFIED;
 		return user;
 	}
 
@@ -95,11 +97,14 @@ public class User {
 		return passwordHash != null && encoder.matches(rawPassword, passwordHash);
 	}
 
-	public void verifyCampusIdentity(String realName, String studentNo, String college, String grade) {
+	public void verifyCampusIdentity(String realName, String studentNo, String college, String grade, String mobilePhone) {
 		this.realName = realName;
 		this.studentNo = studentNo;
 		this.college = college;
 		this.grade = grade;
+		if (mobilePhone != null) {
+			this.mobilePhone = mobilePhone;
+		}
 		this.verificationStatus = VerificationStatus.VERIFIED;
 	}
 
@@ -143,6 +148,10 @@ public class User {
 
 	public String getPhone() {
 		return phone;
+	}
+
+	public String getMobilePhone() {
+		return mobilePhone;
 	}
 
 	public String getNickname() {

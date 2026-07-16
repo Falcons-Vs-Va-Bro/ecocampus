@@ -3,11 +3,13 @@ package com.falconsvsvabro.ecocampus.auth;
 import com.falconsvsvabro.ecocampus.auth.dto.CampusVerificationRequest;
 import com.falconsvsvabro.ecocampus.auth.dto.LoginResponse;
 import com.falconsvsvabro.ecocampus.auth.dto.MeResponse;
+import com.falconsvsvabro.ecocampus.auth.dto.PhoneVerificationCodeResponse;
 import com.falconsvsvabro.ecocampus.common.api.BusinessException;
 import com.falconsvsvabro.ecocampus.common.api.ErrorCode;
 import com.falconsvsvabro.ecocampus.user.User;
 import com.falconsvsvabro.ecocampus.user.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +19,17 @@ public class AuthService {
 
 	private final JwtService jwtService;
 	private final UserRepository userRepository;
+	private final DemoPhoneVerificationService phoneVerificationService;
+	private final boolean phoneVerificationRequired;
 	private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-	public AuthService(JwtService jwtService, UserRepository userRepository) {
+	public AuthService(JwtService jwtService, UserRepository userRepository,
+			DemoPhoneVerificationService phoneVerificationService,
+			@Value("${ecocampus.auth.demo-phone-verification-required:true}") boolean phoneVerificationRequired) {
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
+		this.phoneVerificationService = phoneVerificationService;
+		this.phoneVerificationRequired = phoneVerificationRequired;
 	}
 
 	@Transactional
@@ -42,8 +50,30 @@ public class AuthService {
 		if (userRepository.existsByStudentNoAndIdNot(request.studentNo(), user.getId())) {
 			throw new BusinessException(ErrorCode.CONFLICT, "student number already verified");
 		}
-		user.verifyCampusIdentity(request.realName(), request.studentNo(), request.college(), request.grade());
+		if (phoneVerificationRequired) {
+			if (request.mobilePhone() == null || request.verificationCode() == null) {
+				throw new BusinessException(ErrorCode.BAD_REQUEST, "phone verification is required");
+			}
+			if (userRepository.existsByMobilePhoneAndIdNot(request.mobilePhone(), user.getId())) {
+				throw new BusinessException(ErrorCode.CONFLICT, "mobile phone already verified");
+			}
+			phoneVerificationService.consume(userId, request.mobilePhone(), request.verificationCode());
+		}
+		user.verifyCampusIdentity(request.realName(), request.studentNo(), request.college(), request.grade(),
+				request.mobilePhone());
 		return toMeResponse(user);
+	}
+
+	@Transactional(readOnly = true)
+	public PhoneVerificationCodeResponse issuePhoneVerificationCode(Long userId, String mobilePhone) {
+		User user = getUser(userId);
+		if (user.isBlacklisted()) {
+			throw new BusinessException(ErrorCode.BLACKLISTED);
+		}
+		if (userRepository.existsByMobilePhoneAndIdNot(mobilePhone, user.getId())) {
+			throw new BusinessException(ErrorCode.CONFLICT, "mobile phone already verified");
+		}
+		return phoneVerificationService.issue(userId, mobilePhone);
 	}
 
 	@Transactional(readOnly = true)

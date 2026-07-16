@@ -1,6 +1,5 @@
 import type { ApiResponse, ItemStatus, PageResult, VerificationStatus } from '../types/api'
 import { apiClient } from './http'
-import type { ItemSummary } from './item.api'
 import { listMockAdminItems, listMockAdminUsers, listMockReviewItems, mockBlacklistUser, mockRemoveUserFromBlacklist, mockViolationRemoveItem, reviewMockItem } from './mock/admin.mock'
 
 const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
@@ -56,13 +55,25 @@ export interface ReviewItemRequest {
   reason: string
 }
 
-export interface AdminReviewItemSummary extends ItemSummary {
-  description?: string
-  imageCount?: number
+export interface AdminItemSummary {
+  id: number
+  title: string
+  description: string
+  sellerId: number
+  sellerNickname: string
+  studentNoMasked?: string
+  categoryName: string
+  priceCent: number
+  status: ItemStatus
+  createdAt: string
+  coverImageUrl?: string
+  imageCount: number
+}
+
+export interface AdminReviewItemSummary extends AdminItemSummary {
   reviewFlags?: string[]
   reviewReason?: string
   sellerViolationCount?: number
-  studentNoMasked?: string
   submittedAt?: string
 }
 
@@ -94,7 +105,7 @@ export async function reviewItem(itemId: string | number, payload: ReviewItemReq
     return reviewMockItem(itemId, payload)
   }
 
-  const response = await apiClient.post<ApiResponse<void>>(`/admin/items/${itemId}/review`, payload)
+  const response = await apiClient.post<ApiResponse<AdminItemSummary>>(`/admin/items/${itemId}/review`, payload)
   return response.data
 }
 
@@ -109,7 +120,7 @@ export async function listAdminItems(params?: {
     return listMockAdminItems(params)
   }
 
-  const response = await apiClient.get<ApiResponse<PageResult<ItemSummary>>>('/admin/items', { params })
+  const response = await apiClient.get<ApiResponse<PageResult<AdminItemSummary>>>('/admin/items', { params })
   return response.data
 }
 
@@ -118,7 +129,7 @@ export async function violationRemoveItem(itemId: string | number, payload: Viol
     return mockViolationRemoveItem(itemId)
   }
 
-  const response = await apiClient.post<ApiResponse<void>>(`/admin/items/${itemId}/violation-remove`, payload)
+  const response = await apiClient.post<ApiResponse<AdminItemSummary>>(`/admin/items/${itemId}/violation-remove`, payload)
   return response.data
 }
 

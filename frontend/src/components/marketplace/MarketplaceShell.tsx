@@ -304,7 +304,7 @@ export function MarketplaceShell({
                     onClick={() => {
                       setOpenMenu(null)
                       identity.logout()
-                      navigate('/')
+                      navigate('/login', { replace: true })
                     }}
                   >
                     <LogOut size={18} />

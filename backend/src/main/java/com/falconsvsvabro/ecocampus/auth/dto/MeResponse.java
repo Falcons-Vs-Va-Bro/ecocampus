@@ -8,7 +8,8 @@ public record MeResponse(Long id, String nickname, String phone, UserRole role, 
 		String studentNoMasked) {
 
 	public static MeResponse from(User user) {
-		return new MeResponse(user.getId(), user.getNickname(), maskPhone(user.getPhone()), user.getRole(),
+		String displayPhone = user.getMobilePhone() == null ? user.getPhone() : user.getMobilePhone();
+		return new MeResponse(user.getId(), user.getNickname(), maskPhone(displayPhone), user.getRole(),
 				user.getVerificationStatus(), maskStudentNo(user.getStudentNo()));
 	}
 

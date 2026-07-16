@@ -23,6 +23,8 @@ spring:
           time_zone: Asia/Shanghai
 
 ecocampus:
+  auth:
+    demo-phone-verification-required: false
   file-storage:
     local-dir: ./target/test-uploads
     public-url-prefix: /uploads

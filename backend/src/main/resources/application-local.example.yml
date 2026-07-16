@@ -19,6 +19,9 @@ spring:
       ddl-auto: validate
 
 ecocampus:
+  auth:
+    # 课堂演示模式：后端返回随机演示码，不会发送真实短信。
+    demo-phone-verification-required: ${DEMO_PHONE_VERIFICATION_REQUIRED:true}
   file-storage:
     type: ${FILE_STORAGE_TYPE:local}
     local-dir: ${FILE_STORAGE_LOCAL_DIR:./storage/uploads}

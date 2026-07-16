@@ -13,11 +13,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	boolean existsByStudentNoAndIdNot(String studentNo, Long id);
 
+	boolean existsByMobilePhoneAndIdNot(String mobilePhone, Long id);
+
 	@Query("""
 			select account from User account
 			where (:verificationStatus is null or account.verificationStatus = :verificationStatus)
 			  and (:keyword is null or lower(account.nickname) like lower(concat('%', :keyword, '%'))
 			    or account.phone like concat('%', :keyword, '%')
+			    or account.mobilePhone like concat('%', :keyword, '%')
 			    or account.studentNo like concat('%', :keyword, '%'))
 			order by account.createdAt desc
 			""")

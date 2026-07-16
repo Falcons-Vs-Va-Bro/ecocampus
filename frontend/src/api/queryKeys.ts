@@ -18,7 +18,8 @@ export const queryKeys = {
     addresses: ['profile', 'addresses'] as const,
   },
   conversations: {
-    list: ['conversations'] as const,
+    lists: ['conversations', 'list'] as const,
+    list: (params?: unknown) => ['conversations', 'list', params] as const,
     messages: (conversationId: string | number) => ['conversations', conversationId, 'messages'] as const,
   },
   orders: {

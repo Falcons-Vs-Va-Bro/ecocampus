@@ -37,11 +37,22 @@ class AuthControllerTests {
 					{"account":"%s","password":"test-password"}
 					""".formatted(phone)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.user.verificationStatus").value("VERIFIED"))
+			.andExpect(jsonPath("$.data.user.verificationStatus").value("UNVERIFIED"))
 			.andExpect(jsonPath("$.data.accessToken", not(emptyOrNullString())))
 			.andReturn();
 
 		String accessToken = read(login, "/data/accessToken").asText();
+
+		mockMvc.perform(post("/api/v1/auth/phone-verification/code")
+			.header("Authorization", "Bearer " + accessToken)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"mobilePhone":"13800006721"}
+					"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.maskedPhone").value("138****6721"))
+			.andExpect(jsonPath("$.data.demoCode").isString())
+			.andExpect(jsonPath("$.data.expiresInSeconds").value(300));
 
 		mockMvc.perform(post("/api/v1/auth/campus-verification")
 			.header("Authorization", "Bearer " + accessToken)

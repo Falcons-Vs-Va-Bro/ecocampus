@@ -30,6 +30,29 @@ export interface ItemDetail extends ItemSummary {
   imageUrls: string[]
 }
 
+export interface OwnedItemDetail {
+  id: number
+  title: string
+  description: string
+  categoryId: number
+  categoryName: string
+  priceCent: number
+  deliveryModes: DeliveryMode[]
+  status: ItemStatus
+  imageUrls: string[]
+  createdAt: string
+}
+
+export interface MyItemSummary {
+  id: number
+  title: string
+  categoryName: string
+  priceCent: number
+  status: ItemStatus
+  coverImageUrl?: string
+  createdAt: string
+}
+
 export interface ItemListParams {
   keyword?: string
   categoryId?: number
@@ -68,21 +91,26 @@ export async function getItem(itemId: string | number) {
 }
 
 export async function createItem(payload: UpsertItemRequest) {
-  const response = await apiClient.post<ApiResponse<ItemDetail>>('/items', payload)
+  const response = await apiClient.post<ApiResponse<OwnedItemDetail>>('/items', payload)
   return response.data
 }
 
 export async function updateItem(itemId: string | number, payload: UpsertItemRequest) {
-  const response = await apiClient.put<ApiResponse<ItemDetail>>(`/items/${itemId}`, payload)
+  const response = await apiClient.put<ApiResponse<OwnedItemDetail>>(`/items/${itemId}`, payload)
   return response.data
 }
 
 export async function setItemOnSale(itemId: string | number) {
-  const response = await apiClient.post<ApiResponse<void>>(`/items/${itemId}/on-sale`)
+  const response = await apiClient.post<ApiResponse<OwnedItemDetail>>(`/items/${itemId}/on-sale`)
   return response.data
 }
 
 export async function setItemOffShelf(itemId: string | number) {
-  const response = await apiClient.post<ApiResponse<void>>(`/items/${itemId}/off-shelf`)
+  const response = await apiClient.post<ApiResponse<OwnedItemDetail>>(`/items/${itemId}/off-shelf`)
+  return response.data
+}
+
+export async function listMyItems(params?: { status?: ItemStatus; page?: number; size?: number }) {
+  const response = await apiClient.get<ApiResponse<PageResult<MyItemSummary>>>('/users/me/items', { params })
   return response.data
 }
