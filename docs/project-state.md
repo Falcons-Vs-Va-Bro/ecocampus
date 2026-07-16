@@ -35,9 +35,10 @@
 - H2 依赖与配置已移除；测试使用独立的 `ecocampus_test` MySQL，只加载 `db/migration`，并在测试上下文启动时自动清库、迁移。
 - 课堂单实例默认基线：Hikari 最大 12/最小空闲 3、连接等待 10 秒；Tomcat 最大线程 100、最小空闲 8、最大连接 300、等待队列 100。
 - Flyway 当前为 V1–V4：核心表、4 个初始类目、账号密码哈希列、会话双方已读时间。
-- `db/seed/R__mysql_demo_seed.sql` 和 `R__mysql_catalog_seed.sql` 是 repeatable Flyway 演示 seed；后者使用预留 ID `50001`–`50072` 为九类目各补 8 件商品。生产 profile 会解析这两份已登记脚本，校验和不变时不会重复执行，脚本变更则会按 Flyway repeatable 语义再次运行。
+- `db/seed/R__mysql_demo_seed.sql` 和 `R__mysql_catalog_seed.sql` 是 repeatable Flyway 演示 seed；后者使用预留 ID `50001`–`50088`，其中 `50001`–`50072` 为九类目各 8 件常规商品，`50073`–`50088` 为明确标注非官方联名的校园抽象梗商品。生产 profile 会解析这两份已登记脚本，校验和不变时不会重复执行，脚本变更则会按 Flyway repeatable 语义再次运行。
 - 2026-07-15 已按运维授权通过 SSH 隧道将两份 repeatable seed 导入真实 `ecocampus`：9 类目、36 用户、99 商品、14 收藏、9 订单、5 会话、11 消息、4 求购、4 审计记录；扩展商品九类目各 8 件，Flyway history 均标记执行成功。
-- 112 条 seed 商品图片记录已统一改为 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；2026-07-16 已按商品名称从 Wikimedia Commons/Flickr 重新匹配并本地化全部图片，来源清单位于 `frontend/public/catalog/sources.json`，可重复生成脚本位于 `frontend/scripts/fetch-catalog-images.ps1`。真实库旧 `/src/assets` 图片地址为 0，Vite 生产构建已确认复制全部 112 个文件。
+- 2026-07-16 仓库内 catalog repeatable seed 已新增 16 件抽象梗商品；本轮未连接或手工写入真实数据库，线上数量仍以上一次部署/核对结果为准，合并部署后由 Flyway repeatable 变更自动同步。
+- 128 条 seed 商品图片记录统一使用 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；常规商品主要从 Wikimedia Commons/Flickr 匹配，新增 16 张抽象梗图来自网络图片搜索并明确标记为课程演示素材，来源清单共 115 条商品/同款映射，位于 `frontend/public/catalog/sources.json`，可重复生成脚本位于 `frontend/scripts/fetch-catalog-images.ps1`。真实库旧 `/src/assets` 图片地址为 0。
 - Maven 已移除 Redis 依赖和业务使用；`application-local.example.yml` 中 Redis 段只是未生效的遗留占位。
 - 图片仅实现本地 JPEG/PNG/GIF 存储；`FILE_STORAGE_TYPE` 没有实现选择器。`GET /uploads/**` 已公开并返回一年期 `public, immutable` 缓存头，生产上传响应默认使用 API 域名完整 URL，可由 Cloudflare和浏览器缓存。
 
@@ -85,6 +86,7 @@ API 模块：
 mock 与守卫：
 
 - `pnpm dev:mock` 读取 `.env.mock`；API mock 覆盖类目、商品、收藏、私信、订单、后台商品和后台用户。
+- mock 首页与真实 catalog seed 均包含 16 件校园抽象梗商品；`今日推荐` 和 `最新上架` 按 `createdAt` 倒序，使新加入的梗商品优先进入首页前两页，详情文案明确其非官方联名/代言属性。
 - auth mock 在登录页内处理；profile/file/demand/dashboard wrappers 没有 API mock；Local mock 页面不随开关切换。
 - `auth`、`verified`、`admin` 已执行跳转；`owner` 当前只检查登录，未核对商品所有者。
 - 前端执行角色域隔离：`ADMIN` 登录默认进入 `/admin`，只能停留在 `/admin` 路由树；市场/用户路由会重定向后台首页，普通用户的后台 `returnTo` 不会被登录页恢复。
@@ -142,6 +144,7 @@ GitHub Pages frontend
 - 2026-07-15 扩展 catalog seed 导入成功：新增 72 商品、72 图片关联和 82 配送方式；新增商品状态为 63 在售、5 已售、4 下架。
 - 2026-07-15 商品图片生产路径修复后，`cd frontend && pnpm lint`、`pnpm build` 通过；本地预览首页与 `/catalog/50001.webp` 均返回 200，图片响应类型为 `image/webp`。
 - 2026-07-16 商品名称与图片重新匹配后，112 个 WebP 均可解码，来源清单含 99 条独立商品/同款映射；重复哈希仅存在于明确复用同款商品及审核详情图的 8 组文件。`cd frontend && pnpm lint && pnpm build` 通过。
+- 2026-07-16 首页抽象梗商品扩展后，catalog 共 128 个 WebP、来源清单 115 条映射；新增 `50073`–`50088` 的 16 件商品、16 张图片和 19 条配送方式映射均完整。`cd frontend && pnpm lint && pnpm build`、`cd backend && ./mvnw -DskipTests package` 通过，Vite 仍仅提示既有的入口 chunk 超过 500 kB。
 - 2026-07-15 用户端共享顶栏交互变更后，`cd frontend && pnpm lint && pnpm build` 通过；入口包为 628.25 kB（gzip 205.51 kB），Vite 仍提示部分 chunk 超过 500 kB。
 - 2026-07-16 上传图片匿名读取和一年期缓存头变更在合并前的远端基线上通过 33 项测试；合并 MySQL 专用测试配置后，本机因无法连接 `ecocampus_test` 未能重新执行完整套件，`./mvnw -DskipTests package` 通过。
 - 2026-07-16 Mac mini Runner 工作流增加幂等的 `ecocampus_test` 建库和测试账号授权步骤，避免移除 H2 后因 Runner 缺少专用测试库而阻断部署；测试清库仍受 `_test` 库名保护。
@@ -183,6 +186,7 @@ GitHub Pages frontend
 - 2026-07-16：配置完整图片缓存链路：匿名开放 `GET /uploads/**`，添加一年期 `public, immutable` 缓存头，并让生产上传响应默认返回 API 域名完整 URL；Cloudflare 已启用仅匹配 `ecocampus-api.teamdsb.online/uploads/*` 的一年期 Edge/Browser Cache Rule，未匹配 `/api/*` 或启用 Cache Reserve。
 - 2026-07-15：修复真实 API 首页商品图片不显示：将 seed 图片从不可发布的 `/src/assets` 迁移到 `frontend/public/catalog/`，同步真实 MySQL，并验证 112 个静态图片进入生产构建。
 - 2026-07-16：按 90 个独立 seed 商品名称重新检索网络实物图片，覆盖 112 个 catalog WebP；新增来源追溯清单和可重复执行的图片获取脚本，并通过拼图目视抽查修正压缩袋、轮滑鞋、卷发棒、旅行洗护和化妆品收纳盒等易错项。
+- 2026-07-16：首页新增 16 件不同类型的校园抽象梗商品，包含张雪峰粽子玩偶、巧乐兹雪碧冰红茶三件套、科比冰红茶、奶龙奶蛙、蔡徐坤篮球、小猫/乌萨奇/派大星等梗图周边；真实 seed 与 mock 数据保持一致，网络梗图已本地化并写入来源清单。
 - 2026-07-15：参考公开商品目录的名称和价格区间，新增经校园二手场景重写的 `R__mysql_catalog_seed.sql`；未采集用户身份、商家描述或第三方图片，真实库商品总数从 27 增至 99。
 - 2026-07-15：经运维明确授权，将 `R__mysql_demo_seed.sql` 导入 Mac mini 真实 `ecocampus` 并通过 JDBC 核对各业务表数量。
 - 2026-07-15：确认内网数据库运维入口为 Shadowrocket 节点 `100.80.234.31:22`，受限 SSH 隧道转发本地 `13306` 至目标 MySQL；真实库认证、Flyway V1–V4、JPA 和数据库型 API 验证通过。

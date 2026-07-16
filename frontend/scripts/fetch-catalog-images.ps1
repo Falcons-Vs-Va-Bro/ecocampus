@@ -85,6 +85,22 @@ $items = @(
     @{ Id = '50070'; Title = '校园社团纪念徽章 6 枚'; Query = 'souvenir pin badges' },
     @{ Id = '50071'; Title = '15 寸电脑双肩包'; Query = 'laptop backpack' },
     @{ Id = '50072'; Title = '春秋防风外套 L 码'; Query = 'windbreaker jacket' },
+    @{ Id = '50073'; Title = '张雪峰粽子玩偶'; Query = '张雪峰公仔玩偶' },
+    @{ Id = '50074'; Title = '巧乐兹雪碧冰红茶三件套'; Query = '巧乐兹雪碧冰红茶三件套' },
+    @{ Id = '50075'; Title = '科比同款冰红茶（梗图版）'; Query = '牢大冰红茶梗图' },
+    @{ Id = '50076'; Title = '奶龙奶蛙宿舍门神贴'; Query = '奶龙奶蛙梗图' },
+    @{ Id = '50077'; Title = '蔡徐坤打篮球小鸡立牌'; Query = '蔡徐坤打篮球鸡表情包' },
+    @{ Id = '50078'; Title = '哈基米宿舍循环播放器'; Query = '哈基米猫梗图' },
+    @{ Id = '50079'; Title = '尊嘟假嘟粉色小熊抱枕'; Query = '尊嘟假嘟表情包' },
+    @{ Id = '50080'; Title = '退退退宿舍驱邪门贴'; Query = '退退退表情包' },
+    @{ Id = '50081'; Title = '乌萨奇发疯桌面摆件'; Query = '乌萨奇表情包' },
+    @{ Id = '50082'; Title = '派大星你知不知道鼠标垫'; Query = '派大星知不知道表情包' },
+    @{ Id = '50083'; Title = '先天圣体大学生发疯立牌'; Query = '先天圣体大学生表情包' },
+    @{ Id = '50084'; Title = '曼波小猫午夜循环钥匙扣'; Query = '曼波表情包' },
+    @{ Id = '50085'; Title = '香蕉猫悲伤充电宝'; Query = '香蕉猫梗图' },
+    @{ Id = '50086'; Title = '悲伤蛙期末复习抱枕'; Query = '悲伤蛙表情包' },
+    @{ Id = '50087'; Title = '吉吉国王红温桌面摆件'; Query = '吉吉国王表情包' },
+    @{ Id = '50088'; Title = '无语菩萨答辩护身符'; Query = '无语菩萨表情包' },
     @{ Id = '1001'; Title = '高等数学（第七版）上下册'; Query = 'higher mathematics textbooks calculus' },
     @{ Id = '1002'; Title = 'MacBook Air 2019 13 寸'; Query = 'MacBook Air 2019 13 inch' },
     @{ Id = '1003'; Title = '护眼台灯 可调光'; Query = 'adjustable LED desk lamp' },
@@ -124,6 +140,22 @@ $directImages = @{
     '50043' = @{ FileTitle = 'Hot tolls Curling Iron'; DownloadUrl = 'https://live.staticflickr.com/65535/53254560296_4da010205d_b.jpg'; SourcePage = 'https://www.flickr.com/photos/199326649@N04/53254560296/'; License = 'See Flickr source page'; Artist = 'See Flickr source page' }
     '50045' = @{ FileTitle = 'Kulturbeutel1.jpg'; DownloadUrl = 'https://upload.wikimedia.org/wikipedia/commons/b/be/Kulturbeutel1.jpg'; SourcePage = 'https://commons.wikimedia.org/wiki/File:Kulturbeutel1.jpg'; License = 'See Wikimedia Commons source page'; Artist = 'See Wikimedia Commons source page' }
     '50048' = @{ FileTitle = 'Lipstick attachment Makeup Organiser and Cosmetic Organizer'; DownloadUrl = 'https://live.staticflickr.com/65535/53419072227_3fbda749fa_b.jpg'; SourcePage = 'https://www.flickr.com/photos/199473638@N06/53419072227/'; License = 'See Flickr source page'; Artist = 'See Flickr source page' }
+    '50073' = @{ FileTitle = '张雪峰粽子玩偶网络梗图'; DownloadUrl = 'https://i02piccdn.sogoucdn.com/40fc4d2a7a4b2de9'; SourcePage = 'https://pic.sogou.com/pics?query=张雪峰公仔玩偶'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50074' = @{ FileTitle = '巧乐兹雪碧冰红茶组合网络梗图'; DownloadUrl = 'https://i02piccdn.sogoucdn.com/eaa37f2ac0d49ca7'; SourcePage = 'https://pic.sogou.com/pics?query=巧乐兹雪碧冰红茶三件套'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50075' = @{ FileTitle = '科比冰红茶网络梗图'; DownloadUrl = 'https://i03piccdn.sogoucdn.com/a3dd55ce6fbd2e84'; SourcePage = 'https://pic.sogou.com/pics?query=牢大冰红茶梗图'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50076' = @{ FileTitle = '奶龙奶蛙网络梗图'; DownloadUrl = 'https://i02piccdn.sogoucdn.com/3ad9a76ec8d27989'; SourcePage = 'https://pic.sogou.com/pics?query=奶龙奶蛙梗图'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50077' = @{ FileTitle = '蔡徐坤打篮球网络梗图'; DownloadUrl = 'https://i02piccdn.sogoucdn.com/68c450ba93cc1d5f'; SourcePage = 'https://pic.sogou.com/pics?query=蔡徐坤打篮球鸡表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50078' = @{ FileTitle = '哈基米猫网络梗图'; DownloadUrl = 'https://i02piccdn.sogoucdn.com/a02b295574252b5b'; SourcePage = 'https://pic.sogou.com/pics?query=哈基米猫梗图'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50079' = @{ FileTitle = '尊嘟假嘟网络梗图'; DownloadUrl = 'https://i01piccdn.sogoucdn.com/4dd2604037b1cf3e'; SourcePage = 'https://pic.sogou.com/pics?query=尊嘟假嘟表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50080' = @{ FileTitle = '退退退网络梗图'; DownloadUrl = 'https://i02piccdn.sogoucdn.com/1008607f3c53d9d2'; SourcePage = 'https://pic.sogou.com/pics?query=退退退表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50081' = @{ FileTitle = '乌萨奇发疯网络梗图'; DownloadUrl = 'https://i03piccdn.sogoucdn.com/8d32cf137c06c523'; SourcePage = 'https://pic.sogou.com/pics?query=乌萨奇表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50082' = @{ FileTitle = '派大星你知不知道网络梗图'; DownloadUrl = 'https://i04piccdn.sogoucdn.com/1a9a8f42cd6105b7'; SourcePage = 'https://pic.sogou.com/pics?query=派大星知不知道表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50083' = @{ FileTitle = '先天圣体大学生网络梗图'; DownloadUrl = 'https://i01piccdn.sogoucdn.com/adb84bad53487ec1'; SourcePage = 'https://pic.sogou.com/pics?query=先天圣体大学生表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50084' = @{ FileTitle = '曼波小猫网络梗图'; DownloadUrl = 'https://i01piccdn.sogoucdn.com/eb092f28845143fc'; SourcePage = 'https://pic.sogou.com/pics?query=曼波表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50085' = @{ FileTitle = '香蕉猫网络梗图'; DownloadUrl = 'https://i02piccdn.sogoucdn.com/fc302143280970f1'; SourcePage = 'https://pic.sogou.com/pics?query=香蕉猫梗图'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50086' = @{ FileTitle = '悲伤蛙网络梗图'; DownloadUrl = 'https://i04piccdn.sogoucdn.com/0690a7a2ab481349'; SourcePage = 'https://pic.sogou.com/pics?query=悲伤蛙表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50087' = @{ FileTitle = '吉吉国王红温网络梗图'; DownloadUrl = 'https://i03piccdn.sogoucdn.com/5742e0b6653ac114'; SourcePage = 'https://pic.sogou.com/pics?query=吉吉国王表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
+    '50088' = @{ FileTitle = '无语菩萨网络梗图'; DownloadUrl = 'https://i04piccdn.sogoucdn.com/f32747498ea94ff5'; SourcePage = 'https://pic.sogou.com/pics?query=无语菩萨表情包'; License = '网络梗图搜索结果，仅用于课程演示；发布前需复核授权'; Artist = '来源作者待核验' }
 }
 
 function Get-NetworkImage {

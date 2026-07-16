@@ -105,7 +105,7 @@ export function HomePage() {
         return `${item.title} ${displayCategoryName(item.categoryName)} ${item.seller.nickname}`.toLowerCase().includes(normalizedKeyword)
       })
       .sort((a, b) => {
-        if (section === '最新上架') {
+        if (section === '今日推荐' || section === '最新上架') {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         }
 

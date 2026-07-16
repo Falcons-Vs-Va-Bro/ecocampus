@@ -79,6 +79,7 @@ Recommended homepage sections:
 - `教材专区`: seasonal textbooks and course materials.
 - `数码好物`: laptops, earphones, calculators, keyboards, and accessories.
 - `宿舍补给`: lamps, storage, suitcase, bedding, and small appliances.
+- `校园抽象闲置`: a restrained mix inside `今日推荐`/`最新上架`, using real network meme imagery for fictional second-hand listings such as odd dolls, meme drink bundles, stickers, desk ornaments, pillows, and keychains. Public-figure or brand references must be labeled as unofficial meme naming rather than endorsements or licensed collaborations; images must be localized and source-tracked.
 - `求购动态`: demand cards loaded from `GET /demands`; “更多” uses `/orders/purchase/demand`, and each card links to `/orders/purchase/demand/:id/detail`. `/demands` remains only a legacy placeholder route.
 
 Use compact section labels. Avoid long explanatory copy inside the application surface.
