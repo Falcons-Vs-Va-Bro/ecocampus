@@ -25,7 +25,7 @@ export function useCurrentUserIdentity() {
 
   function logout() {
     clearSession()
-    queryClient.removeQueries({ queryKey: queryKeys.auth.me })
+    queryClient.clear()
   }
 
   return {
