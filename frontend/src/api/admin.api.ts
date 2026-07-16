@@ -58,22 +58,22 @@ export interface ReviewItemRequest {
 export interface AdminItemSummary {
   id: number
   title: string
+  description: string
   sellerId: number
   sellerNickname: string
+  studentNoMasked?: string
   categoryName: string
   priceCent: number
   status: ItemStatus
   createdAt: string
   coverImageUrl?: string
+  imageCount: number
 }
 
 export interface AdminReviewItemSummary extends AdminItemSummary {
-  description?: string
-  imageCount?: number
   reviewFlags?: string[]
   reviewReason?: string
   sellerViolationCount?: number
-  studentNoMasked?: string
   submittedAt?: string
 }
 

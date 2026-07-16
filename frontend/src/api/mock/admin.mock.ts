@@ -251,6 +251,7 @@ function createAdminItem(
   return {
     id,
     title,
+    description: '演示商品信息完整，等待后台治理。',
     categoryName,
     priceCent,
     status,
@@ -258,6 +259,7 @@ function createAdminItem(
     createdAt: `2026-07-${String(Math.max(1, 9 - dayOffset)).padStart(2, '0')}T${String(8 + dayOffset).padStart(2, '0')}:20:00+08:00`,
     sellerId: 3000 + id,
     sellerNickname,
+    imageCount: 1,
   }
 }
 
@@ -265,11 +267,13 @@ function createMissingAdminItem(itemId: string | number): AdminItemSummary {
   return {
     id: Number(itemId),
     title: '商品不存在',
+    description: '商品记录不存在。',
     sellerId: 0,
     sellerNickname: '未知用户',
     categoryName: '其他',
     priceCent: 0,
     status: 'DELETED',
+    imageCount: 0,
     createdAt: new Date(0).toISOString(),
   }
 }

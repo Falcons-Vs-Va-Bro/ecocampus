@@ -93,7 +93,7 @@ src/
 | 路由 | 页面状态 | 当前数据源/说明 |
 | --- | --- | --- |
 | `/admin` | API-backed | 调用真实 `GET /admin/dashboard/summary`；没有 dashboard mock |
-| `/admin/items/review` | API-backed | wrapper 支持 mock/真实；使用与后端一致的扁平 `sellerId/sellerNickname` 后台摘要，图片、描述、标记等仅在 mock 中可选展示 |
+| `/admin/items/review` | API-backed | wrapper 支持 mock/真实；真实摘要包含卖家、学号掩码、描述、封面与图片数；举报提示、审核标记等仍仅在 mock 中可选展示 |
 | `/admin/items` | API-backed | wrapper 支持 mock/真实；使用独立 `AdminItemSummary`，不再误声明为公开市场 `ItemSummary` |
 | `/admin/users` | API-backed + Local UI model | 用户列表和黑名单 mutation 支持 mock/真实；顶部总量、注册日期、发布数等为硬编码展示值 |
 | `/admin/categories` | API-backed + Local UI model | 页面调用一级类目列表/创建/更新；删除 wrapper 存在但页面未调用，树层级、启停、商品数和预置子类目为本地展示模型 |
@@ -140,7 +140,7 @@ src/
 
 | 前端期望 | 后端真实响应 | 影响 |
 | --- | --- | --- |
-| 后台审核/治理使用 `AdminItemSummary` | 后台商品摘要只有治理基础字段 | 类型已与真实扁平 DTO 对齐；真实模式仍缺图片、描述、举报/审核展示元数据 |
+| 后台审核/治理使用 `AdminItemSummary` | 后台商品摘要已补卖家、描述和图片字段 | 类型已与真实扁平 DTO 对齐；真实模式仍缺举报/审核标记和卖家历史违规数 |
 | 收藏、关闭求购等 wrappers 中部分声明 `void` | 后端实际返回商品/求购详情 | 当前页面多半忽略响应，但类型不准确；商品创建/更新/上下架、校园核验和后台审核/违规下架响应类型已对齐 |
 
 2026-07-15 已对齐：`GET /items`、商品详情 seller、商品收藏列表、购买/出售订单卡片字段、私信详情当前用户判断、求购广场/发布/我的求购/匹配结果，以及主页求购摘要、九个分类商品页和个人常用地址 CRUD 的主要 API 接线。

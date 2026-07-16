@@ -508,7 +508,7 @@ type DemandStatus = 'OPEN' | 'MATCHED' | 'CLOSED'
 { "reason": "疑似违规发布" }
 ```
 
-后台商品摘要真实字段：`id/title/sellerId/sellerNickname/categoryName/priceCent/status/createdAt`。不包含图片、完整描述、举报数、审核标记或卖家历史违规数；这些目前是前端 mock 展示字段。
+后台商品摘要真实字段：`id/title/description/sellerId/sellerNickname/studentNoMasked/categoryName/priceCent/status/coverImageUrl/imageCount/createdAt`。举报数、审核标记和卖家历史违规数仍不是后端字段；这些目前只在前端 mock 中展示。
 
 ### 用户黑名单
 
