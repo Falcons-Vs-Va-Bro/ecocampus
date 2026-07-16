@@ -163,7 +163,7 @@ GitHub Pages frontend
 - 2026-07-15 `/profile` 移动端比例调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器验证 390×844 与 430×932 下“个人中心”保持单行、无横向溢出，430px 下资料卡高度由约 452px 收紧至 339px，控制台 0 error。
 - 2026-07-16 “厦大白鹭短信站”双重核验完成后，`cd frontend && pnpm lint && pnpm build` 与后端跳过测试打包通过；不依赖数据库的演示码服务 2 项单元测试通过。完整后端 35 项测试因本机 MySQL 3306 未启动而在上下文初始化阶段连接被拒绝，未进入业务断言。内置浏览器 390×844 验证新 mock 账号登录后直达 `/verify`，随机码投递、自动填入、资料解锁与完成态均正常，控制台 0 error。
 - 2026-07-16 共享顶栏退出登录修复后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器桌面 mock 复现修复前按钮中心被页面内容覆盖，修复后命中目标为退出按钮本身，点击可清除会话并返回登录页。
-- 2026-07-16 后台商品扁平 DTO 对齐后 `cd frontend && pnpm lint && pnpm build` 通过；生产发布完成后需用真实管理员会话复核 `/admin/items` 与 `/admin/items/review`。
+- 2026-07-16 后台商品扁平 DTO 对齐后 `cd frontend && pnpm lint && pnpm build` 通过；GitHub Pages 工作流 `29480267698` 发布成功，真实管理员会话复核 `/admin/items` 加载 50 条商品、`/admin/items/review` 加载 6 条待审商品，均无 Router 页面错误。
 - 2026-07-15 分类、发布、消息页移动端密度调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器在 430×932 下验证三页无横向溢出、控制台 0 error。分类页筛选默认折叠且可展开/收起，商品首卡位于 `y≈287`；发布页不再被固定最小宽度裁切；消息统计区由约 357px 降至 81px，首条会话由 `y≈771` 提前至 `y≈344`。
 - 2026-07-15 主页求购摘要、九个分类商品页和 `/profile` 常用地址切换真实 API 后，`cd frontend && pnpm lint && pnpm build` 通过；内置浏览器经可选 Vite API 代理验证主页返回 3 条真实求购、教材页返回后端当前 8 件商品，未登录访问 `/profile` 正确跳转 `/login?returnTo=%2Fprofile`。地址写操作未在无登录凭据下执行。
 
