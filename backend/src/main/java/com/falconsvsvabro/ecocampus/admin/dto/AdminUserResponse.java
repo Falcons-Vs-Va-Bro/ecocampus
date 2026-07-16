@@ -8,7 +8,8 @@ public record AdminUserResponse(Long id, String nickname, String phoneMasked, St
 		VerificationStatus verificationStatus, boolean blacklisted) {
 
 	public static AdminUserResponse from(User user) {
-		return new AdminUserResponse(user.getId(), user.getNickname(), maskPhone(user.getPhone()),
+		String displayPhone = user.getMobilePhone() == null ? user.getPhone() : user.getMobilePhone();
+		return new AdminUserResponse(user.getId(), user.getNickname(), maskPhone(displayPhone),
 				maskStudentNo(user.getStudentNo()), user.getRole(), user.getVerificationStatus(),
 				user.getVerificationStatus() == VerificationStatus.BLACKLISTED);
 	}

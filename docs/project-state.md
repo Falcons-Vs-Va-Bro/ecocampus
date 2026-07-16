@@ -34,7 +34,7 @@
 - `application-prod.yml` 要求显式 MySQL 凭据，使用 `ddl-auto=validate`，同时扫描 `db/migration` 与 `db/seed`，并由启动期防呆阻止不安全生产配置。
 - H2 依赖与配置已移除；测试使用独立的 `ecocampus_test` MySQL，只加载 `db/migration`，并在测试上下文启动时自动清库、迁移。
 - 课堂单实例默认基线：Hikari 最大 12/最小空闲 3、连接等待 10 秒；Tomcat 最大线程 100、最小空闲 8、最大连接 300、等待队列 100。
-- Flyway 当前为 V1–V4：核心表、4 个初始类目、账号密码哈希列、会话双方已读时间。
+- Flyway 当前为 V1–V5：核心表、4 个初始类目、账号密码哈希列、会话双方已读时间、独立绑定手机号及唯一约束。
 - `db/seed/R__mysql_demo_seed.sql` 和 `R__mysql_catalog_seed.sql` 是 repeatable Flyway 演示 seed；后者使用预留 ID `50001`–`50072` 为九类目各补 8 件商品。生产 profile 会解析这两份已登记脚本，校验和不变时不会重复执行，脚本变更则会按 Flyway repeatable 语义再次运行。
 - 2026-07-15 已按运维授权通过 SSH 隧道将两份 repeatable seed 导入真实 `ecocampus`：9 类目、36 用户、99 商品、14 收藏、9 订单、5 会话、11 消息、4 求购、4 审计记录；扩展商品九类目各 8 件，Flyway history 均标记执行成功。
 - 112 条 seed 商品图片记录已统一改为 `/catalog/*.webp`，对应文件位于 `frontend/public/catalog/`；真实库旧 `/src/assets` 图片地址为 0，Vite 生产构建已确认复制全部 112 个文件。
@@ -51,9 +51,10 @@ API 模块：
 
 关键边界：
 
-- 首次账号登录自动创建 `USER/VERIFIED` 用户；账号必须匹配 `2292024.+`。
+- 首次账号登录自动创建 `USER/UNVERIFIED` 用户；账号必须匹配 `2292024.+`，普通用户登录后直接进入 `/verify`。
 - 后端没有注册、refresh token、退出登录、求购详情、求购编辑、商品删除、管理员全站订单端点。
-- 校园核验提交后直接 `VERIFIED`，没有人工审核 API。
+- 校园核验使用“厦大白鹭短信站”课堂模拟：后端随机签发 6 位演示码，5 分钟有效、45 秒后可重发且成功后一次性失效；演示码直接返回，不接运营商短信，不能视作真实短信安全能力。
+- 校园核验同时校验演示码、手机号唯一性与学号唯一性，提交成功后直接 `VERIFIED`，没有人工审核 API。
 - 交易 service 要求 `VERIFIED`；后台 service 要求 `ADMIN`。
 - 审计日志当前只覆盖商品和订单操作。
 
@@ -63,9 +64,9 @@ API 模块：
 
 页面数据源摘要：
 
-- API-backed：`/login`、`/`、`/items`、九个 `/items/*` 分类页、`/items/:id`、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、个人常用地址、后台看板、后台商品/用户/类目。主页求购摘要、分类商品、商品卡片、收藏失效、订单卡片、私信详情当前用户判断和求购主要链路已使用真实 API 字段。
+- API-backed：`/login`、`/verify`、`/`、`/items`、九个 `/items/*` 分类页、`/items/:id`、商品收藏、私信、购买/出售订单、求购广场、发布求购、我的求购/匹配结果、个人常用地址、后台看板、后台商品/用户/类目。主页求购摘要、分类商品、商品卡片、收藏失效、订单卡片、私信详情当前用户判断和求购主要链路已使用真实 API 字段。`/verify` 的学生证图片仍只作本地 UI 展示。
 - API-backed limited：求购详情页通过公开 `GET /demands` 列表兜底定位开放求购；后端没有单条求购详情接口，关闭/非公开求购无法直接展示。
-- Local mock：发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；头像与基本资料编辑、核验表单；收藏里的求购关注。
+- Local mock：发布/我的商品/编辑（上传图片压缩后随草稿和商品本地持久化）；头像与基本资料编辑；收藏里的求购关注。
 - Placeholder：`/demands`、`/demands/new`、`/demands/mine`。
 - Redirect：`/orders -> /orders/purchase`，`/orders/sales -> /orders/sale`。
 
@@ -85,7 +86,7 @@ API 模块：
 mock 与守卫：
 
 - `pnpm dev:mock` 读取 `.env.mock`；API mock 覆盖类目、商品、收藏、私信、订单、后台商品和后台用户。
-- auth mock 在登录页内处理；profile/file/demand/dashboard wrappers 没有 API mock；Local mock 页面不随开关切换。
+- auth mock 在登录页内处理；手机号演示码与校园核验 wrapper 有独立 mock adapter；profile/file/demand/dashboard 其余 wrappers 没有 API mock；Local mock 页面不随开关切换。
 - `auth`、`verified`、`admin` 已执行跳转；`owner` 当前只检查登录，未核对商品所有者。
 - 前端执行角色域隔离：`ADMIN` 登录默认进入 `/admin`，只能停留在 `/admin` 路由树；市场/用户路由会重定向后台首页，普通用户的后台 `returnTo` 不会被登录页恢复。
 - mock 与真实认证分别使用 v2 storage key；401 清理会话，没有 token refresh。
@@ -99,7 +100,7 @@ mock 与守卫：
 ## 已知实现对齐问题
 
 1. 后台商品真实摘要缺少审核/治理页面 mock 中的图片、描述、举报数、审核标记等元数据；前端 wrapper 类型过宽。
-2. 校园核验、收藏、上下架、关闭求购、审核/违规下架等若干 mutation wrapper 声明 `void`，后端实际返回当前用户、商品/求购详情或后台商品摘要。
+2. 收藏、上下架、关闭求购、审核/违规下架等若干 mutation wrapper 声明 `void`，后端实际返回商品/求购详情或后台商品摘要；校园核验响应类型已对齐。
 3. 后端没有 `GET /demands/{demandId}`、求购编辑、删除或重开端点；前端求购详情只能通过公开列表兜底，发布页编辑模式明确不可用。
 4. 求购关注仍为 `localStorage` 本地能力，后端没有对应收藏表/API。
 5. 九个分类页面已改用真实商品列表，但当前先取前 80 件后按 `categoryName` 做客户端筛选；数据量超过 80 时应改为先解析真实类目 id，再用后端 `categoryId` 分页查询。
@@ -160,6 +161,7 @@ GitHub Pages frontend
 - 2026-07-15 分类商品页排序交互补齐后运行 `cd frontend && pnpm lint && pnpm build` 通过；Chrome 自动化确认 4 个选项可切换、价格升降序结果正确、关注度排序改变卡片顺序，控制台 0 error。
 - 2026-07-15 `/profile` 常用地址编辑与删除交互补齐后运行 `cd frontend && pnpm lint && pnpm build` 通过；人工确认地址可编辑保存，删除后对应卡片从本地列表消失。
 - 2026-07-15 `/profile` 移动端比例调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器验证 390×844 与 430×932 下“个人中心”保持单行、无横向溢出，430px 下资料卡高度由约 452px 收紧至 339px，控制台 0 error。
+- 2026-07-16 “厦大白鹭短信站”双重核验完成后，`cd frontend && pnpm lint && pnpm build` 与后端跳过测试打包通过；不依赖数据库的演示码服务 2 项单元测试通过。完整后端 35 项测试因本机 MySQL 3306 未启动而在上下文初始化阶段连接被拒绝，未进入业务断言。内置浏览器 390×844 验证新 mock 账号登录后直达 `/verify`，随机码投递、自动填入、资料解锁与完成态均正常，控制台 0 error。
 - 2026-07-15 分类、发布、消息页移动端密度调整后 `cd frontend && pnpm lint && pnpm build` 通过；内置浏览器在 430×932 下验证三页无横向溢出、控制台 0 error。分类页筛选默认折叠且可展开/收起，商品首卡位于 `y≈287`；发布页不再被固定最小宽度裁切；消息统计区由约 357px 降至 81px，首条会话由 `y≈771` 提前至 `y≈344`。
 - 2026-07-15 主页求购摘要、九个分类商品页和 `/profile` 常用地址切换真实 API 后，`cd frontend && pnpm lint && pnpm build` 通过；内置浏览器经可选 Vite API 代理验证主页返回 3 条真实求购、教材页返回后端当前 8 件商品，未登录访问 `/profile` 正确跳转 `/login?returnTo=%2Fprofile`。地址写操作未在无登录凭据下执行。
 
@@ -174,6 +176,7 @@ GitHub Pages frontend
 
 ## 最近变更
 
+- 2026-07-16：新增“厦大白鹭短信站”课堂手机号模拟验证：新账号改为 `USER/UNVERIFIED`，登录后直达核验页；后端随机码支持过期、重发冷却和一次性消费，手机号与学号唯一绑定；移动端加入白鹭送信动画并明确标注非真实短信。
 - 2026-07-16：修复生产 Flyway 只扫描结构迁移、无法解析真实库中已执行 repeatable seed 的问题；生产 profile 改为同时扫描 `db/migration` 与 `db/seed`，避免后端启动和 CD 回滚健康检查失败。
 - 2026-07-16：后端 self-hosted 部署工作流在测试前自动准备隔离的本机 MySQL 测试库和权限，不写入生产数据库凭据，也不清理生产 schema。
 - 2026-07-16：后端部署失败时上传短期保留的脱敏 LaunchAgent、进程、端口和本机健康诊断工件，便于在受限 SSH 不提供 Shell 的前提下定位 Mac mini 服务故障。

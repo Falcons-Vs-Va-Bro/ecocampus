@@ -23,7 +23,7 @@
 | `REJECTED` | 枚举保留；当前没有管理员核验/驳回端点 |
 | `BLACKLISTED` | 有效黑名单期内交易 service 返回 `423 BLACKLISTED` |
 
-当前账号密码登录会在首次建档时直接创建 `USER/VERIFIED` 用户。`POST /auth/campus-verification` 提交后也直接设为 `VERIFIED`。因此“手机号验证码 + 学号人工二次审核”是旧规划，不是当前实现。
+当前账号密码登录首次建档创建 `USER/UNVERIFIED` 用户。普通用户需先通过“厦大白鹭短信站”取得后端随机签发的课堂演示码，再将手机号、验证码、姓名、学号、院系和年级提交到 `POST /auth/campus-verification`；手机号与学号均不可重复绑定。成功后直接设为 `VERIFIED`，仍没有管理员人工审核环节。演示码会直接返回给当前登录用户，不能当作真实短信安全能力。
 
 ## 2. 鉴权分层
 

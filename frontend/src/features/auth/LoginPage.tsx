@@ -74,18 +74,22 @@ export function LoginPage() {
 
     setIsSubmitting(true)
     let loggedInRole: 'USER' | 'ADMIN' = 'USER'
+    let requiresCampusVerification = false
 
     try {
       if (import.meta.env.VITE_USE_MOCKS === 'true') {
         provisionMockAccount(normalizedAccount)
+        requiresCampusVerification = true
         setSession({
           accessToken: `mock-${normalizedAccount}-${Date.now()}`,
           role: 'USER',
-          verificationStatus: 'VERIFIED',
+          verificationStatus: 'UNVERIFIED',
         })
       } else {
         const response = await login({ account: normalizedAccount, password: normalizedPassword })
         loggedInRole = response.data.user.role
+        requiresCampusVerification = response.data.user.role === 'USER'
+          && response.data.user.verificationStatus !== 'VERIFIED'
         setSession({
           accessToken: response.data.accessToken,
           role: response.data.user.role,
@@ -96,7 +100,7 @@ export function LoginPage() {
       setNotice(t.mockNotice)
       setLoginError('')
       const returnTo = searchParams.get('returnTo')
-      navigate(resolvePostLoginPath(loggedInRole, returnTo))
+      navigate(requiresCampusVerification ? '/verify' : resolvePostLoginPath(loggedInRole, returnTo))
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : '登录失败')
       setNotice('')

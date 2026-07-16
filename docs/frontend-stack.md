@@ -81,7 +81,7 @@ src/
 | `/items/mine` | Local mock | `myItems.mock.ts` + `localStorage`，未调用我的商品 API |
 | `/items/:id/edit` | Local mock | 编辑本地发布数据，未调用商品详情/更新 API |
 | `/profile` | API-backed + Local profile UI | 顶部身份调用 `/auth/me`；常用地址调用 `GET/POST/PUT/DELETE /users/me/addresses` 并刷新 Query cache；头像和基本资料编辑仍是本地交互 |
-| `/verify` | Local mock | 本地核验演示，未调用 `/auth/campus-verification` |
+| `/verify` | API-backed + mock adapter | 真实模式调用演示验证码签发与 `/auth/campus-verification`；mock 模式复现随机码、过期和一次性校验。学生证图片仅作本地 UI 展示，不上传服务器 |
 | `/demands` | Placeholder | catalog 保留的旧公开求购入口 |
 | `/demands/new` | Placeholder | catalog 保留的旧发布求购入口 |
 | `/demands/mine` | Placeholder | catalog 保留的旧我的求购入口 |
@@ -132,7 +132,7 @@ src/
 - demand API。
 - dashboard overview/summary。
 
-页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如发布/我的商品、头像与基本资料编辑、核验页面即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。真实模式下主页求购摘要、分类商品和个人地址都通过现有 API wrapper 获取，不再读取页面硬编码业务数组。
+页面内 Local mock 不受上述 wrapper 覆盖定义约束。例如发布/我的商品、头像与基本资料编辑即使开启或关闭 `VITE_USE_MOCKS` 仍主要使用本地数据。校园核验已经区分真实 API 与 mock adapter；真实模式下主页求购摘要、分类商品和个人地址都通过现有 API wrapper 获取，不再读取页面硬编码业务数组。
 
 ## 6. 当前 DTO 对齐风险
 
@@ -141,7 +141,7 @@ src/
 | 前端期望 | 后端真实响应 | 影响 |
 | --- | --- | --- |
 | 后台审核/治理复用或扩展 `ItemSummary` | 后台商品摘要只有治理基础字段 | 真实模式缺图片、描述、举报/审核展示元数据 |
-| 校园核验、收藏、上下架、关闭求购、审核/违规下架等 wrappers 中部分声明 `void` | 后端实际返回当前用户、商品/求购详情或后台摘要 | 当前页面多半忽略响应，但类型不准确 |
+| 收藏、上下架、关闭求购、审核/违规下架等 wrappers 中部分声明 `void` | 后端实际返回商品/求购详情或后台摘要 | 当前页面多半忽略响应，但类型不准确；校园核验响应类型已对齐 |
 
 2026-07-15 已对齐：`GET /items`、商品详情 seller、商品收藏列表、购买/出售订单卡片字段、私信详情当前用户判断、求购广场/发布/我的求购/匹配结果，以及主页求购摘要、九个分类商品页和个人常用地址 CRUD 的主要 API 接线。
 
