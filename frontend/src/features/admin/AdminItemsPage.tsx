@@ -19,9 +19,8 @@ import {
 import { motion, useReducedMotion } from 'motion/react'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { listAdminItems, violationRemoveItem } from '../../api/admin.api'
+import { listAdminItems, violationRemoveItem, type AdminItemSummary } from '../../api/admin.api'
 import { listCategories, type Category } from '../../api/category.api'
-import type { ItemSummary } from '../../api/item.api'
 import { queryKeys } from '../../api/queryKeys'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { ItemStatus } from '../../types/api'
@@ -45,12 +44,12 @@ interface GovernanceSignal {
 }
 
 interface EnrichedAdminItem {
-  item: ItemSummary
+  item: AdminItemSummary
   signal: GovernanceSignal
 }
 
 const pageSize = 6
-const emptyAdminItems: ItemSummary[] = []
+const emptyAdminItems: AdminItemSummary[] = []
 
 const allStatuses: ItemStatus[] = [
   'DRAFT',
@@ -281,7 +280,7 @@ export function AdminItemsPage() {
     updateRouteFilters({ keyword: keywordInput })
   }
 
-  function openRemovalPanel(item: ItemSummary) {
+  function openRemovalPanel(item: AdminItemSummary) {
     setRemovalTargetId(item.id)
     setRemovalReason(getGovernanceSignal(item).severity === 'danger' ? '虚假信息' : '价格异常')
     setRemovalNote('')
@@ -454,7 +453,7 @@ export function AdminItemsPage() {
                         <strong>{item.title}</strong>
                         <em>{formatPrice(item.priceCent)}</em>
                         <small>
-                          发布者：{item.seller.nickname}　{signal.phoneMasked}
+                          发布者：{item.sellerNickname}　{signal.phoneMasked}
                         </small>
                       </div>
                     </div>
@@ -641,7 +640,7 @@ function TableSkeleton() {
   )
 }
 
-function createMetricCards(items: ItemSummary[]) {
+function createMetricCards(items: AdminItemSummary[]) {
   const enrichedItems = items.map((item) => ({ item, signal: getGovernanceSignal(item) }))
   const onSaleCount = items.filter((item) => item.status === 'ON_SALE').length
   const todayRemovedCount = items.filter((item) => item.status === 'VIOLATION_REMOVED').length
@@ -656,7 +655,7 @@ function createMetricCards(items: ItemSummary[]) {
   ]
 }
 
-function createRecentRecords(items: ItemSummary[]) {
+function createRecentRecords(items: AdminItemSummary[]) {
   return items
     .map((item) => ({ item, signal: getGovernanceSignal(item) }))
     .filter(({ item, signal }) => item.status === 'VIOLATION_REMOVED' || signal.reportCount > 0)
@@ -726,7 +725,7 @@ function parseCategoryId(value: string | null) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
 }
 
-function getGovernanceSignal(item: ItemSummary): GovernanceSignal {
+function getGovernanceSignal(item: AdminItemSummary): GovernanceSignal {
   const knownSignal = knownSignals[item.id]
 
   if (knownSignal) {

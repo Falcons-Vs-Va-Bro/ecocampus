@@ -5,8 +5,7 @@ import deskLampImage from '../../assets/favorites/items/desk-lamp.webp'
 import macbookAirImage from '../../assets/favorites/items/macbook-air.webp'
 import mathBooksImage from '../../assets/favorites/items/math-books.webp'
 import suitcaseImage from '../../assets/favorites/items/suitcase.webp'
-import type { AdminReviewItemSummary, AdminUserSummary, ReviewItemRequest } from '../admin.api'
-import type { ItemSummary } from '../item.api'
+import type { AdminItemSummary, AdminReviewItemSummary, AdminUserSummary, ReviewItemRequest } from '../admin.api'
 
 interface MockAdminItemsParams {
   status?: ItemStatus
@@ -56,15 +55,15 @@ const categoryIdsByName = new Map([
   ['其他', 9],
 ])
 
-const mockAdminItems: ItemSummary[] = [
-  createAdminItem(1002, 'MacBook Air 2019 13 寸', '数码', 268000, macbookAirImage, '林同学', 'ON_SALE', 42, 1),
-  createAdminItem(1007, 'AirPods 二代', '数码', 32000, airpodsImage, '周同学', 'ON_SALE', 31, 2),
-  createAdminItem(1017, '演唱会门票转让', '票务转让', 58000, calculatorImage, '黄同学', 'PENDING_REVIEW', 8, 3),
-  createAdminItem(1003, '护眼台灯 可调光', '宿舍用品', 4500, deskLampImage, '许同学', 'ON_SALE', 9, 4),
-  createAdminItem(1018, '蓝牙音箱 便携款', '数码', 7600, airpodsImage, '陈同学', 'ON_SALE', 12, 5),
-  createAdminItem(1011, '考研英语真题 近五年', '教材', 1800, mathBooksImage, '何同学', 'OFF_SHELF', 5, 6),
-  createAdminItem(1006, '20 寸行李箱 九成新', '生活日用', 8000, suitcaseImage, '刘同学', 'SOLD', 16, 7),
-  createAdminItem(1019, '疑似批量耳机转售', '数码', 19900, airpodsImage, '匿名用户', 'VIOLATION_REMOVED', 3, 8),
+const mockAdminItems: AdminItemSummary[] = [
+  createAdminItem(1002, 'MacBook Air 2019 13 寸', '数码', 268000, macbookAirImage, '林同学', 'ON_SALE', 1),
+  createAdminItem(1007, 'AirPods 二代', '数码', 32000, airpodsImage, '周同学', 'ON_SALE', 2),
+  createAdminItem(1017, '演唱会门票转让', '票务转让', 58000, calculatorImage, '黄同学', 'PENDING_REVIEW', 3),
+  createAdminItem(1003, '护眼台灯 可调光', '宿舍用品', 4500, deskLampImage, '许同学', 'ON_SALE', 4),
+  createAdminItem(1018, '蓝牙音箱 便携款', '数码', 7600, airpodsImage, '陈同学', 'ON_SALE', 5),
+  createAdminItem(1011, '考研英语真题 近五年', '教材', 1800, mathBooksImage, '何同学', 'OFF_SHELF', 6),
+  createAdminItem(1006, '20 寸行李箱 九成新', '生活日用', 8000, suitcaseImage, '刘同学', 'SOLD', 7),
+  createAdminItem(1019, '疑似批量耳机转售', '数码', 19900, airpodsImage, '匿名用户', 'VIOLATION_REMOVED', 8),
 ]
 
 let mockReviewItems: AdminReviewItemSummary[] = [
@@ -135,7 +134,7 @@ let mockReviewItems: AdminReviewItemSummary[] = [
   }),
 ]
 
-export async function listMockAdminItems(params?: MockAdminItemsParams): Promise<ApiResponse<PageResult<ItemSummary>>> {
+export async function listMockAdminItems(params?: MockAdminItemsParams): Promise<ApiResponse<PageResult<AdminItemSummary>>> {
   await delay(mockLatencyMs)
 
   const page = params?.page ?? 1
@@ -156,7 +155,7 @@ export async function listMockAdminItems(params?: MockAdminItemsParams): Promise
         return true
       }
 
-      return `${item.title} ${item.categoryName} ${item.seller.nickname}`.toLowerCase().includes(normalizedKeyword)
+      return `${item.title} ${item.categoryName} ${item.sellerNickname}`.toLowerCase().includes(normalizedKeyword)
     })
 
   const start = (page - 1) * size
@@ -199,7 +198,7 @@ export async function listMockReviewItems(params?: {
   }
 }
 
-export async function reviewMockItem(itemId: string | number, payload: ReviewItemRequest): Promise<ApiResponse<void>> {
+export async function reviewMockItem(itemId: string | number, payload: ReviewItemRequest): Promise<ApiResponse<AdminItemSummary>> {
   await delay(mockLatencyMs)
 
   mockReviewItems = mockReviewItems.map((item) =>
@@ -212,15 +211,17 @@ export async function reviewMockItem(itemId: string | number, payload: ReviewIte
       : item,
   )
 
+  const reviewedItem = mockReviewItems.find((item) => item.id === Number(itemId))
+
   return {
     code: 'OK',
     message: 'success',
-    data: undefined as void,
+    data: reviewedItem ?? createMissingAdminItem(itemId),
     traceId: 'mock-admin-review-item',
   }
 }
 
-export async function mockViolationRemoveItem(itemId: string | number): Promise<ApiResponse<void>> {
+export async function mockViolationRemoveItem(itemId: string | number): Promise<ApiResponse<AdminItemSummary>> {
   await delay(mockLatencyMs)
 
   const targetItem = mockAdminItems.find((item) => item.id === Number(itemId))
@@ -232,7 +233,7 @@ export async function mockViolationRemoveItem(itemId: string | number): Promise<
   return {
     code: 'OK',
     message: 'success',
-    data: undefined as void,
+    data: targetItem ?? createMissingAdminItem(itemId),
     traceId: 'mock-admin-violation-remove',
   }
 }
@@ -245,9 +246,8 @@ function createAdminItem(
   coverImageUrl: string,
   sellerNickname: string,
   status: ItemStatus,
-  favoriteCount: number,
   dayOffset: number,
-): ItemSummary {
+): AdminItemSummary {
   return {
     id,
     title,
@@ -256,14 +256,21 @@ function createAdminItem(
     status,
     coverImageUrl,
     createdAt: `2026-07-${String(Math.max(1, 9 - dayOffset)).padStart(2, '0')}T${String(8 + dayOffset).padStart(2, '0')}:20:00+08:00`,
-    deliveryModes: dayOffset % 2 === 0 ? ['DELIVER_TO_SCHOOL'] : ['SELF_PICKUP'],
-    seller: {
-      id: 3000 + id,
-      nickname: sellerNickname,
-      verificationStatus: dayOffset % 3 === 0 ? 'PENDING_REVIEW' : 'VERIFIED',
-    },
-    favorited: false,
-    favoriteCount,
+    sellerId: 3000 + id,
+    sellerNickname,
+  }
+}
+
+function createMissingAdminItem(itemId: string | number): AdminItemSummary {
+  return {
+    id: Number(itemId),
+    title: '商品不存在',
+    sellerId: 0,
+    sellerNickname: '未知用户',
+    categoryName: '其他',
+    priceCent: 0,
+    status: 'DELETED',
+    createdAt: new Date(0).toISOString(),
   }
 }
 
@@ -289,15 +296,9 @@ function createReviewItem(item: {
     coverImageUrl: item.coverImageUrl,
     createdAt: item.createdAt,
     submittedAt: item.createdAt,
-    deliveryModes: ['SELF_PICKUP'],
-    seller: {
-      id: 7000 + item.id,
-      nickname: item.sellerNickname,
-      verificationStatus: 'VERIFIED',
-    },
+    sellerId: 7000 + item.id,
+    sellerNickname: item.sellerNickname,
     studentNoMasked: item.studentNoMasked,
-    favorited: false,
-    favoriteCount: 0,
     description: item.description,
     imageCount: 3,
     reviewFlags: item.reviewFlags,

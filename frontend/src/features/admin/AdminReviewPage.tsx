@@ -339,7 +339,7 @@ function ReviewItemCard({
         </Link>
         <strong>{formatPrice(item.priceCent)}</strong>
         <p>
-          发布者：{item.seller.nickname}　{item.studentNoMasked ?? '学号待补充'}
+          发布者：{item.sellerNickname}　{item.studentNoMasked ?? '学号待补充'}
         </p>
         <p>{item.description ?? '发布者暂未填写详细描述。'}</p>
         <div className="admin-review-flags" aria-label="审核提示">
@@ -455,7 +455,7 @@ function filterReviewItems(items: AdminReviewItemSummary[], keyword: string, cat
         return true
       }
 
-      return `${item.title} ${item.categoryName} ${item.seller.nickname} ${item.studentNoMasked ?? ''}`
+      return `${item.title} ${item.categoryName} ${item.sellerNickname} ${item.studentNoMasked ?? ''}`
         .toLowerCase()
         .includes(normalizedKeyword)
     })
