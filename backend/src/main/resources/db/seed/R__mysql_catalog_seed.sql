@@ -1,11 +1,59 @@
 -- Expanded EcoCampus catalog seed.
 --
 -- Product names and price ranges were informed by public catalog samples, then
--- rewritten as synthetic campus second-hand listings. IDs 50073-50088 are
+-- rewritten as synthetic campus second-hand listings. IDs 60001-60016 are
 -- explicitly fictional meme listings whose local images are tracked by the
--- frontend catalog source manifest. IDs 50001-50088 are reserved here.
+-- frontend catalog source manifest. IDs 50001-50072 and 60001-60016 are reserved here.
 
 start transaction;
+
+-- The first meme rollout accidentally reused auto-increment IDs 50073-50075.
+-- Restore ownership from immutable creation audits, take the damaged listings
+-- off shelf, and leave them editable by their original sellers. Original text
+-- and image associations cannot be reconstructed from the catalog seed.
+update items item
+left join (
+	select target_id, min(actor_user_id) as actor_user_id
+	from audit_logs
+	where target_type = 'ITEM'
+		and action = 'ITEM_CREATED'
+		and target_id in (50073, 50074, 50075)
+	group by target_id
+) creation_audit on creation_audit.target_id = item.id
+set item.seller_id = coalesce(creation_audit.actor_user_id, item.seller_id),
+	item.title = '商品信息待卖家重新确认',
+	item.description = '目录种子曾错误覆盖该商品信息，现已下架保护。请原卖家在“我的发布”中重新编辑标题、描述、价格和图片后申请审核。',
+	item.price_cent = 0,
+	item.status = 'OFF_SHELF',
+	item.updated_at = current_timestamp(6)
+where (item.id = 50073 and item.title = '张雪峰粽子玩偶' and item.created_at < '2026-07-16 18:00:00.000000')
+	or (item.id = 50074 and item.title = '巧乐兹雪碧冰红茶三件套' and item.created_at < '2026-07-16 18:10:00.000000')
+	or (item.id = 50075 and item.title = '科比同款冰红茶（梗图版）' and item.created_at < '2026-07-16 18:20:00.000000');
+
+delete from item_delivery_modes
+where item_id in (50073, 50074, 50075)
+	and exists (
+		select 1 from items
+		where items.id = item_delivery_modes.item_id
+			and items.title = '商品信息待卖家重新确认'
+	);
+
+delete from item_images
+where item_id in (50073, 50074, 50075)
+	and image_url in ('/catalog/50073.webp', '/catalog/50074.webp', '/catalog/50075.webp');
+
+-- IDs 50076-50088 were created only by the faulty seed. Keep the rows for
+-- referential safety but hide them after their replacements are inserted.
+update items
+set status = 'DELETED', updated_at = current_timestamp(6)
+where id between 50076 and 50088
+	and title in (
+		'奶龙奶蛙宿舍门神贴', '蔡徐坤打篮球小鸡立牌', '哈基米宿舍循环播放器',
+		'尊嘟假嘟粉色小熊抱枕', '退退退宿舍驱邪门贴', '乌萨奇发疯桌面摆件',
+		'派大星你知不知道鼠标垫', '先天圣体大学生发疯立牌', '曼波小猫午夜循环钥匙扣',
+		'香蕉猫悲伤充电宝', '悲伤蛙期末复习抱枕', '吉吉国王红温桌面摆件',
+		'无语菩萨答辩护身符'
+	);
 
 insert into items (
 	id, seller_id, title, description, category_id, price_cent, status, version, created_at, updated_at
@@ -83,22 +131,22 @@ values
 	(50070, 12, '校园社团纪念徽章 6 枚', '普通纪念徽章，不含受限制标识，背针完好，整套出售。', 9, 3000, 'ON_SALE', 0, '2026-07-14 17:00:00.000000', '2026-07-15 20:00:00.000000'),
 	(50071, 13, '15 寸电脑双肩包', '独立电脑夹层，拉链和肩带正常，底部有轻微使用痕迹。', 9, 6800, 'ON_SALE', 0, '2026-07-01 18:00:00.000000', '2026-07-15 20:00:00.000000'),
 	(50072, 14, '春秋防风外套 L 码', '已清洗，拉链和口袋正常，无明显污渍，具体尺寸可当面试穿确认。', 9, 5600, 'SOLD', 0, '2026-07-02 19:00:00.000000', '2026-07-15 20:00:00.000000'),
-	(50073, 15, '张雪峰粽子玩偶', '网络梗图同款粽子造型，非官方周边，适合考研宿舍桌面摆放，按图所示出。', 9, 2690, 'ON_SALE', 0, '2026-07-16 18:00:00.000000', '2026-07-16 22:00:00.000000'),
-	(50074, 16, '巧乐兹雪碧冰红茶三件套', '宿舍抽象饮料组合展示数据，非品牌官方联名，三件内容以图片和当面确认为准。', 9, 3990, 'ON_SALE', 0, '2026-07-16 18:10:00.000000', '2026-07-16 22:00:00.000000'),
-	(50075, 17, '科比同款冰红茶（梗图版）', '按网络梗图命名的冰红茶摆拍商品，非本人代言或官方联名，仅供校园玩梗展示。', 9, 2400, 'ON_SALE', 0, '2026-07-16 18:20:00.000000', '2026-07-16 22:00:00.000000'),
-	(50076, 18, '奶龙奶蛙宿舍门神贴', '奶龙奶蛙抽象门贴一对，适合贴在宿舍门内侧，边角有轻微卷曲。', 9, 1600, 'ON_SALE', 0, '2026-07-16 18:30:00.000000', '2026-07-16 22:00:00.000000'),
-	(50077, 22, '蔡徐坤打篮球小鸡立牌', '鸡你太美动作梗立牌，非官方周边，底座可拆，放在篮球架或书桌旁都很抽象。', 9, 2800, 'ON_SALE', 0, '2026-07-16 18:40:00.000000', '2026-07-16 22:00:00.000000'),
-	(50078, 23, '哈基米宿舍循环播放器', '按键后循环播放哈基米片段的整活小音箱，音量不大，建议不要在熄灯后使用。', 9, 5200, 'ON_SALE', 0, '2026-07-16 18:50:00.000000', '2026-07-16 22:00:00.000000'),
-	(50079, 24, '尊嘟假嘟粉色小熊抱枕', '粉色小熊表情包造型抱枕，非官方联名，已清洗，适合宿舍椅背。', 9, 3600, 'ON_SALE', 0, '2026-07-16 19:00:00.000000', '2026-07-16 22:00:00.000000'),
-	(50080, 101, '退退退宿舍驱邪门贴', '经典退退退表情包门贴，考试周和答辩周均可使用，背胶仍可粘贴。', 9, 900, 'ON_SALE', 0, '2026-07-16 19:10:00.000000', '2026-07-16 22:00:00.000000'),
-	(50081, 7, '乌萨奇发疯桌面摆件', '乌萨奇发疯表情桌面摆件，非官方周边，适合放在论文和作业旁边提供精神状态说明。', 9, 3200, 'ON_SALE', 0, '2026-07-16 19:20:00.000000', '2026-07-16 22:00:00.000000'),
-	(50082, 8, '派大星你知不知道鼠标垫', '派大星经典发问梗鼠标垫，表面轻微使用痕迹，不影响继续灵魂拷问。', 9, 2200, 'ON_SALE', 0, '2026-07-16 19:30:00.000000', '2026-07-16 22:00:00.000000'),
-	(50083, 9, '先天圣体大学生发疯立牌', '大学生期末精神状态立牌，适合图书馆占座提醒，非正式校园用品。', 9, 1800, 'ON_SALE', 0, '2026-07-16 19:40:00.000000', '2026-07-16 22:00:00.000000'),
-	(50084, 10, '曼波小猫午夜循环钥匙扣', '会发出短促曼波音效的小猫钥匙扣，电池尚有余量，公共区域请谨慎按键。', 9, 2600, 'ON_SALE', 0, '2026-07-16 19:50:00.000000', '2026-07-16 22:00:00.000000'),
-	(50085, 11, '香蕉猫悲伤充电宝', '香蕉猫外壳充电宝，容量标称 5000mAh，实际续航建议当面测试。', 9, 4800, 'ON_SALE', 0, '2026-07-16 20:00:00.000000', '2026-07-16 22:00:00.000000'),
-	(50086, 12, '悲伤蛙期末复习抱枕', '悲伤蛙图案抱枕，适合期末周趴桌使用，已清洗晾晒。', 9, 3400, 'ON_SALE', 0, '2026-07-16 20:10:00.000000', '2026-07-16 22:00:00.000000'),
-	(50087, 13, '吉吉国王红温桌面摆件', '吉吉国王红温形态摆件，非官方周边，适合在代码报错时放在显示器旁。', 9, 3900, 'ON_SALE', 0, '2026-07-16 20:20:00.000000', '2026-07-16 22:00:00.000000'),
-	(50088, 14, '无语菩萨答辩护身符', '无语菩萨梗图护身符，适合答辩、汇报和小组作业现场，纯属精神安慰。', 9, 1200, 'ON_SALE', 0, '2026-07-16 20:30:00.000000', '2026-07-16 22:00:00.000000')
+	(60001, 15, '张雪峰粽子玩偶', '网络梗图同款粽子造型，非官方周边，适合考研宿舍桌面摆放，按图所示出。', 9, 2690, 'ON_SALE', 0, '2026-07-16 18:00:00.000000', '2026-07-16 22:00:00.000000'),
+	(60002, 16, '巧乐兹雪碧冰红茶三件套', '宿舍抽象饮料组合展示数据，非品牌官方联名，三件内容以图片和当面确认为准。', 9, 3990, 'ON_SALE', 0, '2026-07-16 18:10:00.000000', '2026-07-16 22:00:00.000000'),
+	(60003, 17, '科比同款冰红茶（梗图版）', '按网络梗图命名的冰红茶摆拍商品，非本人代言或官方联名，仅供校园玩梗展示。', 9, 2400, 'ON_SALE', 0, '2026-07-16 18:20:00.000000', '2026-07-16 22:00:00.000000'),
+	(60004, 18, '奶龙奶蛙宿舍门神贴', '奶龙奶蛙抽象门贴一对，适合贴在宿舍门内侧，边角有轻微卷曲。', 9, 1600, 'ON_SALE', 0, '2026-07-16 18:30:00.000000', '2026-07-16 22:00:00.000000'),
+	(60005, 22, '蔡徐坤打篮球小鸡立牌', '鸡你太美动作梗立牌，非官方周边，底座可拆，放在篮球架或书桌旁都很抽象。', 9, 2800, 'ON_SALE', 0, '2026-07-16 18:40:00.000000', '2026-07-16 22:00:00.000000'),
+	(60006, 23, '哈基米宿舍循环播放器', '按键后循环播放哈基米片段的整活小音箱，音量不大，建议不要在熄灯后使用。', 9, 5200, 'ON_SALE', 0, '2026-07-16 18:50:00.000000', '2026-07-16 22:00:00.000000'),
+	(60007, 24, '尊嘟假嘟粉色小熊抱枕', '粉色小熊表情包造型抱枕，非官方联名，已清洗，适合宿舍椅背。', 9, 3600, 'ON_SALE', 0, '2026-07-16 19:00:00.000000', '2026-07-16 22:00:00.000000'),
+	(60008, 101, '退退退宿舍驱邪门贴', '经典退退退表情包门贴，考试周和答辩周均可使用，背胶仍可粘贴。', 9, 900, 'ON_SALE', 0, '2026-07-16 19:10:00.000000', '2026-07-16 22:00:00.000000'),
+	(60009, 7, '乌萨奇发疯桌面摆件', '乌萨奇发疯表情桌面摆件，非官方周边，适合放在论文和作业旁边提供精神状态说明。', 9, 3200, 'ON_SALE', 0, '2026-07-16 19:20:00.000000', '2026-07-16 22:00:00.000000'),
+	(60010, 8, '派大星你知不知道鼠标垫', '派大星经典发问梗鼠标垫，表面轻微使用痕迹，不影响继续灵魂拷问。', 9, 2200, 'ON_SALE', 0, '2026-07-16 19:30:00.000000', '2026-07-16 22:00:00.000000'),
+	(60011, 9, '先天圣体大学生发疯立牌', '大学生期末精神状态立牌，适合图书馆占座提醒，非正式校园用品。', 9, 1800, 'ON_SALE', 0, '2026-07-16 19:40:00.000000', '2026-07-16 22:00:00.000000'),
+	(60012, 10, '曼波小猫午夜循环钥匙扣', '会发出短促曼波音效的小猫钥匙扣，电池尚有余量，公共区域请谨慎按键。', 9, 2600, 'ON_SALE', 0, '2026-07-16 19:50:00.000000', '2026-07-16 22:00:00.000000'),
+	(60013, 11, '香蕉猫悲伤充电宝', '香蕉猫外壳充电宝，容量标称 5000mAh，实际续航建议当面测试。', 9, 4800, 'ON_SALE', 0, '2026-07-16 20:00:00.000000', '2026-07-16 22:00:00.000000'),
+	(60014, 12, '悲伤蛙期末复习抱枕', '悲伤蛙图案抱枕，适合期末周趴桌使用，已清洗晾晒。', 9, 3400, 'ON_SALE', 0, '2026-07-16 20:10:00.000000', '2026-07-16 22:00:00.000000'),
+	(60015, 13, '吉吉国王红温桌面摆件', '吉吉国王红温形态摆件，非官方周边，适合在代码报错时放在显示器旁。', 9, 3900, 'ON_SALE', 0, '2026-07-16 20:20:00.000000', '2026-07-16 22:00:00.000000'),
+	(60016, 14, '无语菩萨答辩护身符', '无语菩萨梗图护身符，适合答辩、汇报和小组作业现场，纯属精神安慰。', 9, 1200, 'ON_SALE', 0, '2026-07-16 20:30:00.000000', '2026-07-16 22:00:00.000000')
 on duplicate key update
 	seller_id = values(seller_id),
 	title = values(title),
@@ -109,7 +157,8 @@ on duplicate key update
 	updated_at = values(updated_at);
 
 delete from item_delivery_modes
-where item_id between 50001 and 50088;
+where item_id between 50001 and 50072
+	or item_id between 60001 and 60016;
 
 insert into item_delivery_modes (item_id, delivery_mode)
 values
@@ -195,28 +244,29 @@ values
 	(50070, 'SELF_PICKUP'),
 	(50071, 'DELIVER_TO_SCHOOL'),
 	(50072, 'SELF_PICKUP'),
-	(50073, 'SELF_PICKUP'),
-	(50074, 'SELF_PICKUP'),
-	(50074, 'DELIVER_TO_SCHOOL'),
-	(50075, 'DELIVER_TO_SCHOOL'),
-	(50076, 'SELF_PICKUP'),
-	(50077, 'SELF_PICKUP'),
-	(50078, 'SELF_PICKUP'),
-	(50078, 'DELIVER_TO_SCHOOL'),
-	(50079, 'DELIVER_TO_SCHOOL'),
-	(50080, 'SELF_PICKUP'),
-	(50081, 'SELF_PICKUP'),
-	(50082, 'DELIVER_TO_SCHOOL'),
-	(50083, 'SELF_PICKUP'),
-	(50084, 'DELIVER_TO_SCHOOL'),
-	(50085, 'SELF_PICKUP'),
-	(50086, 'DELIVER_TO_SCHOOL'),
-	(50087, 'SELF_PICKUP'),
-	(50088, 'SELF_PICKUP'),
-	(50088, 'DELIVER_TO_SCHOOL');
+	(60001, 'SELF_PICKUP'),
+	(60002, 'SELF_PICKUP'),
+	(60002, 'DELIVER_TO_SCHOOL'),
+	(60003, 'DELIVER_TO_SCHOOL'),
+	(60004, 'SELF_PICKUP'),
+	(60005, 'SELF_PICKUP'),
+	(60006, 'SELF_PICKUP'),
+	(60006, 'DELIVER_TO_SCHOOL'),
+	(60007, 'DELIVER_TO_SCHOOL'),
+	(60008, 'SELF_PICKUP'),
+	(60009, 'SELF_PICKUP'),
+	(60010, 'DELIVER_TO_SCHOOL'),
+	(60011, 'SELF_PICKUP'),
+	(60012, 'DELIVER_TO_SCHOOL'),
+	(60013, 'SELF_PICKUP'),
+	(60014, 'DELIVER_TO_SCHOOL'),
+	(60015, 'SELF_PICKUP'),
+	(60016, 'SELF_PICKUP'),
+	(60016, 'DELIVER_TO_SCHOOL');
 
 delete from item_images
-where item_id between 50001 and 50088;
+where item_id between 50001 and 50072
+	or item_id between 60001 and 60016;
 
 insert into item_images (item_id, sort_order, image_url)
 values
@@ -292,21 +342,21 @@ values
 	(50070, 0, '/catalog/50070.webp'),
 	(50071, 0, '/catalog/50071.webp'),
 	(50072, 0, '/catalog/50072.webp'),
-	(50073, 0, '/catalog/50073.webp'),
-	(50074, 0, '/catalog/50074.webp'),
-	(50075, 0, '/catalog/50075.webp'),
-	(50076, 0, '/catalog/50076.webp'),
-	(50077, 0, '/catalog/50077.webp'),
-	(50078, 0, '/catalog/50078.webp'),
-	(50079, 0, '/catalog/50079.webp'),
-	(50080, 0, '/catalog/50080.webp'),
-	(50081, 0, '/catalog/50081.webp'),
-	(50082, 0, '/catalog/50082.webp'),
-	(50083, 0, '/catalog/50083.webp'),
-	(50084, 0, '/catalog/50084.webp'),
-	(50085, 0, '/catalog/50085.webp'),
-	(50086, 0, '/catalog/50086.webp'),
-	(50087, 0, '/catalog/50087.webp'),
-	(50088, 0, '/catalog/50088.webp');
+	(60001, 0, '/catalog/60001.webp'),
+	(60002, 0, '/catalog/60002.webp'),
+	(60003, 0, '/catalog/60003.webp'),
+	(60004, 0, '/catalog/60004.webp'),
+	(60005, 0, '/catalog/60005.webp'),
+	(60006, 0, '/catalog/60006.webp'),
+	(60007, 0, '/catalog/60007.webp'),
+	(60008, 0, '/catalog/60008.webp'),
+	(60009, 0, '/catalog/60009.webp'),
+	(60010, 0, '/catalog/60010.webp'),
+	(60011, 0, '/catalog/60011.webp'),
+	(60012, 0, '/catalog/60012.webp'),
+	(60013, 0, '/catalog/60013.webp'),
+	(60014, 0, '/catalog/60014.webp'),
+	(60015, 0, '/catalog/60015.webp'),
+	(60016, 0, '/catalog/60016.webp');
 
 commit;

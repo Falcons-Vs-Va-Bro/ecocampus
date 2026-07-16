@@ -45,52 +45,52 @@ import type { ItemDetail, ItemListParams, ItemSummary } from '../item.api'
 const mockLatencyMs = 180
 
 const mockItems: ItemSummary[] = [
-  createItem(200, '张雪峰粽子玩偶', '其他', 2690, '/catalog/50073.webp', '研友小张', ['SELF_PICKUP'], 36, 0, {
+  createItem(200, '张雪峰粽子玩偶', '其他', 2690, '/catalog/60001.webp', '研友小张', ['SELF_PICKUP'], 36, 0, {
     createdAt: '2026-07-16T18:00:00+08:00',
   }),
-  createItem(201, '巧乐兹雪碧冰红茶三件套', '其他', 3990, '/catalog/50074.webp', '抽象批发部', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 58, 0, {
+  createItem(201, '巧乐兹雪碧冰红茶三件套', '其他', 3990, '/catalog/60002.webp', '抽象批发部', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 58, 0, {
     createdAt: '2026-07-16T18:10:00+08:00',
   }),
-  createItem(202, '科比同款冰红茶（梗图版）', '其他', 2400, '/catalog/50075.webp', '曼巴饮料站', ['DELIVER_TO_SCHOOL'], 81, 0, {
+  createItem(202, '科比同款冰红茶（梗图版）', '其他', 2400, '/catalog/60003.webp', '曼巴饮料站', ['DELIVER_TO_SCHOOL'], 81, 0, {
     createdAt: '2026-07-16T18:20:00+08:00',
   }),
-  createItem(203, '奶龙奶蛙宿舍门神贴', '其他', 1600, '/catalog/50076.webp', '奶味研究所', ['SELF_PICKUP'], 43, 0, {
+  createItem(203, '奶龙奶蛙宿舍门神贴', '其他', 1600, '/catalog/60004.webp', '奶味研究所', ['SELF_PICKUP'], 43, 0, {
     createdAt: '2026-07-16T18:30:00+08:00',
   }),
-  createItem(204, '蔡徐坤打篮球小鸡立牌', '其他', 2800, '/catalog/50077.webp', '篮球练习生', ['SELF_PICKUP'], 66, 0, {
+  createItem(204, '蔡徐坤打篮球小鸡立牌', '其他', 2800, '/catalog/60005.webp', '篮球练习生', ['SELF_PICKUP'], 66, 0, {
     createdAt: '2026-07-16T18:40:00+08:00',
   }),
-  createItem(205, '哈基米宿舍循环播放器', '其他', 5200, '/catalog/50078.webp', '哈基米音像社', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 49, 0, {
+  createItem(205, '哈基米宿舍循环播放器', '其他', 5200, '/catalog/60006.webp', '哈基米音像社', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 49, 0, {
     createdAt: '2026-07-16T18:50:00+08:00',
   }),
-  createItem(206, '尊嘟假嘟粉色小熊抱枕', '其他', 3600, '/catalog/50079.webp', '尊嘟家居馆', ['DELIVER_TO_SCHOOL'], 34, 0, {
+  createItem(206, '尊嘟假嘟粉色小熊抱枕', '其他', 3600, '/catalog/60007.webp', '尊嘟家居馆', ['DELIVER_TO_SCHOOL'], 34, 0, {
     createdAt: '2026-07-16T19:00:00+08:00',
   }),
-  createItem(207, '退退退宿舍驱邪门贴', '其他', 900, '/catalog/50080.webp', '宿舍结界部', ['SELF_PICKUP'], 72, 0, {
+  createItem(207, '退退退宿舍驱邪门贴', '其他', 900, '/catalog/60008.webp', '宿舍结界部', ['SELF_PICKUP'], 72, 0, {
     createdAt: '2026-07-16T19:10:00+08:00',
   }),
-  createItem(208, '乌萨奇发疯桌面摆件', '其他', 3200, '/catalog/50081.webp', '精神状态良好', ['SELF_PICKUP'], 53, 0, {
+  createItem(208, '乌萨奇发疯桌面摆件', '其他', 3200, '/catalog/60009.webp', '精神状态良好', ['SELF_PICKUP'], 53, 0, {
     createdAt: '2026-07-16T19:20:00+08:00',
   }),
-  createItem(209, '派大星你知不知道鼠标垫', '其他', 2200, '/catalog/50082.webp', '比奇堡代购', ['DELIVER_TO_SCHOOL'], 47, 0, {
+  createItem(209, '派大星你知不知道鼠标垫', '其他', 2200, '/catalog/60010.webp', '比奇堡代购', ['DELIVER_TO_SCHOOL'], 47, 0, {
     createdAt: '2026-07-16T19:30:00+08:00',
   }),
-  createItem(210, '先天圣体大学生发疯立牌', '其他', 1800, '/catalog/50083.webp', '期末精神科', ['SELF_PICKUP'], 61, 0, {
+  createItem(210, '先天圣体大学生发疯立牌', '其他', 1800, '/catalog/60011.webp', '期末精神科', ['SELF_PICKUP'], 61, 0, {
     createdAt: '2026-07-16T19:40:00+08:00',
   }),
-  createItem(211, '曼波小猫午夜循环钥匙扣', '其他', 2600, '/catalog/50084.webp', '午夜曼波社', ['DELIVER_TO_SCHOOL'], 39, 0, {
+  createItem(211, '曼波小猫午夜循环钥匙扣', '其他', 2600, '/catalog/60012.webp', '午夜曼波社', ['DELIVER_TO_SCHOOL'], 39, 0, {
     createdAt: '2026-07-16T19:50:00+08:00',
   }),
-  createItem(212, '香蕉猫悲伤充电宝', '其他', 4800, '/catalog/50085.webp', '香蕉猫能源站', ['SELF_PICKUP'], 45, 0, {
+  createItem(212, '香蕉猫悲伤充电宝', '其他', 4800, '/catalog/60013.webp', '香蕉猫能源站', ['SELF_PICKUP'], 45, 0, {
     createdAt: '2026-07-16T20:00:00+08:00',
   }),
-  createItem(213, '悲伤蛙期末复习抱枕', '其他', 3400, '/catalog/50086.webp', '伤心蛙宿舍店', ['DELIVER_TO_SCHOOL'], 32, 0, {
+  createItem(213, '悲伤蛙期末复习抱枕', '其他', 3400, '/catalog/60014.webp', '伤心蛙宿舍店', ['DELIVER_TO_SCHOOL'], 32, 0, {
     createdAt: '2026-07-16T20:10:00+08:00',
   }),
-  createItem(214, '吉吉国王红温桌面摆件', '其他', 3900, '/catalog/50087.webp', '红温代码社', ['SELF_PICKUP'], 57, 0, {
+  createItem(214, '吉吉国王红温桌面摆件', '其他', 3900, '/catalog/60015.webp', '红温代码社', ['SELF_PICKUP'], 57, 0, {
     createdAt: '2026-07-16T20:20:00+08:00',
   }),
-  createItem(215, '无语菩萨答辩护身符', '其他', 1200, '/catalog/50088.webp', '答辩祈福处', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 88, 0, {
+  createItem(215, '无语菩萨答辩护身符', '其他', 1200, '/catalog/60016.webp', '答辩祈福处', ['SELF_PICKUP', 'DELIVER_TO_SCHOOL'], 88, 0, {
     createdAt: '2026-07-16T20:30:00+08:00',
   }),
   createItem(1001, '高等数学（第七版）上下册', '教材', 2800, mathBooksImage, '李同学', ['SELF_PICKUP'], 18, 1),
